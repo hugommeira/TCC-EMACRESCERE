@@ -1,0 +1,511 @@
+// ─── Prisma Schema ─────────────────────────────────────────────────────────────
+// Telemedicina – modelo de dados completo
+// NeonDB (PostgreSQL serverless) + Prisma ORM
+// ───────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ConsultationStatus {
+  SCHEDULED
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  RECEIVED
+  OVERDUE
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PIX
+  BOLETO
+}
+
+enum PrescriptionStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+// Tipo de receituário conforme ANVISA (Portaria SVS/MS 344/1998 e RDC 471/2021)
+enum PrescriptionType {
+  COMUM             // Receita comum (branca, sem retenção) — maioria
+  COMUM_DUAS_VIAS   // Receita comum em 2 vias (antimicrobianos — RDC 471/2021)
+  CONTROLE_ESPECIAL // Receita de Controle Especial (branca, 2 vias) — lista C1, C2, C5
+  AZUL_B1           // Notificação Azul B1 — psicotrópicos
+  AZUL_B2           // Notificação Azul B2 — anorexígenos
+  AMARELA_A1        // Notificação Amarela A1 — entorpecentes
+  AMARELA_A2        // A2 — entorpecentes
+  AMARELA_A3        // A3 — psicotrópicos
+}
+
+enum MedicationClass {
+  COMUM             // Não controlado
+  ANTIMICROBIANO    // RDC 471 — receita branca 2 vias
+  CONTROLE_ESPECIAL // C1/C2/C5 — branca 2 vias
+  B1                // Azul — psicotrópico
+  B2                // Azul — anorexígeno
+  A1                // Amarela — entorpecente
+  A2
+  A3
+  GLP1              // GLP-1 / GIP — não controlado mas com regras especiais (semaglutida, tirzepatida)
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+enum FollowUpStatus {
+  PENDING
+  SENT
+  RESPONDED
+  CLOSED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USUÁRIO BASE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  phone         String?
+  cpf           String?   @unique
+  avatarUrl     String?
+  role          Role      @default(PATIENT)
+  active        Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // NextAuth
+  accounts Account[]
+  sessions Session[]
+
+  // Domínio
+  patientProfile    PatientProfile?
+  doctorProfile     DoctorProfile?
+  medicalCertificate MedicalCertificate?
+  consultationsAsPatient Consultation[] @relation("PatientConsultations")
+  consultationsAsDoctor  Consultation[] @relation("DoctorConsultations")
+  messages          Message[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEXTAUTH (Auth.js v5)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PERFIS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PatientProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  birthDate   DateTime?
+  gender      String?
+  bloodType   String?
+  allergies   String[]
+  medications String[]
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("patient_profiles")
+}
+
+model DoctorProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  crm              String   @unique
+  crmState         String
+  specialty        String
+  subSpecialty     String?
+  bio              String?
+  consultationFee  Decimal  @db.Decimal(10, 2)
+  available        Boolean  @default(true)
+  availableHours   Json     @default("{}") // { mon: ["08:00","18:00"], ... }
+  asaasCustomerId  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("doctor_profiles")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONSULTAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Consultation {
+  id             String             @id @default(cuid())
+  patientId      String
+  doctorId       String?            // null enquanto na fila, populado quando médico atende
+  status         ConsultationStatus @default(SCHEDULED)
+  scheduledAt    DateTime?          // null para consultas on-demand (fila)
+  enqueuedAt     DateTime?          // quando entrou na fila (após pagamento)
+  claimedAt      DateTime?          // quando médico pegou
+  startedAt      DateTime?
+  endedAt        DateTime?
+  patientLastSeenAt DateTime?       // heartbeat do paciente (presença)
+  notes          String?
+  chiefComplaint String?
+  diagnosis      String?
+  conduct        String?            // conduta clínica
+  roomToken      String?            @unique
+  livekitRoom    String?            @unique // identificador da sala LiveKit
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient      User           @relation("PatientConsultations", fields: [patientId], references: [id])
+  doctor       User?          @relation("DoctorConsultations",  fields: [doctorId],  references: [id])
+  payment      Payment?
+  messages     Message[]
+  prescription Prescription?
+  followUps    FollowUp[]
+  attachments  Attachment[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+  @@index([status, enqueuedAt]) // fila ordenada
+  @@index([patientId, status])
+  @@index([doctorId, status])
+  @@map("consultations")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANEXOS (S3 Contabo)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AttachmentKind {
+  RECEITA
+  LAUDO
+  EXAME
+  OUTRO
+}
+
+model Attachment {
+  id             String         @id @default(cuid())
+  consultationId String
+  uploadedById   String         // userId (médico ou paciente)
+  kind           AttachmentKind @default(OUTRO)
+  fileName       String
+  mimeType       String
+  size           Int
+  s3Key          String         @unique // ex: emaerescere/consultations/{id}/{uuid}.pdf
+  description    String?
+
+  createdAt DateTime @default(now())
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+
+  @@index([consultationId])
+  @@map("attachments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGAMENTOS (Asaas)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Payment {
+  id               String        @id @default(cuid())
+  consultationId   String        @unique
+  asaasPaymentId   String?       @unique
+  asaasChargeId    String?       @unique
+  method           PaymentMethod
+  status           PaymentStatus @default(PENDING)
+  amount           Decimal       @db.Decimal(10, 2)
+  pixQrCode        String?
+  pixCopyPaste     String?
+  boletoUrl        String?
+  boletoBarCode    String?
+  paidAt           DateTime?
+  refundedAt       DateTime?
+  expiresAt        DateTime?
+  metadata         Json          @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  consultation Consultation @relation(fields: [consultationId], references: [id])
+
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHAT / MENSAGENS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Message {
+  id             String      @id @default(cuid())
+  consultationId String
+  senderId       String
+  type           MessageType @default(TEXT)
+  content        String
+  fileUrl        String?
+  readAt         DateTime?
+
+  createdAt DateTime @default(now())
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([consultationId])
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRESCRIÇÕES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Prescription {
+  id             String             @id @default(cuid())
+  consultationId String             @unique
+  doctorId       String
+  patientId      String
+  status         PrescriptionStatus @default(DRAFT)
+  type           PrescriptionType   @default(COMUM)
+
+  // Conteúdo
+  notes          String?            // orientações gerais ao paciente
+
+  // Emissão
+  issuedAt       DateTime?
+  expiresAt      DateTime?          // validade da receita (30 dias B1/B2, 5 dias antimicrobiano etc)
+
+  // Assinatura digital
+  signedPdfKey   String?            // S3 key do PDF assinado
+  signatureCN    String?            // nome (CN) do certificado usado
+  signatureSerial String?           // serial do certificado
+  signatureHash  String?            // SHA-256 do PDF assinado (validação pública)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  consultation Consultation @relation(fields: [consultationId], references: [id])
+  items        PrescriptionItem[]
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([status])
+  @@map("prescriptions")
+}
+
+model PrescriptionItem {
+  id             String  @id @default(cuid())
+  prescriptionId String
+  medicationId   String?  // FK opcional (caso médico digite manual)
+
+  // Snapshot (preserva mesmo se medicamento for editado/removido)
+  name           String   // nome (princípio ativo + apresentação)
+  commercialName String?  // nome comercial
+  presentation   String?  // ex: "comprimido 5mg"
+
+  // Posologia
+  dosage         String   // ex: "1 comprimido"
+  route          String?  // via (oral, subcutâneo, etc)
+  frequency      String   // ex: "1x ao dia"
+  duration       String?  // ex: "30 dias" ou "uso contínuo"
+  quantity       String?  // ex: "30 comprimidos" / "1 caneta"
+  instructions   String?  // posologia detalhada / orientações
+  continuous     Boolean  @default(false) // uso contínuo
+
+  order          Int      @default(0)
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  medication   Medication?  @relation(fields: [medicationId], references: [id])
+
+  @@index([prescriptionId])
+  @@map("prescription_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BASE DE MEDICAMENTOS (ANVISA)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Medication {
+  id             String          @id @default(cuid())
+  // Identificação
+  activeName     String          // princípio ativo (ex: "Tirzepatida")
+  commercialName String?         // nome comercial (ex: "Mounjaro")
+  presentation   String          // apresentação (ex: "Caneta SC 2,5mg/0,5mL")
+  laboratory     String?         // laboratório (Eli Lilly, etc)
+
+  // Regulatório
+  class          MedicationClass @default(COMUM)
+  controlled     Boolean         @default(false)
+  anvisaCode     String?         // registro ANVISA
+
+  // Posologia padrão sugerida
+  defaultDosage      String?
+  defaultFrequency   String?
+  defaultRoute       String?
+
+  active         Boolean         @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  prescriptionItems PrescriptionItem[]
+
+  @@index([activeName])
+  @@index([commercialName])
+  @@index([class])
+  @@map("medications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CERTIFICADO DIGITAL DO MÉDICO (.pfx — ICP-Brasil A1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model MedicalCertificate {
+  id          String   @id @default(cuid())
+  doctorId    String   @unique
+  // Arquivo no S3 (.pfx)
+  s3Key       String
+  fileName    String
+  // Senha encriptada (AES-256-GCM + chave do servidor)
+  encryptedPassword String   // formato: base64(iv).base64(ciphertext).base64(authTag)
+  // Metadados extraídos do certificado
+  subjectCN   String?  // Common Name (nome do titular)
+  issuerCN    String?  // emissor (AC)
+  serialNumber String?
+  validFrom   DateTime?
+  validTo     DateTime?
+
+  active      Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@map("medical_certificates")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FOLLOW-UP
+// ─────────────────────────────────────────────────────────────────────────────
+
+model FollowUp {
+  id             String         @id @default(cuid())
+  consultationId String
+  status         FollowUpStatus @default(PENDING)
+  message        String
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  response       String?
+  respondedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  consultation Consultation @relation(fields: [consultationId], references: [id])
+
+  @@map("follow_ups")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String  @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  action     String
+  entity     String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ip         String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
