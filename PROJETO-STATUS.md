@@ -41,6 +41,7 @@ Nova máquina, ambiente reinstalado e validado do zero:
 - Scripts `prisma:push/migrate/studio/seed` não funcionavam via `npm run` porque a Prisma CLI só carrega `.env`, não `.env.local` — corrigido com `dotenv-cli`.
 - `npm audit fix` (sem `--force`) eliminou a vulnerabilidade do `brace-expansion`. Restam 5 altas + 1 baixa (Next.js/glob/postcss), todas só resolvidas com upgrade major pra Next 16 — mantido como está (breaking change, decisão já registrada).
 - Identidade git (`user.name`/`user.email`) não estava configurada na máquina nova — configurada localmente no repo (não global).
+- **LiveKit configurado**: projeto criado no LiveKit Cloud, as 4 variáveis (`LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEXT_PUBLIC_LIVEKIT_URL`) adicionadas no `.env.local` e no painel da Vercel (Production/Preview/Development), redeploy feito e confirmado "Ready". Geração de token JWT testada localmente com sucesso.
 
 ## Dívida técnica pré-existente (não introduzida nesta sessão, não corrigida)
 
@@ -56,7 +57,7 @@ Nova máquina, ambiente reinstalado e validado do zero:
 | `RESEND_API_KEY` | ✅ configurada e testada (envio real confirmado) — **modo sandbox mantido de propósito** (decisão abaixo) |
 | `PFX_ENCRYPTION_KEY` | ✅ gerada |
 | `FACEBOOK_CLIENT_ID` / `SECRET` | ⏳ pendente — precisa criar app em developers.facebook.com |
-| `LIVEKIT_*` | ⏳ pendente — precisa criar projeto no LiveKit Cloud |
+| `LIVEKIT_*` | ✅ configurada (projeto próprio no LiveKit Cloud, `.env.local` + Vercel) — geração de token testada, deploy em produção OK |
 | `ASAAS_*` | ⏳ pendente — usando `PAYMENT_MOCK=true` por enquanto |
 | `S3_*` (Contabo) | ⏳ pendente — precisa criar bucket no Contabo Object Storage |
 
