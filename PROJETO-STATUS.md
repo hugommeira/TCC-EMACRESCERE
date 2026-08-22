@@ -56,7 +56,7 @@ Nova máquina, ambiente reinstalado e validado do zero:
 | `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` | ✅ `https://tcc-emacrescere.vercel.app` em prod |
 | `RESEND_API_KEY` | ✅ configurada e testada (envio real confirmado) — **modo sandbox mantido de propósito** (decisão abaixo) |
 | `PFX_ENCRYPTION_KEY` | ✅ gerada |
-| `FACEBOOK_CLIENT_ID` / `SECRET` | ⏳ pendente — precisa criar app em developers.facebook.com |
+| `FACEBOOK_CLIENT_ID` / `SECRET` | ⏳ pendente — **bloqueado**: cadastro de conta developer na Meta travado (SMS de verificação não chega, mesmo com formato `+55` e sem VPN). Tentar de novo mais tarde ou com outro número. |
 | `LIVEKIT_*` | ✅ configurada (projeto próprio no LiveKit Cloud, `.env.local` + Vercel) — geração de token testada, deploy em produção OK |
 | `ASAAS_*` | ⏳ pendente — usando `PAYMENT_MOCK=true` por enquanto |
 | `S3_*` (Contabo) | ⏳ pendente — precisa criar bucket no Contabo Object Storage |
