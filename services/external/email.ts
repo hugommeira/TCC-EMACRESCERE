@@ -4,7 +4,7 @@ import { AppError } from "@/lib/errors";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
 const RESEND_API_KEY = process.env["RESEND_API_KEY"] ?? "";
-const EMAIL_FROM      = process.env["EMAIL_FROM"] ?? "TeleMed <onboarding@resend.dev>";
+const EMAIL_FROM      = process.env["EMAIL_FROM"] ?? "Emacrescere <onboarding@resend.dev>";
 
 // ─── HTTP client ─────────────────────────────────────────────────────────────
 
@@ -39,12 +39,12 @@ export async function sendPasswordResetEmail(
 ): Promise<void> {
   await resendRequest({
     to:      [to],
-    subject: "Redefinir sua senha — TeleMed",
+    subject: "Redefinir sua senha — Emacrescere",
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
         <h2 style="color: #0f172a;">Redefinir senha</h2>
         <p style="color: #334155; line-height: 1.6;">
-          Recebemos uma solicitação para redefinir a senha da sua conta TeleMed.
+          Recebemos uma solicitação para redefinir a senha da sua conta Emacrescere.
           Se foi você, clique no botão abaixo. Este link expira em 15 minutos.
         </p>
         <p style="margin: 24px 0;">
