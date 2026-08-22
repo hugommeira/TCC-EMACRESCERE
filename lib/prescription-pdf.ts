@@ -1,5 +1,6 @@
 import "server-only";
-import { PDFDocument, PDFFont, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import type { PDFFont } from "pdf-lib";
 
 export interface PrescriptionData {
   // Receita

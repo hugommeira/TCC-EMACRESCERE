@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { auth }            from "@/lib/auth";
 import { prisma }          from "@/lib/prisma";
 import { toApiError, ForbiddenError, NotFoundError } from "@/lib/errors";
-import { auditLog, AuditAction } from "@/lib/audit";
+import { auditLog } from "@/lib/audit";
 
 export async function POST(
   _req: NextRequest,

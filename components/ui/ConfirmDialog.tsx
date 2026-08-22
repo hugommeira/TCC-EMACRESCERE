@@ -28,7 +28,7 @@ const DEFAULT: OpenState = { open: false, title: "", message: "" };
 // o usuário clica. O <ConfirmDialogHost /> precisa estar montado em algum lugar
 // da árvore (uso: 1 instância no root layout ou shell).
 
-let mountSubscribers: Set<(s: OpenState) => void> = new Set();
+const mountSubscribers: Set<(s: OpenState) => void> = new Set();
 let currentState: OpenState = DEFAULT;
 
 function notify() {
