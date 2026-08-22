@@ -3,6 +3,7 @@ import { Inter, Fraunces } from "next/font/google";
 import { SessionProvider }    from "@/components/providers/SessionProvider";
 import { Toaster }            from "@/components/ui/Toast";
 import { ConfirmDialogHost }  from "@/components/ui/ConfirmDialog";
+import { APP_NAME }           from "@/lib/constants";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,18 +21,18 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default:  "TeleMed – Consultas Médicas Online",
-    template: "%s | TeleMed",
+    default:  `${APP_NAME} – Consultas Médicas Online`,
+    template: `%s | ${APP_NAME}`,
   },
   description:
     "Plataforma de telemedicina: consulte médicos especialistas de qualquer lugar, com segurança e comodidade.",
   keywords:   ["telemedicina", "consulta online", "médico online", "saúde digital"],
-  authors:    [{ name: "TeleMed" }],
+  authors:    [{ name: APP_NAME }],
   robots:     { index: true, follow: true },
   openGraph: {
     type:        "website",
     locale:      "pt_BR",
-    siteName:    "TeleMed",
+    siteName:    APP_NAME,
   },
 };
 
