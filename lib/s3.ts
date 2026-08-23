@@ -13,7 +13,7 @@ function env(name: typeof REQUIRED[number]): string {
 }
 
 export const s3Bucket = () => env("S3_BUCKET");
-export const s3Prefix = () => process.env["S3_PREFIX"] ?? "emaerescere/";
+export const s3Prefix = () => process.env["S3_PREFIX"] ?? "emacrescere/";
 
 let _client: S3Client | undefined;
 function client(): S3Client {
@@ -30,7 +30,7 @@ function client(): S3Client {
   return _client;
 }
 
-/** Gera key prefixada (ex: emaerescere/consultations/{id}/{file}) */
+/** Gera key prefixada (ex: emacrescere/consultations/{id}/{file}) */
 export function buildKey(parts: string[]): string {
   const clean = parts
     .map((p) => p.replace(/^\/+|\/+$/g, ""))

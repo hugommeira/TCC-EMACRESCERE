@@ -110,7 +110,7 @@ export function ForWhom() {
             </Link>
             <p className="mt-3 text-xs text-slate-500">
               Médicos e farmácias parceiros são cadastrados pela equipe
-              Emaerescere.{" "}
+              Emacrescere.{" "}
               <a href="#contato" className="font-medium text-brand-700 hover:underline">
                 Fale conosco
               </a>

@@ -69,7 +69,7 @@ export default function RegisterPage() {
           </div>
 
           <p className="text-xs text-white/60">
-            Médicos e farmácias parceiros são cadastrados pela equipe Emaerescere.
+            Médicos e farmácias parceiros são cadastrados pela equipe Emacrescere.
           </p>
         </div>
       </div>

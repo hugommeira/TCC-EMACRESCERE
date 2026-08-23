@@ -224,7 +224,7 @@ export function CertificateManager() {
         <div className="rounded-xl bg-amber-50/60 px-4 py-3 text-xs text-amber-900 ring-1 ring-amber-200">
           <strong>Segurança:</strong> seu arquivo .pfx fica armazenado encriptado no servidor.
           A senha é criptografada com AES-256-GCM antes de ser persistida.
-          Em produção real, use sempre o seu próprio certificado ICP-Brasil pessoal — a Emaerescere
+          Em produção real, use sempre o seu próprio certificado ICP-Brasil pessoal — a Emacrescere
           nunca terá acesso à sua chave privada em texto claro.
         </div>
       </form>

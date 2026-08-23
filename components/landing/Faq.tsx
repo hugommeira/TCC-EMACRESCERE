@@ -4,16 +4,16 @@ import { useState } from "react";
 
 const FAQS = [
   {
-    q: "O que é a Emaerescere?",
+    q: "O que é a Emacrescere?",
     a: "Somos uma plataforma de telessaúde que conecta pacientes a médicos especialistas em obesidade e doenças metabólicas. A condução clínica e qualquer eventual prescrição são decisão exclusiva do médico responsável, em consulta individualizada.",
   },
   {
     q: "Como funciona a prescrição?",
-    a: "A Emaerescere não emite receitas. Após a consulta, o médico utiliza o Portal Oficial do CFM (prescricaoeletronica.cfm.org.br) para emitir a prescrição com assinatura digital certificada — válida em todo Brasil conforme a Resolução CFM 2.314/2022.",
+    a: "A Emacrescere não emite receitas. Após a consulta, o médico utiliza o Portal Oficial do CFM (prescricaoeletronica.cfm.org.br) para emitir a prescrição com assinatura digital certificada — válida em todo Brasil conforme a Resolução CFM 2.314/2022.",
   },
   {
     q: "A plataforma indica ou vende medicamentos?",
-    a: "Não. A Emaerescere não comercializa, indica nem dispensa medicamentos. Toda decisão clínica é do médico, e qualquer medicamento é adquirido em farmácias autorizadas mediante apresentação de receita válida.",
+    a: "Não. A Emacrescere não comercializa, indica nem dispensa medicamentos. Toda decisão clínica é do médico, e qualquer medicamento é adquirido em farmácias autorizadas mediante apresentação de receita válida.",
   },
   {
     q: "Como adquiro o medicamento se for prescrito?",

@@ -3,7 +3,7 @@ import { LegalLayout } from "@/components/landing/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Política de Privacidade",
-  description: "Política de Privacidade da Emaerescere em conformidade com a LGPD.",
+  description: "Política de Privacidade da Emacrescere em conformidade com a LGPD.",
 };
 
 export default function PrivacidadePage() {
@@ -15,7 +15,7 @@ export default function PrivacidadePage() {
     >
       <h2>1. Compromisso com a sua privacidade</h2>
       <p>
-        A Emaerescere respeita sua privacidade e segue rigorosamente a{" "}
+        A Emacrescere respeita sua privacidade e segue rigorosamente a{" "}
         <strong>Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018)</strong>{" "}
         e demais normas aplicáveis (CFM, ANVISA, Marco Civil da Internet).
       </p>
@@ -78,7 +78,7 @@ export default function PrivacidadePage() {
       </ul>
       <p>
         Para exercer seus direitos, escreva para{" "}
-        <a href="mailto:dpo@emaerescere.com.br">dpo@emaerescere.com.br</a>.
+        <a href="mailto:dpo@emacrescere.com.br">dpo@emacrescere.com.br</a>.
       </p>
 
       <h2>7. Retenção</h2>
@@ -99,7 +99,7 @@ export default function PrivacidadePage() {
       <h2>9. Encarregado de Dados (DPO)</h2>
       <p>
         Em conformidade com o art. 41 da LGPD, nosso DPO pode ser contatado por{" "}
-        <a href="mailto:dpo@emaerescere.com.br">dpo@emaerescere.com.br</a>.
+        <a href="mailto:dpo@emacrescere.com.br">dpo@emacrescere.com.br</a>.
       </p>
 
       <h2>10. Atualizações</h2>

@@ -94,8 +94,8 @@ export async function generatePrescriptionPdf(data: PrescriptionData): Promise<B
   pdf.setTitle(`Receita ${data.prescriptionId}`);
   pdf.setAuthor(`Dr(a). ${data.doctorName} — CRM ${data.doctorCrm}/${data.doctorCrmState}`);
   pdf.setSubject(TYPE_LABELS[data.type]);
-  pdf.setCreator("Emaerescere — Plataforma de Telessaúde");
-  pdf.setProducer("Emaerescere");
+  pdf.setCreator("Emacrescere — Plataforma de Telessaúde");
+  pdf.setProducer("Emacrescere");
   pdf.setCreationDate(new Date());
 
   const font     = await pdf.embedFont(StandardFonts.Helvetica);
@@ -137,7 +137,7 @@ function drawPage(
   y -= 26;
 
   // Título
-  page.drawText("EMAERESCERE", {
+  page.drawText("EMACRESCERE", {
     x: margin, y, size: 10, font: fonts.fontBold, color: colorRgb,
   });
   page.drawText("Plataforma de Telessaúde", {
@@ -290,7 +290,7 @@ function drawPage(
 
   // Data e local
   page.drawText(
-    `Emitido em ${PT_BR_DATE.format(data.issuedAt)} via Emaerescere — Telessaúde`,
+    `Emitido em ${PT_BR_DATE.format(data.issuedAt)} via Emacrescere — Telessaúde`,
     { x: margin, y: footerY + 36, size: 8, font: fonts.font, color: slate600 },
   );
 

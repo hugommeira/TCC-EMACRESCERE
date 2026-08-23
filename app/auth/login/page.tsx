@@ -73,7 +73,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-xs text-white/60">
-            © {new Date().getFullYear()} Emaerescere · Todos os direitos reservados
+            © {new Date().getFullYear()} Emacrescere · Todos os direitos reservados
           </p>
         </div>
       </div>

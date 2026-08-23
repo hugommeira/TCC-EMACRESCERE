@@ -3,19 +3,19 @@ import { LegalLayout } from "@/components/landing/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Termos de Uso",
-  description: "Termos de Uso da plataforma Emaerescere — telessaúde para acompanhamento de obesidade.",
+  description: "Termos de Uso da plataforma Emacrescere — telessaúde para acompanhamento de obesidade.",
 };
 
 export default function TermosPage() {
   return (
     <LegalLayout
       title="Termos de Uso"
-      subtitle="Estes termos regulam o uso da plataforma Emaerescere por pacientes, médicos e demais usuários."
+      subtitle="Estes termos regulam o uso da plataforma Emacrescere por pacientes, médicos e demais usuários."
       updated="04 de maio de 2026"
     >
       <h2>1. Quem somos</h2>
       <p>
-        A <strong>Emaerescere</strong> é uma plataforma de <strong>telessaúde</strong>
+        A <strong>Emacrescere</strong> é uma plataforma de <strong>telessaúde</strong>
         que conecta pacientes a médicos especialistas em obesidade e doenças
         metabólicas. Não comercializamos, indicamos nem dispensamos medicamentos.
         A condução clínica e qualquer eventual prescrição são decisão exclusiva do
@@ -34,7 +34,7 @@ export default function TermosPage() {
         <li>O cadastro de paciente é livre, gratuito e exige CPF e e-mail válidos.</li>
         <li>Você deve ter 18 anos ou mais (ou estar acompanhado de responsável legal).</li>
         <li>Os dados informados devem ser verdadeiros, completos e atualizados.</li>
-        <li>Médicos e farmácias parceiras são cadastrados pela equipe Emaerescere após validação documental (CRM/ANVISA).</li>
+        <li>Médicos e farmácias parceiras são cadastrados pela equipe Emacrescere após validação documental (CRM/ANVISA).</li>
       </ul>
 
       <h2>4. Telemedicina e responsabilidade médica</h2>
@@ -48,7 +48,7 @@ export default function TermosPage() {
 
       <h2>5. Aquisição de medicamentos</h2>
       <p>
-        A Emaerescere <strong>não vende medicamentos</strong>. Caso o seu médico
+        A Emacrescere <strong>não vende medicamentos</strong>. Caso o seu médico
         decida prescrever, a aquisição ocorre exclusivamente em farmácias
         autorizadas pela ANVISA, mediante apresentação da receita válida. As
         farmácias parceiras são empresas independentes, responsáveis por suas
@@ -58,7 +58,7 @@ export default function TermosPage() {
       <h2>6. Pagamentos</h2>
       <p>
         Os valores das consultas e demais serviços médicos são definidos pelo
-        próprio profissional. A Emaerescere processa pagamentos em ambiente
+        próprio profissional. A Emacrescere processa pagamentos em ambiente
         seguro (PIX, cartão ou boleto), por meio de provedores de pagamento
         certificados. Cancelamentos e reembolsos seguem as regras informadas no
         momento do agendamento.
@@ -73,7 +73,7 @@ export default function TermosPage() {
 
       <h2>8. Limitação de responsabilidade</h2>
       <p>
-        A Emaerescere atua como facilitadora tecnológica e não se responsabiliza
+        A Emacrescere atua como facilitadora tecnológica e não se responsabiliza
         por eventos clínicos decorrentes da prática médica, pela disponibilidade
         de medicamentos nas farmácias parceiras ou por interrupções
         eventuais do serviço por motivos técnicos, de força maior ou
@@ -97,7 +97,7 @@ export default function TermosPage() {
       <h2>11. Contato</h2>
       <p>
         Em caso de dúvidas, escreva para{" "}
-        <a href="mailto:contato@emaerescere.com.br">contato@emaerescere.com.br</a>.
+        <a href="mailto:contato@emacrescere.com.br">contato@emacrescere.com.br</a>.
       </p>
     </LegalLayout>
   );

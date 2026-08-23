@@ -36,7 +36,7 @@ const presignSchema = z.object({
 });
 
 const confirmSchema = z.object({
-  s3Key:       z.string().regex(/^emaerescere\/consultations\/[\w-]+\/[\w.-]+$/),
+  s3Key:       z.string().regex(/^emacrescere\/consultations\/[\w-]+\/[\w.-]+$/),
   fileName:    z.string().min(1).max(200),
   mimeType:    z.string().refine((m) => ALLOWED_MIME.has(m), "Tipo de arquivo não permitido"),
   size:        z.number().int().positive().max(MAX_SIZE),

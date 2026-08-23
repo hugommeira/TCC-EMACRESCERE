@@ -74,7 +74,7 @@ export function Benefits() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
-            Por que Emaerescere
+            Por que Emacrescere
           </p>
           <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
             Segurança e praticidade em cada etapa

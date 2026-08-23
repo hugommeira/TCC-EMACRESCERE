@@ -1,5 +1,5 @@
 /**
- * Base de medicamentos curada para o Emaerescere.
+ * Base de medicamentos curada para o Emacrescere.
  *
  * Cobre os principais grupos terapêuticos usados na rotina médica brasileira,
  * com classificação ANVISA correta (Portaria 344/98 e RDC 471/2021).

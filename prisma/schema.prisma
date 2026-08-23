@@ -274,7 +274,7 @@ model Attachment {
   fileName       String
   mimeType       String
   size           Int
-  s3Key          String         @unique // ex: emaerescere/consultations/{id}/{uuid}.pdf
+  s3Key          String         @unique // ex: emacrescere/consultations/{id}/{uuid}.pdf
   description    String?
 
   createdAt DateTime @default(now())

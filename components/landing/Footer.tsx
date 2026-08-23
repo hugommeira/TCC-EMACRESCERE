@@ -87,7 +87,7 @@ export function Footer() {
         {/* Compliance disclaimer */}
         <div className="mt-12 rounded-2xl bg-white/5 p-5 ring-1 ring-white/10">
           <p className="text-xs leading-relaxed text-ink-200/80">
-            <strong className="text-white">Aviso legal:</strong> A Emaerescere é
+            <strong className="text-white">Aviso legal:</strong> A Emacrescere é
             uma plataforma de telessaúde e não comercializa, indica nem dispensa
             medicamentos. Toda decisão clínica e qualquer eventual prescrição são
             de responsabilidade exclusiva do médico, em consulta individualizada.
@@ -101,7 +101,7 @@ export function Footer() {
 
         <div className="mt-8 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center">
           <p className="text-xs text-ink-200/70">
-            © {new Date().getFullYear()} Emaerescere. Todos os direitos reservados.
+            © {new Date().getFullYear()} Emacrescere. Todos os direitos reservados.
           </p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-200/70">
             <li>
@@ -111,7 +111,7 @@ export function Footer() {
               <Link href="/privacidade" className="hover:text-white">Privacidade</Link>
             </li>
             <li>
-              <a href="mailto:contato@emaerescere.com.br" className="hover:text-white">Contato</a>
+              <a href="mailto:contato@emacrescere.com.br" className="hover:text-white">Contato</a>
             </li>
           </ul>
         </div>
