@@ -2,12 +2,20 @@ import 'package:dio/dio.dart';
 
 import 'api_client.dart';
 
+/// Usuário da sessão atual, devolvido por AuthService.checkSession().
+class SessionUser {
+  const SessionUser({required this.name, required this.email, required this.role});
+
+  final String? name;
+  final String? email;
+  final String? role;
+}
+
 /// Autentica contra o fluxo padrão do NextAuth v5 (Credentials provider),
 /// via cookie de sessão — o mesmo mecanismo usado pelo site web.
 ///
-/// O contrato (endpoints, campos, status codes) foi inferido lendo
-/// lib/auth.ts e lib/auth.config.ts do backend, não testado contra o
-/// servidor real ainda. Validar assim que houver ambiente de teste.
+/// Login e checagem de sessão validados contra o backend real (conta de
+/// paciente do seed).
 class AuthService {
   AuthService._();
 
@@ -47,6 +55,26 @@ class AuthService {
     final success = statusOk && errorCode == null;
 
     return (success: success, errorCode: success ? null : errorCode);
+  }
+
+  /// Verifica se já existe uma sessão válida (cookie persistido de um
+  /// login anterior). Usado na checagem de sessão ao abrir o app.
+  static Future<SessionUser?> checkSession() async {
+    final dio = await ApiClient.instance;
+    try {
+      final response = await dio.get('/api/auth/session');
+      final data = response.data;
+      if (data is! Map || data['user'] == null) return null;
+
+      final user = data['user'] as Map;
+      return SessionUser(
+        name: user['name'] as String?,
+        email: user['email'] as String?,
+        role: user['role'] as String?,
+      );
+    } on DioException {
+      return null;
+    }
   }
 
   static Future<void> logout() async {
