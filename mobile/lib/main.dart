@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import 'screens/debug_login_test_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +36,11 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      // Em debug, abre direto na tela de teste de login (útil pra validar
+      // o AuthService rapidamente). Em release, cai na home normal.
+      home: kDebugMode
+          ? const DebugLoginTestScreen()
+          : const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
