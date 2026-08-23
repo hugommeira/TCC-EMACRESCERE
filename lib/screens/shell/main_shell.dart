@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../home/dashboard_screen.dart';
+import '../tracking/tracking_screen.dart';
 import 'placeholder_screen.dart';
 
 /// Shell principal do app logado: navegação inferior com as 5 abas.
@@ -16,7 +17,7 @@ class _MainShellState extends State<MainShell> {
 
   static const _tabs = [
     DashboardScreen(),
-    PlaceholderScreen(title: 'Acompanhamento', icon: Icons.monitor_weight_outlined),
+    TrackingScreen(),
     PlaceholderScreen(title: 'Consultas', icon: Icons.medical_services_outlined),
     PlaceholderScreen(title: 'Chat', icon: Icons.chat_bubble_outline),
     PlaceholderScreen(title: 'Perfil', icon: Icons.person_outline),

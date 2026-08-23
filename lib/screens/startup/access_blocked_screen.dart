@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../theme/app_theme.dart';
 import '../debug_login_test_screen.dart';
 
 /// Mostrada quando não há sessão válida. O app não tem cadastro/compra de
@@ -30,7 +29,11 @@ class AccessBlockedScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline, size: 72, color: AppColors.ink600),
+              Icon(
+                Icons.lock_outline,
+                size: 72,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: 24),
               Text(
                 'Acesso bloqueado',

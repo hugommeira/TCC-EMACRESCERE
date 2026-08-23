@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../services/onboarding_service.dart';
-import '../../theme/app_theme.dart';
 
 class _OnboardingSlide {
   const _OnboardingSlide({
@@ -106,7 +105,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(slide.icon, size: 96, color: AppColors.brand600),
+                        Icon(
+                          slide.icon,
+                          size: 96,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                         const SizedBox(height: 32),
                         Text(
                           slide.title,
@@ -135,7 +138,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: active ? 20 : 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: active ? AppColors.brand600 : AppColors.ink200,
+                    color: active
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outlineVariant,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 );
