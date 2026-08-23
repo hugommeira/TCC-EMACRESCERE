@@ -271,7 +271,7 @@ function Tab({
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 cursor-pointer border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
+      className={`flex-1 cursor-pointer truncate whitespace-nowrap border-b-2 px-2 py-3 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
         active ? "border-brand-500 text-brand-700" : "border-transparent text-slate-600 hover:text-slate-900"
       }`}
     >

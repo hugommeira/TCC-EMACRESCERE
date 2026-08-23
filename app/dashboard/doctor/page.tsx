@@ -110,7 +110,7 @@ export default async function DoctorDashboardPage() {
         Split: a plataforma retém uma comissão sobre cada consulta paga.
         Configurável via env DOCTOR_REVENUE_PCT (default 70%).
       */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Hoje"        value={String(todayTotal)} tone="brand"  icon={ICONS.calendar} />
         <StatCard label="Pendentes"   value={String(pending)}    tone="amber"  icon={ICONS.hourglass} />
         <StatCard label="Concluídas"  value={String(completed)}  tone="teal"   icon={ICONS.check} />

@@ -338,7 +338,7 @@ export function ConsultationDetailsModal({ open, onClose, consultationId, forPat
               {/* Pagamento (admin/médico vê) */}
               {data.payment && (
                 <Section title="Pagamento">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <Info label="Valor"  value={`R$ ${data.payment.amount.toFixed(2).replace(".", ",")}`} />
                     <Info label="Método" value={data.payment.method} />
                     <Info label="Status" value={data.payment.status} />

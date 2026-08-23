@@ -29,7 +29,7 @@ export function PrescriptionView({
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-6 print:shadow-none">
       {/* Header */}
-      <div className="flex items-start justify-between border-b border-gray-200 pb-4">
+      <div className="flex flex-col gap-4 border-b border-gray-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl font-bold text-brand-600">{APP_NAME}</span>
@@ -40,7 +40,7 @@ export function PrescriptionView({
             <p className="text-xs text-gray-400">CRM {doctorCrm}</p>
           )}
         </div>
-        <div className="text-right space-y-1">
+        <div className="space-y-1 sm:text-right">
           {prescription.issuedAt && (
             <p className="text-sm text-gray-600">
               Emitida em {formatDate(prescription.issuedAt)}

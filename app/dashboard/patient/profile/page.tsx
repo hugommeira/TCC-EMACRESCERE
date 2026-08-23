@@ -52,6 +52,7 @@ export default async function PatientProfilePage() {
                   value={(profile.allergies as string[]).length > 0
                     ? (profile.allergies as string[]).join(", ")
                     : "Nenhuma registrada"}
+                  className="col-span-2"
                 />
                 <DataRow
                   label="Medicamentos em uso"

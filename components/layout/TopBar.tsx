@@ -1,19 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui";
+import { NavLinks } from "@/components/layout/NavLinks";
+import { ROLE_LABEL } from "@/components/layout/Sidebar";
+import type { NavItem } from "@/components/layout/Sidebar";
+import type { Role } from "@prisma/client";
 
 interface TopBarProps {
   userName:  string;
   userImage?: string | null;
   title?:    string;
+  items?:    NavItem[];
+  role?:     Role;
 }
 
-export function TopBar({ userName, userImage, title }: TopBarProps) {
+export function TopBar({ userName, userImage, title, items, role }: TopBarProps) {
   const [open, setOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -25,9 +34,36 @@ export function TopBar({ userName, userImage, title }: TopBarProps) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileNavOpen]);
+
   return (
+    <>
     <header className="flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6">
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        {items && items.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            className="-ml-2 inline-flex flex-none cursor-pointer rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 lg:hidden"
+            aria-label="Abrir menu"
+            aria-haspopup="menu"
+            aria-expanded={mobileNavOpen}
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
         {title && (
           <h2 className="truncate font-display text-lg font-semibold text-slate-900">
             {title}
@@ -118,5 +154,35 @@ export function TopBar({ userName, userImage, title }: TopBarProps) {
         </div>
       </div>
     </header>
+
+    {items && items.length > 0 && mobileNavOpen && (
+      <div className="fixed inset-0 z-50 lg:hidden">
+        <button
+          type="button"
+          aria-label="Fechar menu"
+          className="absolute inset-0 cursor-default bg-slate-900/40"
+          onClick={() => setMobileNavOpen(false)}
+        />
+        <div className="relative flex h-full w-72 max-w-[80vw] flex-col overflow-hidden bg-gradient-to-b from-brand-600 via-brand-700 to-teal-800 text-white shadow-xl">
+          <div className="flex h-16 flex-none items-center justify-between border-b border-white/10 px-4">
+            <span className="font-display text-lg font-semibold tracking-tight text-white">
+              {role ? ROLE_LABEL[role] : "Menu"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(false)}
+              className="cursor-pointer rounded-lg p-2 text-white/80 hover:bg-white/10 hover:text-white"
+              aria-label="Fechar menu"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <NavLinks items={items} onNavigate={() => setMobileNavOpen(false)} />
+        </div>
+      </div>
+    )}
+    </>
   );
 }

@@ -23,7 +23,7 @@ export function Hero() {
             Telessaúde para acompanhamento de obesidade
           </span>
 
-          <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl lg:text-[4.25rem]">
+          <h1 className="mt-5 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-[4.25rem]">
             Cuide da sua{" "}
             <span className="bg-gradient-to-r from-brand-600 to-teal-500 bg-clip-text text-transparent">
               saúde metabólica
@@ -55,14 +55,14 @@ export function Hero() {
             </a>
           </div>
 
-          <dl className="mt-12 grid max-w-lg grid-cols-3 gap-x-6 gap-y-4">
+          <dl className="mt-12 grid max-w-lg grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3">
             <Stat value="+2mil" label="Pacientes acompanhados" />
             <Stat value="100%"  label="Médicos com CRM ativo" />
             <Stat value="LGPD"  label="Dados protegidos" />
           </dl>
 
           <p className="mt-6 max-w-xl text-[11px] leading-relaxed text-slate-400">
-            A Emaerescere é uma plataforma de telessaúde. Não vende, dispensa
+            A Emacrescere é uma plataforma de telessaúde. Não vende, dispensa
             ou indica medicamentos. Toda conduta clínica é decisão exclusiva do
             médico responsável, em consulta individualizada.
           </p>
@@ -115,7 +115,7 @@ function HeroVisual() {
       <div className="absolute -bottom-8 -left-6 w-64 rotate-[-3deg] rounded-2xl bg-white p-4 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-200">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-700">
-            Emaerescere
+            Emacrescere
           </span>
           <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">
             ao vivo

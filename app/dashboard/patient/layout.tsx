@@ -62,6 +62,8 @@ export default async function PatientLayout({
         <TopBar
           userName={session.user.name}
           userImage={session.user.image}
+          items={patientNav}
+          role={session.user.role}
         />
 
         <main className="flex-1 overflow-y-auto">

@@ -505,7 +505,7 @@ function ItemCard({
               {[item.commercialName, item.presentation].filter(Boolean).join(" — ")}
             </p>
           )}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Input label="Dose"       placeholder="1 comprimido" value={item.dosage}    onChange={(v) => onChange({ dosage: v })}    disabled={disabled} />
             <Input label="Frequência" placeholder="1x ao dia"    value={item.frequency} onChange={(v) => onChange({ frequency: v })} disabled={disabled} />
             <Input label="Via"        placeholder="Oral / SC / IM" value={item.route ?? ""}    onChange={(v) => onChange({ route: v || undefined })}    disabled={disabled} />

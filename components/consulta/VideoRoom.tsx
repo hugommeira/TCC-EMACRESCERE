@@ -21,6 +21,15 @@ export function VideoRoom({ consultationId }: Props) {
   const [token, setToken] = useState<string | null>(null);
   const [url,   setUrl]   = useState<string | null>(null);
   const [err,   setErr]   = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    setIsMobile(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,7 +92,7 @@ export function VideoRoom({ consultationId }: Props) {
         <RoomAudioRenderer />
         {/* ControlBar com todos os controles: mic, câmera, screen share, device selector */}
         <ControlBar
-          variation="verbose"
+          variation={isMobile ? "minimal" : "verbose"}
           controls={{
             microphone:  true,
             camera:      true,

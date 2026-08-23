@@ -93,7 +93,7 @@ export default async function PatientDashboardPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total"      value={String(total)}     tone="brand"  icon={ICONS.calendar} />
         <StatCard label="Próximas"   value={String(upcoming)}  tone="amber"  icon={ICONS.hourglass} />
         <StatCard label="Concluídas" value={String(completed)} tone="teal"   icon={ICONS.check} />

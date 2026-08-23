@@ -164,13 +164,13 @@ export function CheckoutForm({
         <div className="space-y-3">
           <Input label="Nome no cartão" value={card.holderName} onChange={(e) => updateCard("holderName", e.target.value)} placeholder="Como impresso no cartão" required />
           <Input label="Número do cartão" value={card.number}     onChange={(e) => updateCard("number", e.target.value)}     placeholder="0000 0000 0000 0000"   required />
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <Input label="Mês" value={card.expiryMonth} onChange={(e) => updateCard("expiryMonth", e.target.value)} placeholder="MM" required />
             <Input label="Ano" value={card.expiryYear}  onChange={(e) => updateCard("expiryYear",  e.target.value)} placeholder="AAAA" required />
             <Input label="CVV" value={card.ccv}         onChange={(e) => updateCard("ccv", e.target.value)}         placeholder="123" required />
           </div>
           <Input label="CPF do titular" value={card.cpf} onChange={(e) => updateCard("cpf", e.target.value)} placeholder="00000000000" required />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <Input label="CEP" value={card.postalCode} onChange={(e) => updateCard("postalCode", e.target.value)} placeholder="00000000" required />
             <Input label="Número" value={card.addressNumber} onChange={(e) => updateCard("addressNumber", e.target.value)} placeholder="123" required />
           </div>

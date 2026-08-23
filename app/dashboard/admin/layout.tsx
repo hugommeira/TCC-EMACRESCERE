@@ -102,6 +102,8 @@ export default async function AdminLayout({
         <TopBar
           userName={session.user.name}
           userImage={session.user.image}
+          items={adminNav}
+          role={session.user.role}
         />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
