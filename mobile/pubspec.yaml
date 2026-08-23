@@ -47,6 +47,9 @@ dependencies:
   url_launcher: ^6.3.0
   permission_handler: ^11.3.1
 
+  # Gráficos (aba Acompanhamento)
+  fl_chart: ^0.69.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

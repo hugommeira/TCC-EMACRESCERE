@@ -4,11 +4,17 @@ import 'api_client.dart';
 
 /// Usuário da sessão atual, devolvido por AuthService.checkSession().
 class SessionUser {
-  const SessionUser({required this.name, required this.email, required this.role});
+  const SessionUser({
+    required this.name,
+    required this.email,
+    required this.role,
+    required this.image,
+  });
 
   final String? name;
   final String? email;
   final String? role;
+  final String? image;
 }
 
 /// Autentica contra o fluxo padrão do NextAuth v5 (Credentials provider),
@@ -71,6 +77,7 @@ class AuthService {
         name: user['name'] as String?,
         email: user['email'] as String?,
         role: user['role'] as String?,
+        image: user['image'] as String?,
       );
     } on DioException {
       return null;
