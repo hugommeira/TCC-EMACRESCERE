@@ -3,7 +3,7 @@ import { PaymentError } from "@/lib/errors";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const ASAAS_API_URL = process.env.ASAAS_API_URL ?? "https://sandbox.asaas.com/api/v3";
+const ASAAS_API_URL = process.env.ASAAS_API_URL || "https://sandbox.asaas.com/api/v3";
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? "";
 
 // ─── HTTP client ─────────────────────────────────────────────────────────────

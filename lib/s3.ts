@@ -13,7 +13,7 @@ function env(name: typeof REQUIRED[number]): string {
 }
 
 export const s3Bucket = () => env("S3_BUCKET");
-export const s3Prefix = () => process.env["S3_PREFIX"] ?? "emacrescere/";
+export const s3Prefix = () => process.env["S3_PREFIX"] || "emacrescere/";
 
 let _client: S3Client | undefined;
 function client(): S3Client {
