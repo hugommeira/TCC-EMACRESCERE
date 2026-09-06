@@ -125,6 +125,7 @@ export const RL = {
   livekitToken: { limit: 60,  windowSec: 60 },        // 60/min
   message:      { limit: 60,  windowSec: 60 },        // 60/min
   attachment:   { limit: 30,  windowSec: 60 * 10 },   // 30/10min
+  prescriptionValidate: { limit: 20, windowSec: 60 }, // 20/min por IP (rota pública, farmácias)
   prontuario:   { limit: 120, windowSec: 60 },        // alto: auto-save
   generic:      { limit: 100, windowSec: 60 },
 } as const;

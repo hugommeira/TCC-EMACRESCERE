@@ -17,6 +17,7 @@ const PUBLIC_ROUTES = [
   "/api/auth",
   "/api/webhooks",
   "/api/users/register",
+  "/api/prescription/validate",
   "/prescricao",
   "/termos",
   "/privacidade",
