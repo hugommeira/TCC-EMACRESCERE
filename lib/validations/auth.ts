@@ -73,6 +73,7 @@ export const registerSchema = z
         "Senha muito comum, escolha outra",
       ),
     confirmPassword: z.string({ required_error: "Confirmação obrigatória" }),
+    acceptedTerms: z.boolean(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Senhas não conferem",
@@ -84,7 +85,11 @@ export const registerSchema = z
       message: "Senha não pode conter seu e-mail",
       path: ["password"],
     },
-  );
+  )
+  .refine((d) => d.acceptedTerms === true, {
+    message: "É necessário aceitar os Termos de Uso e a Política de Privacidade",
+    path: ["acceptedTerms"],
+  });
 
 export const forgotPasswordSchema = z.object({
   email: z

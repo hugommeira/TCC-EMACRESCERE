@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       action:     AuditAction.USER_REGISTER,
       entity:     "User",
       entityId:   user.id,
+      after:      { termsAccepted: true, acceptedAt: new Date().toISOString() },
       ip,
       userAgent:  req.headers.get("user-agent"),
     });

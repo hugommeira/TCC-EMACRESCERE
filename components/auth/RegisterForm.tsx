@@ -11,7 +11,7 @@ type FieldErrors = Partial<Record<keyof RegisterInput, string>>;
 
 const INITIAL: RegisterInput = {
   name: "", email: "", cpf: "", phone: "",
-  password: "", confirmPassword: "",
+  password: "", confirmPassword: "", acceptedTerms: false,
 };
 
 function onlyDigits(value: string, max = 11) {
@@ -256,12 +256,33 @@ export function RegisterForm() {
         required
       />
 
-      <p className="text-xs leading-relaxed text-slate-500">
-        Ao criar a conta você concorda com nossos{" "}
-        <Link href="/termos" target="_blank" className="font-medium text-brand-700 hover:underline">Termos de Uso</Link>{" "}
-        e{" "}
-        <Link href="/privacidade" target="_blank" className="font-medium text-brand-700 hover:underline">Política de Privacidade</Link>.
-      </p>
+      <div>
+        <label className="flex cursor-pointer items-start gap-2.5">
+          <input
+            type="checkbox"
+            name="acceptedTerms"
+            checked={values.acceptedTerms}
+            onChange={(e) => setField("acceptedTerms", e.target.checked)}
+            aria-invalid={Boolean(errors.acceptedTerms)}
+            className="mt-0.5 h-4 w-4 flex-none cursor-pointer rounded border-slate-300 text-brand-600 focus:ring-2 focus:ring-brand-500/30"
+          />
+          <span className="text-xs leading-relaxed text-slate-600">
+            Li e concordo com os{" "}
+            <Link href="/termos" target="_blank" className="font-medium text-brand-700 hover:underline">Termos de Uso</Link>{" "}
+            e a{" "}
+            <Link href="/privacidade" target="_blank" className="font-medium text-brand-700 hover:underline">Política de Privacidade</Link>.
+          </span>
+        </label>
+        {errors.acceptedTerms && (
+          <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600">
+            <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4M12 16h.01" />
+            </svg>
+            {errors.acceptedTerms}
+          </p>
+        )}
+      </div>
 
       <button
         type="submit"
