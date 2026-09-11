@@ -1,13 +1,148 @@
 import { prisma } from "@/lib/prisma";
-import { NotFoundError, ConflictError, AppError } from "@/lib/errors";
+import { NotFoundError, ConflictError, ForbiddenError, AppError } from "@/lib/errors";
 import bcrypt from "bcryptjs";
-import type { RegisterInput } from "@/lib/validations/auth";
+import type { RegisterInput, RegisterDoctorInput } from "@/lib/validations/auth";
 import type { UserWithProfile, PaginationParams, PaginatedResponse } from "@/types";
-import type { Role } from "@prisma/client";
+import type { DoctorApprovalStatus, Role } from "@prisma/client";
 import { generateToken, hashToken } from "@/lib/tokens";
 import { sendPasswordResetEmail } from "@/services/external/email";
+import { verifyCrm } from "@/services/external/cfm";
 
 const PASSWORD_RESET_TTL_MS = 15 * 60 * 1000; // 15 minutos
+
+/** Valor padrão da consulta pra médico recém-cadastrado (admin pode ajustar). */
+const DEFAULT_CONSULTATION_FEE = 150;
+
+// ─── Register doctor (auto-cadastro, entra PENDING) ───────────────────────────
+
+/**
+ * Cadastro de médico pelo app/site. Verifica o CRM (simulado, ver
+ * services/external/cfm.ts) e cria a conta com approvalStatus PENDING e
+ * available=false: o médico consegue logar, mas não atende nem aparece
+ * pra pacientes até o admin aprovar em /dashboard/admin/doctors.
+ */
+export async function registerDoctor(
+  input: RegisterDoctorInput,
+): Promise<UserWithProfile> {
+  const existing = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: input.email },
+        { cpf: input.cpf },
+        { doctorProfile: { crm: input.crm } },
+      ],
+    },
+    include: { doctorProfile: { select: { crm: true } } },
+  });
+
+  if (existing) {
+    throw new ConflictError(
+      existing.email === input.email
+        ? "E-mail já cadastrado"
+        : existing.cpf === input.cpf
+          ? "CPF já cadastrado"
+          : "CRM já cadastrado",
+    );
+  }
+
+  const verification = await verifyCrm({
+    crm:      input.crm,
+    crmState: input.crmState,
+    name:     input.name,
+  });
+  if (!verification.valid) {
+    // 422 com a mensagem da "consulta ao conselho" — o app mostra como erro
+    // do campo CRM.
+    throw new AppError(verification.message, "CRM_INVALID", 422);
+  }
+
+  const passwordHash = await bcrypt.hash(input.password, 12);
+
+  return prisma.user.create({
+    data: {
+      name:  input.name,
+      email: input.email,
+      cpf:   input.cpf,
+      phone: input.phone,
+      role:  "DOCTOR",
+      doctorProfile: {
+        create: {
+          crm:             input.crm,
+          crmState:        input.crmState,
+          specialty:       input.specialty,
+          consultationFee: DEFAULT_CONSULTATION_FEE,
+          available:       false,
+          approvalStatus:  "PENDING",
+          crmVerifiedAt:   new Date(verification.checkedAt),
+          crmVerification: verification,
+        },
+      },
+      accounts: {
+        create: {
+          type:             "credentials",
+          provider:         "credentials",
+          providerAccountId: input.email,
+          access_token:     passwordHash,
+        },
+      },
+    },
+    include: { patientProfile: true, doctorProfile: true },
+  });
+}
+
+/**
+ * Guarda das rotas de atendimento: médico só entra na fila/atende depois de
+ * credenciado. Perfil inexistente também barra.
+ */
+export async function assertDoctorApproved(userId: string): Promise<void> {
+  const profile = await prisma.doctorProfile.findUnique({
+    where:  { userId },
+    select: { approvalStatus: true },
+  });
+  if (profile?.approvalStatus !== "APPROVED") {
+    throw new ForbiddenError(
+      profile?.approvalStatus === "REJECTED"
+        ? "Seu cadastro de médico foi reprovado. Fale com a equipe Emacrescere."
+        : "Seu credenciamento ainda está em análise. Aguarde a aprovação.",
+    );
+  }
+}
+
+// ─── Admin: credenciamento ────────────────────────────────────────────────────
+
+export async function listDoctorsForApproval(status?: DoctorApprovalStatus) {
+  return prisma.user.findMany({
+    where: {
+      role: "DOCTOR",
+      ...(status ? { doctorProfile: { approvalStatus: status } } : {}),
+    },
+    include: { doctorProfile: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function decideDoctorApproval(input: {
+  doctorUserId: string;
+  adminId:      string;
+  decision:     "APPROVED" | "REJECTED";
+  note?:        string;
+}) {
+  const profile = await prisma.doctorProfile.findUnique({ where: { userId: input.doctorUserId } });
+  if (!profile) throw new NotFoundError("Médico");
+
+  return prisma.doctorProfile.update({
+    where: { userId: input.doctorUserId },
+    data: {
+      approvalStatus: input.decision,
+      approvalNote:   input.note ?? null,
+      approvedAt:     new Date(),
+      approvedById:   input.adminId,
+      // Aprovado passa a ficar visível/disponível; reprovado some da lista.
+      available:      input.decision === "APPROVED",
+    },
+    include: { user: { select: { id: true, name: true, email: true } } },
+  });
+}
 
 // ─── Register patient ─────────────────────────────────────────────────────────
 
@@ -211,6 +346,8 @@ export async function listDoctors(
     active: true,
     doctorProfile: {
       available: true,
+      // Só médico credenciado aparece pra paciente agendar.
+      approvalStatus: "APPROVED" as DoctorApprovalStatus,
       ...(params.specialty ? { specialty: { contains: params.specialty, mode: "insensitive" as const } } : {}),
     },
     ...(params.search

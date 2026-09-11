@@ -49,6 +49,15 @@ enum PaymentMethod {
   BOLETO
 }
 
+// Credenciamento do médico: quem se cadastra sozinho entra PENDING e só
+// atende depois que o admin aprova. Médicos criados pelo seed/admin nascem
+// APPROVED (default) pra nada existente parar de funcionar.
+enum DoctorApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum PrescriptionStatus {
   DRAFT
   ISSUED
@@ -204,6 +213,16 @@ model DoctorProfile {
   available        Boolean  @default(true)
   availableHours   Json     @default("{}") // { mon: ["08:00","18:00"], ... }
   asaasCustomerId  String?
+
+  // Credenciamento (ver enum DoctorApprovalStatus)
+  approvalStatus   DoctorApprovalStatus @default(APPROVED)
+  approvalNote     String?   // motivo da reprovação / observação do admin
+  approvedAt       DateTime?
+  approvedById     String?   // admin que decidiu
+  // Verificação do CRM no cadastro — SIMULADA (services/external/cfm.ts),
+  // sem API real do CFM. Guarda o resultado pra o admin ver.
+  crmVerifiedAt    DateTime?
+  crmVerification  Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

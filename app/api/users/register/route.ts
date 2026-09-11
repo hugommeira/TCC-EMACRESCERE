@@ -1,7 +1,7 @@
 import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
-import { registerPatient }  from "@/services/api/user";
-import { registerSchema }   from "@/lib/validations/auth";
+import { registerPatient, registerDoctor } from "@/services/api/user";
+import { registerSchema, registerDoctorSchema } from "@/lib/validations/auth";
 import { toApiError }       from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp, RL, rateLimit, tooManyRequests } from "@/lib/security";
@@ -17,8 +17,15 @@ export async function POST(req: NextRequest) {
     const rl = rateLimit({ key: `register:${ip}`, ...RL.register });
     if (!rl.ok) return tooManyRequests(rl.resetSeconds);
 
-    const body   = await req.json();
-    const parsed = registerSchema.safeParse(body);
+    const body = await req.json();
+
+    // role "DOCTOR" no body -> cadastro de médico (CRM verificado de forma
+    // simulada, conta entra PENDING). Qualquer outra coisa -> paciente,
+    // como sempre foi.
+    const isDoctor = body?.role === "DOCTOR";
+    const parsed = isDoctor
+      ? registerDoctorSchema.safeParse(body)
+      : registerSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -30,7 +37,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = await registerPatient(parsed.data);
+    const user = isDoctor
+      ? await registerDoctor(parsed.data as Parameters<typeof registerDoctor>[0])
+      : await registerPatient(parsed.data as Parameters<typeof registerPatient>[0]);
 
     auditLog({
       actorId:    user.id,
@@ -50,8 +59,11 @@ export async function POST(req: NextRequest) {
           name:  user.name,
           email: user.email,
           role:  user.role,
+          approvalStatus: user.doctorProfile?.approvalStatus ?? null,
         },
-        message: "Cadastro realizado com sucesso",
+        message: isDoctor
+          ? "Cadastro enviado. Seu credenciamento será analisado pela equipe."
+          : "Cadastro realizado com sucesso",
       },
       { status: 201 },
     );

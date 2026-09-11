@@ -91,6 +91,34 @@ export const registerSchema = z
     path: ["acceptedTerms"],
   });
 
+// Cadastro de MÉDICO: os mesmos campos do paciente + dados do conselho. O CRM
+// passa por verificação (simulada) em services/external/cfm.ts e a conta
+// nasce com approvalStatus PENDING até o admin aprovar.
+export const registerDoctorSchema = registerSchema.innerType().innerType()
+  .extend({
+    role: z.literal("DOCTOR"),
+    crm: z
+      .string({ required_error: "CRM obrigatório" })
+      .trim()
+      .regex(/^\d{4,7}$/, "CRM inválido (4 a 7 dígitos)"),
+    crmState: z
+      .string({ required_error: "UF do CRM obrigatória" })
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z]{2}$/, "UF inválida"),
+    specialty: z
+      .string({ required_error: "Especialidade obrigatória" })
+      .trim()
+      .min(3, "Especialidade muito curta")
+      .max(80, "Especialidade muito longa"),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Senhas não conferem",
+    path: ["confirmPassword"],
+  });
+
+export type RegisterDoctorInput = z.infer<typeof registerDoctorSchema>;
+
 export const forgotPasswordSchema = z.object({
   email: z
     .string({ required_error: "E-mail obrigatório" })

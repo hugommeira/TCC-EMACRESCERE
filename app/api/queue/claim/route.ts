@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { claimFromQueue } from "@/services/api/queue";
+import { assertDoctorApproved } from "@/services/api/user";
 import { toApiError } from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp, RL, rateLimit, tooManyRequests } from "@/lib/security";
@@ -20,6 +21,8 @@ export async function POST(req: NextRequest) {
     if (!session?.user || session.user.role !== "DOCTOR") {
       return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
     }
+    // Só médico credenciado pega paciente da fila.
+    await assertDoctorApproved(session.user.id);
 
     const ip = getClientIp(req);
     const rl = rateLimit({ key: `queue.claim:${session.user.id}`, ...RL.queueClaim });

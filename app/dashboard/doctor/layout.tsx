@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/auth";
+import { prisma }       from "@/lib/prisma";
 import { Sidebar }      from "@/components/layout/Sidebar";
 import { TopBar }       from "@/components/layout/TopBar";
 
@@ -57,6 +58,14 @@ export default async function DoctorLayout({
 }) {
   const session = await requireRole("DOCTOR");
 
+  // Médico que se cadastrou sozinho e ainda não foi credenciado: pode navegar,
+  // mas fila/atendimento respondem 403 até o admin aprovar. Avisa aqui.
+  const profile = await prisma.doctorProfile.findUnique({
+    where:  { userId: session.user.id },
+    select: { approvalStatus: true, approvalNote: true },
+  });
+  const approval = profile?.approvalStatus ?? "APPROVED";
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar
@@ -72,6 +81,24 @@ export default async function DoctorLayout({
           items={doctorNav}
           role={session.user.role}
         />
+        {approval !== "APPROVED" && (
+          <div
+            className={`border-b px-6 py-3 text-sm ${
+              approval === "REJECTED"
+                ? "border-red-200 bg-red-50 text-red-800"
+                : "border-amber-200 bg-amber-50 text-amber-900"
+            }`}
+          >
+            <p className="font-semibold">
+              {approval === "REJECTED" ? "Cadastro reprovado" : "Credenciamento em análise"}
+            </p>
+            <p className="mt-0.5">
+              {approval === "REJECTED"
+                ? `Seu cadastro não foi aprovado${profile?.approvalNote ? `: ${profile.approvalNote}` : "."} Fale com a equipe Emacrescere.`
+                : "Seu CRM foi verificado e o cadastro está com a equipe Emacrescere. Você poderá atender assim que for aprovado."}
+            </p>
+          </div>
+        )}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>

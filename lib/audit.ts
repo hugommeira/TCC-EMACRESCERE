@@ -49,6 +49,8 @@ export const AuditAction = {
   USER_LOGIN:              "user.login",
   USER_LOGIN_FAILED:       "user.login_failed",
   USER_LOGOUT:             "user.logout",
+  DOCTOR_APPROVED:         "doctor.approved",
+  DOCTOR_REJECTED:         "doctor.rejected",
   PASSWORD_RESET_REQUESTED: "user.password_reset_requested",
   PASSWORD_RESET_COMPLETED: "user.password_reset_completed",
   OAUTH_ACCOUNT_LINKED:    "user.oauth_account_linked",
