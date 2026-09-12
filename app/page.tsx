@@ -12,6 +12,9 @@ import { Faq }          from "@/components/landing/Faq";
 import { CtaFinal }     from "@/components/landing/CtaFinal";
 import { DownloadApp }  from "@/components/landing/DownloadApp";
 import { Footer }       from "@/components/landing/Footer";
+import { MobileCtaBar } from "@/components/landing/MobileCtaBar";
+import { CONSULTATION_FEE_REAIS } from "@/services/api/queue";
+import { formatCurrency } from "@/lib/utils";
 
 const roleRedirect: Record<Role, string> = {
   PATIENT:    "/dashboard/patient",
@@ -40,6 +43,7 @@ export default async function RootPage() {
       <Faq />
       <CtaFinal />
       <Footer />
+      <MobileCtaBar priceLabel={formatCurrency(CONSULTATION_FEE_REAIS)} />
     </main>
   );
 }

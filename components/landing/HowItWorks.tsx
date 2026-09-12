@@ -51,26 +51,31 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="como-funciona" className="bg-slate-50/60 py-24 sm:py-28">
+    <section id="como-funciona" className="bg-slate-50/60 py-16 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
             Como funciona
           </p>
-          <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
             Simples, rápido e 100% online
           </h2>
-          <p className="mt-4 text-lg text-slate-600">
+          <p className="mt-4 text-base text-slate-600 sm:text-lg">
             Em apenas 4 passos você tem a caneta de emagrecimento com prescrição
             médica em mãos.
           </p>
+          <p className="mt-2 text-sm text-slate-500 sm:hidden">
+            Arraste para ver os 4 passos.
+          </p>
         </div>
 
-        <ol className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Phone: horizontal snap rail (scanning 4 stacked cards costs a lot of
+            scrolling). Tablet and up: the original grid. */}
+        <ol className="-mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:mt-14 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
           {STEPS.map((step, i) => (
             <li
               key={step.n}
-              className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:ring-brand-200"
+              className="group relative w-[78%] flex-none snap-center overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 transition-all duration-200 sm:w-auto sm:flex-auto hover:sm:-translate-y-1 hover:sm:shadow-xl hover:sm:ring-brand-200"
             >
               <span
                 aria-hidden

@@ -32,26 +32,28 @@ const REVIEWS = [
 
 export function Testimonials() {
   return (
-    <section className="bg-white py-24 sm:py-28">
+    <section className="bg-white py-16 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
             Quem está com a gente
           </p>
-          <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
             A experiência de quem deu o primeiro passo
           </h2>
-          <p className="mt-4 text-lg text-slate-600">
+          <p className="mt-4 text-base text-slate-600 sm:text-lg">
             Depoimentos sobre a qualidade do acompanhamento médico na plataforma.
             Resultados clínicos variam conforme cada paciente.
           </p>
         </div>
 
-        <ul className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Phone: one testimonial at a time on a snap rail, instead of three
+            long quotes stacked. Tablet and up: the original grid. */}
+        <ul className="-mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:mt-14 sm:grid sm:grid-cols-1 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {REVIEWS.map((r) => (
             <li
               key={r.name}
-              className="flex flex-col rounded-3xl bg-gradient-to-br from-brand-50/60 via-white to-white p-7 ring-1 ring-slate-900/5"
+              className="flex w-[85%] flex-none snap-center flex-col rounded-3xl bg-gradient-to-br from-brand-50/60 via-white to-white p-6 ring-1 ring-slate-900/5 sm:w-auto sm:p-7"
             >
               <div className="flex gap-0.5 text-amber-400" aria-label={`${r.rating} de 5 estrelas`}>
                 {Array.from({ length: r.rating }).map((_, i) => (

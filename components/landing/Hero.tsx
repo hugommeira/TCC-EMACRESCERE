@@ -3,7 +3,105 @@ import Image from "next/image";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white">
+    <>
+      <MobileHero />
+      <DesktopHero />
+    </>
+  );
+}
+
+/**
+ * Mobile hero: full-bleed photo running under the fixed header, copy below.
+ * Deliberately not a shrunken desktop — the desktop layout is a 12-col grid
+ * with floating cards that collapse into a cramped stack on a phone.
+ */
+function MobileHero() {
+  return (
+    <section className="relative lg:hidden">
+      <div className="relative h-[56vh] min-h-[360px] max-h-[540px] w-full overflow-hidden">
+        <Image
+          src="/hero-mobile.jpg"
+          alt="Pessoa medindo a glicemia com lanceta e glicosímetro"
+          fill
+          priority
+          // hidden on desktop: ask for the smallest candidate there
+          sizes="(min-width: 1024px) 1px, 100vw"
+          className="object-cover"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-b from-slate-900/25 via-slate-900/0 to-white"
+        />
+        <span className="absolute bottom-5 left-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur">
+          <span className="relative flex h-2 w-2" aria-hidden>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
+          </span>
+          Telessaúde para obesidade
+        </span>
+      </div>
+
+      <div className="px-4 pb-14">
+        <h1 className="font-display text-[2rem] font-semibold leading-[1.1] tracking-tight text-slate-900 sm:text-4xl">
+          Cuide da sua{" "}
+          <span className="bg-gradient-to-r from-brand-600 to-teal-500 bg-clip-text text-transparent">
+            saúde metabólica
+          </span>{" "}
+          com acompanhamento médico
+        </h1>
+
+        <p className="mt-4 text-base leading-relaxed text-slate-600">
+          Conectamos você a médicos especialistas em obesidade e doenças
+          metabólicas. A conduta — incluindo eventual prescrição — é decidida
+          pelo seu médico no Portal Oficial do CFM.
+        </p>
+
+        <div className="mt-7 flex flex-col gap-3">
+          <Link
+            href="/auth/register"
+            className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-7 text-base font-semibold text-white shadow-lg shadow-brand-500/30 focus:outline-none focus:ring-4 focus:ring-brand-500/30"
+          >
+            Começar minha jornada
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </Link>
+          <a
+            href="#como-funciona"
+            className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-slate-300 bg-white px-7 text-base font-semibold text-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200"
+          >
+            Como funciona
+          </a>
+        </div>
+
+        <dl className="mt-8 grid grid-cols-3 divide-x divide-slate-200 rounded-2xl border border-slate-200 bg-white py-3.5 shadow-sm">
+          <StatCompact value="+2mil" label="Pacientes" />
+          <StatCompact value="100%"  label="CRM ativo" />
+          <StatCompact value="LGPD"  label="Protegido" />
+        </dl>
+
+        <p className="mt-5 text-[11px] leading-relaxed text-slate-400">
+          A Emacrescere é uma plataforma de telessaúde. Não vende, dispensa ou
+          indica medicamentos. Toda conduta clínica é decisão exclusiva do
+          médico responsável, em consulta individualizada.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function StatCompact({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="px-2 text-center">
+      <dt className="font-mono text-sm font-bold text-brand-700">{value}</dt>
+      <dd className="mt-0.5 text-[11px] leading-tight text-slate-500">{label}</dd>
+    </div>
+  );
+}
+
+function DesktopHero() {
+  return (
+    <section className="relative hidden overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white lg:block">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-32 right-0 h-[500px] w-[500px] rounded-full bg-brand-200/40 blur-3xl"
@@ -103,6 +201,8 @@ function HeroVisual() {
           width={900}
           height={1100}
           priority
+          // this block is hidden below lg: keep phones from downloading it
+          sizes="(max-width: 1023px) 1px, 40vw"
           className="aspect-[4/5] w-full object-cover"
         />
         <div

@@ -28,14 +28,62 @@ const COLUMNS = [
       { label: "Privacidade",      href: "#" },
     ],
   },
+  {
+    title: "Legal",
+    links: [
+      { label: "Termos de Uso",            href: "/termos" },
+      { label: "Política de Privacidade",  href: "/privacidade" },
+    ],
+  },
 ];
 
 export function Footer() {
   return (
     <footer className="bg-ink-950 text-ink-100">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-12">
-          <div className="col-span-2 md:col-span-4">
+      {/* extra bottom padding on phones so the sticky CTA bar never covers the
+          last row of the footer */}
+      <div className="mx-auto max-w-7xl px-4 pb-28 pt-16 sm:px-6 lg:px-8 lg:pb-16">
+        <div className="md:hidden">
+          <Logo variant="light" />
+          <p className="mt-4 text-sm leading-relaxed text-ink-200/80">
+            Conectando pacientes, médicos e farmácias para emagrecimento seguro.
+          </p>
+
+          {/* Native <details>: no JS, keeps this a Server Component, and stops
+              the footer from being a wall of links on a phone. */}
+          <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
+            {COLUMNS.map((col) => (
+              <details key={col.title} className="group">
+                <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between text-sm font-semibold text-white [&::-webkit-details-marker]:hidden">
+                  {col.title}
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 text-ink-200/70 transition-transform duration-200 group-open:rotate-180"
+                    fill="none" stroke="currentColor" strokeWidth={2}
+                    strokeLinecap="round" strokeLinejoin="round" aria-hidden
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </summary>
+                <ul className="pb-3">
+                  {col.links.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href as Route}
+                        className="flex min-h-[44px] items-center text-sm text-ink-200/80"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <div className="hidden gap-8 md:grid md:grid-cols-12">
+          <div className="md:col-span-4">
             <Logo variant="light" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-200/80">
               Conectando pacientes, médicos e farmácias para emagrecimento
@@ -60,28 +108,6 @@ export function Footer() {
               </ul>
             </div>
           ))}
-
-          <div className="col-span-2 md:col-span-2">
-            <h3 className="text-sm font-semibold text-white">Legal</h3>
-            <ul className="mt-4 space-y-2.5">
-              <li>
-                <Link
-                  href="/termos"
-                  className="text-sm text-ink-200/80 transition-colors duration-200 hover:text-white"
-                >
-                  Termos de Uso
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacidade"
-                  className="text-sm text-ink-200/80 transition-colors duration-200 hover:text-white"
-                >
-                  Política de Privacidade
-                </Link>
-              </li>
-            </ul>
-          </div>
         </div>
 
         {/* Compliance disclaimer */}
@@ -103,15 +129,17 @@ export function Footer() {
           <p className="text-xs text-ink-200/70">
             © {new Date().getFullYear()} Emacrescere. Todos os direitos reservados.
           </p>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-200/70">
+          {/* min-h on phones only: these are standalone links, not inline in a
+              sentence, so they need a real tap area */}
+          <ul className="flex flex-wrap gap-x-6 text-xs text-ink-200/70">
             <li>
-              <Link href="/termos" className="hover:text-white">Termos</Link>
+              <Link href="/termos" className="inline-flex min-h-[44px] items-center hover:text-white sm:min-h-0">Termos</Link>
             </li>
             <li>
-              <Link href="/privacidade" className="hover:text-white">Privacidade</Link>
+              <Link href="/privacidade" className="inline-flex min-h-[44px] items-center hover:text-white sm:min-h-0">Privacidade</Link>
             </li>
             <li>
-              <a href="mailto:contato@emacrescere.com.br" className="hover:text-white">Contato</a>
+              <a href="mailto:contato@emacrescere.com.br" className="inline-flex min-h-[44px] items-center hover:text-white sm:min-h-0">Contato</a>
             </li>
           </ul>
         </div>

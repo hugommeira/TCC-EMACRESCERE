@@ -97,7 +97,7 @@ export function Header() {
                 <a
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50"
+                  className="flex min-h-[48px] items-center rounded-lg px-3 text-base font-medium text-slate-700 hover:bg-slate-50"
                 >
                   {link.label}
                 </a>
@@ -106,9 +106,21 @@ export function Header() {
             <li className="pt-2">
               <Link
                 href="/auth/register"
-                className="block rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 py-3 text-center text-sm font-semibold text-white shadow"
+                onClick={() => setOpen(false)}
+                className="flex min-h-[48px] items-center justify-center rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 text-center text-sm font-semibold text-white shadow"
               >
                 Quero começar agora
+              </Link>
+            </li>
+            {/* "Entrar" existed only in the desktop header — a returning user on
+                a phone had no way in from the landing page. */}
+            <li>
+              <Link
+                href="/auth/login"
+                onClick={() => setOpen(false)}
+                className="flex min-h-[48px] items-center justify-center rounded-full border border-slate-300 px-5 text-center text-sm font-semibold text-slate-700"
+              >
+                Entrar
               </Link>
             </li>
           </ul>

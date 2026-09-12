@@ -5,7 +5,7 @@ export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
   return (
     <Link
       href="/"
-      className="group inline-flex items-center gap-2"
+      className="group inline-flex min-h-[44px] items-center gap-2"
       aria-label="Emacrescere - voltar ao topo"
     >
       <span
