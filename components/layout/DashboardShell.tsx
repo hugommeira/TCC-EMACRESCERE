@@ -90,7 +90,7 @@ export function StatCard({
           <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 sm:text-xs">
             {label}
           </p>
-          <p className="mt-2 truncate font-display text-xl font-semibold text-slate-900 sm:text-3xl">
+          <p className={cn("mt-2 truncate font-display text-xl font-semibold text-slate-900", value.length > 8 ? "sm:text-2xl" : "sm:text-3xl")} title={value}>
             {value}
           </p>
           {(hint || trend) && (
