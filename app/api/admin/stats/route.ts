@@ -26,7 +26,7 @@ export async function GET() {
       pendingPayments,
     ] = await prisma.$transaction([
       prisma.user.count(),
-      prisma.user.count({ where: { role: "DOCTOR" } }),
+      prisma.user.count({ where: { role: "DOCTOR", doctorProfile: { approvalStatus: "APPROVED" } } }), // só credenciados (igual ao painel)
       prisma.user.count({ where: { role: "PATIENT" } }),
       prisma.consultation.count(),
       prisma.payment.aggregate({
