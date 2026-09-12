@@ -32,16 +32,34 @@ export function ChatPanel({
   const [sending,  setSending]  = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // load history
+  // load history + polling de 5s. O SSE abaixo depende de pg NOTIFY, que
+  // não entrega em produção (Neon/Vercel): sem o polling, mensagem do outro
+  // lado (ex.: paciente pelo app) só aparecia ao recarregar a página.
+  // Mensagens já na lista (inclusive as otimistas) não são duplicadas.
   useEffect(() => {
-    void (async () => {
-      const r = await fetch(`/api/consultations/${consultationId}/messages?take=100`, { cache: "no-store" });
-      if (r.ok) {
-        const data = await r.json();
-        setMessages(data.messages);
+    let alive = true;
+    async function load() {
+      try {
+        const r = await fetch(`/api/consultations/${consultationId}/messages?take=100`, { cache: "no-store" });
+        if (!r.ok || !alive) return;
+        const data = (await r.json()) as { messages: Message[] };
+        setMessages((prev) => {
+          const pending = prev.filter((m) => m.id.startsWith("tmp-"));
+          const known   = new Set(data.messages.map((m) => m.id));
+          const extra   = prev.filter((m) => !m.id.startsWith("tmp-") && !known.has(m.id));
+          return [...data.messages, ...extra, ...pending];
+        });
+      } catch {
+        // sem rede: mantém o que tinha
       }
-    })();
-  }, [consultationId]);
+    }
+    void load();
+    const t = setInterval(load, disabled ? 30_000 : 5_000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [consultationId, disabled]);
 
   // realtime
   useSse(`/api/realtime/consultation/${consultationId}`, {
@@ -84,7 +102,16 @@ export function ChatPanel({
       if (!r.ok) {
         // rollback optimistic
         setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+        return;
       }
+      // Troca a otimista pela real (senão o polling/SSE traria a mesma
+      // mensagem de novo e ela apareceria duplicada pra quem enviou).
+      const saved = (await r.json()) as Message;
+      setMessages((prev) =>
+        prev.some((m) => m.id === saved.id)
+          ? prev.filter((m) => m.id !== optimisticId)
+          : prev.map((m) => (m.id === optimisticId ? saved : m)),
+      );
     } finally {
       setSending(false);
     }

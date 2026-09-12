@@ -61,15 +61,20 @@ export function ConsultationRoom(p: Props) {
     return () => clearInterval(i);
   }, []);
 
-  // Médico: polling do lastSeen do paciente a cada 15s (não tem SSE específico)
+  // Polling a cada 15s enquanto em andamento. Médico: lastSeen do paciente.
+  // Os dois lados: status — o SSE abaixo depende de pg NOTIFY, que não
+  // entrega em produção, então sem isso o paciente ficava na sala "em
+  // andamento" depois de o médico encerrar (e o médico, se o paciente
+  // cancelasse pelo app).
   useEffect(() => {
-    if (!p.isDoctor || status !== "IN_PROGRESS") return;
+    if (status !== "IN_PROGRESS") return;
     const poll = async () => {
       try {
         const r = await fetch(`/api/queue/position?id=${p.consultationId}`, { cache: "no-store" });
         if (!r.ok) return;
-        const data = await r.json();
-        if (data.patientLastSeenAt) setPatientLastSeen(data.patientLastSeenAt);
+        const data = await r.json() as { status?: string; patientLastSeenAt?: string | null };
+        if (p.isDoctor && data.patientLastSeenAt) setPatientLastSeen(data.patientLastSeenAt);
+        if (data.status && data.status !== "IN_PROGRESS") setStatus("COMPLETED");
       } catch {}
     };
     void poll();
