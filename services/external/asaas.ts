@@ -22,10 +22,21 @@ async function asaasRequest<T>(
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    // Asaas responde { errors: [{ code, description }] }; sem chave configurada
+    // vem 401 sem corpo. Antes só se lia `description` na raiz e todo erro
+    // virava o genérico "Erro na integração..." — impossível diagnosticar.
+    const body = (await res.json().catch(() => ({}))) as {
+      description?: string;
+      errors?: { code?: string; description?: string }[];
+    };
+    const detail = body.errors?.[0]?.description ?? body.description;
+    console.error(`[asaas] ${options?.method ?? "GET"} ${path} -> ${res.status}`, body);
     throw new PaymentError(
-      (body as { description?: string }).description ??
-        "Erro na integração com gateway de pagamento",
+      detail
+        ? `Gateway de pagamento: ${detail}`
+        : res.status === 401
+          ? "Gateway de pagamento não configurado (chave do Asaas ausente ou inválida)"
+          : "Erro na integração com gateway de pagamento",
     );
   }
 
