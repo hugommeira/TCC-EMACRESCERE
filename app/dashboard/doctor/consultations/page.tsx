@@ -112,7 +112,7 @@ export default async function DoctorConsultationsPage({
                       {new Intl.DateTimeFormat("pt-BR", {
                         day: "2-digit", month: "2-digit", year: "2-digit",
                         hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo",
-                      }).format(c.createdAt)}
+                      }).format(c.scheduledAt ?? c.createdAt)}
                     </td>
                     <td data-label="Paciente" className="px-5 py-3.5 font-medium text-slate-900">
                       {c.patient.name}

@@ -45,6 +45,15 @@ export function DoctorConsultationActions({ consultationId, status }: Props) {
     );
   }
 
-  // Demais (waiting/scheduled) — não tem ação direta aqui
-  return null;
+  // Agendada / em espera → página da consulta (onde ficam "Chamar paciente",
+  // "Iniciar", "Cancelar"). Antes retornava null e o médico não tinha como
+  // chegar lá a partir da lista.
+  return (
+    <Link
+      href={`/dashboard/doctor/consultations/${consultationId}` as Route}
+      className="text-sm font-medium text-brand-700 hover:underline"
+    >
+      Abrir →
+    </Link>
+  );
 }
