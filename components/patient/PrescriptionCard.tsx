@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SectionCard } from "@/components/layout/DashboardShell";
 import { PrescriptionPdfModal } from "@/components/consulta/PrescriptionPdfModal";
+import { doctorTitle } from "@/lib/utils";
 
 interface Item {
   id:             string;
@@ -36,7 +37,7 @@ const PT_D  = new Intl.DateTimeFormat("pt-BR");
 export function PatientPrescriptionCard({ prescription }: { prescription: Prescription }) {
   const [open, setOpen] = useState(false);
   const subtitle = prescription.doctor
-    ? `Dr(a). ${prescription.doctor.name}${prescription.doctor.crm ? ` · CRM ${prescription.doctor.crm}/${prescription.doctor.crmState ?? ""}` : ""}`
+    ? `${doctorTitle(prescription.doctor.name)}${prescription.doctor.crm ? ` · CRM ${prescription.doctor.crm}/${prescription.doctor.crmState ?? ""}` : ""}`
     : "Médico";
 
   return (

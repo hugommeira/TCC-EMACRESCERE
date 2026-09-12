@@ -3,7 +3,7 @@ import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
 import { prisma }           from "@/lib/prisma";
 import { ConsultationStatusBadge, PaymentStatusBadge } from "@/components/ui/Badge";
 import { Avatar }           from "@/components/ui/Avatar";
-import { formatDateTime, formatCurrency } from "@/lib/utils";
+import { formatDateTime, formatCurrency , doctorTitle } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Consultas – Admin" };
@@ -47,7 +47,7 @@ export default async function AdminConsultationsPage() {
                       <span className="font-medium text-gray-800">{c.patient.name}</span>
                     </div>
                   </td>
-                  <td data-label="Médico" className="px-4 py-3 text-gray-600">{c.doctor ? `Dr(a). ${c.doctor.name}` : "—"}</td>
+                  <td data-label="Médico" className="px-4 py-3 text-gray-600">{c.doctor ? `${doctorTitle(c.doctor.name)}` : "—"}</td>
                   <td data-label="Data" className="px-4 py-3 text-gray-600 whitespace-nowrap">
                     {c.scheduledAt ? formatDateTime(c.scheduledAt) : formatDateTime(c.createdAt)}
                   </td>

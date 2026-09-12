@@ -1,5 +1,5 @@
 import { Badge }          from "@/components/ui/Badge";
-import { formatDate }     from "@/lib/utils";
+import { formatDate , doctorTitle }     from "@/lib/utils";
 import { APP_NAME }       from "@/lib/constants";
 import type { Prescription } from "@prisma/client";
 
@@ -35,7 +35,7 @@ export function PrescriptionView({
             <span className="text-2xl font-bold text-brand-600">{APP_NAME}</span>
             <span className="text-xs text-gray-400">Receituário Digital</span>
           </div>
-          <p className="text-sm text-gray-600">Dr(a). {doctorName}</p>
+          <p className="text-sm text-gray-600">{doctorTitle(doctorName)}</p>
           {doctorCrm && (
             <p className="text-xs text-gray-400">CRM {doctorCrm}</p>
           )}

@@ -3,7 +3,7 @@ import { Card }   from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConsultationStatusBadge, PaymentStatusBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { formatDateTime, formatCurrency } from "@/lib/utils";
+import { formatDateTime, formatCurrency, doctorTitle } from "@/lib/utils";
 import type { ConsultationWithParties } from "@/types";
 
 interface ConsultationCardProps {
@@ -13,7 +13,7 @@ interface ConsultationCardProps {
 
 export function ConsultationCard({ consultation, role }: ConsultationCardProps) {
   const other    = role === "patient" ? consultation.doctor : consultation.patient;
-  const prefix   = role === "patient" ? "Dr(a)." : "";
+
   const isActive =
     consultation.status === "IN_PROGRESS" ||
     consultation.status === "WAITING";
@@ -33,7 +33,7 @@ export function ConsultationCard({ consultation, role }: ConsultationCardProps) 
           <Avatar name={otherName} {...(otherAvatarUrl ? { src: otherAvatarUrl } : {})} size="md" />
           <div className="min-w-0">
             <p className="font-semibold text-gray-900 truncate">
-              {prefix} {otherName}
+              {role === "patient" && other ? doctorTitle(otherName) : otherName}
             </p>
             <p className="text-sm text-gray-500">
               {dateLabel}

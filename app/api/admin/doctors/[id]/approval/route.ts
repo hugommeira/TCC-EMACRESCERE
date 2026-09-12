@@ -6,6 +6,7 @@ import { toApiError, ForbiddenError } from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { getClientIp }     from "@/lib/security";
 import { decideDoctorApproval } from "@/services/api/user";
+import { doctorTitle } from "@/lib/utils";
 
 const schema = z.object({
   decision: z.enum(["APPROVED", "REJECTED"]),
@@ -64,7 +65,7 @@ export async function POST(
         approvedAt:     updated.approvedAt,
       },
       message: parsed.data.decision === "APPROVED"
-        ? `Dr(a). ${updated.user.name} credenciado(a)`
+        ? `${doctorTitle(updated.user.name)} credenciado(a)`
         : `Cadastro de ${updated.user.name} reprovado`,
     });
   } catch (error) {

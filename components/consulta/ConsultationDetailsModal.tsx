@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { PrescriptionPdfModal } from "@/components/consulta/PrescriptionPdfModal";
+import { doctorTitle } from "@/lib/utils";
 
 interface Attachment {
   id:          string;
@@ -175,7 +176,7 @@ export function ConsultationDetailsModal({ open, onClose, consultationId, forPat
             </h2>
             {data?.doctor && (
               <p className="truncate text-xs text-slate-500">
-                Dr(a). {data.doctor.name}
+                {doctorTitle(data.doctor.name)}
                 {data.doctor.doctorProfile && (
                   <> · CRM {data.doctor.doctorProfile.crm}/{data.doctor.doctorProfile.crmState}</>
                 )}

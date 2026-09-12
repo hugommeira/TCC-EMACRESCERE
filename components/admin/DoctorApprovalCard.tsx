@@ -7,6 +7,7 @@ import { Badge }   from "@/components/ui/Badge";
 import { Button }  from "@/components/ui/Button";
 import { toast }   from "@/components/ui/Toast";
 import { confirmDialog } from "@/components/ui/ConfirmDialog";
+import { doctorTitle } from "@/lib/utils";
 
 export interface DoctorForApproval {
   id:        string;
@@ -56,7 +57,7 @@ export function DoctorApprovalCard({ doctor }: { doctor: DoctorForApproval }) {
   async function decide(decision: "APPROVED" | "REJECTED") {
     if (decision === "APPROVED") {
       const ok = await confirmDialog({
-        title:        `Credenciar Dr(a). ${doctor.name}?`,
+        title:        `Credenciar ${doctorTitle(doctor.name)}?`,
         message:      `CRM ${p.crm}/${p.crmState} · ${p.specialty}. O médico passa a atender e a aparecer para os pacientes.`,
         confirmLabel: "Aprovar",
         tone:         "primary",
@@ -92,7 +93,7 @@ export function DoctorApprovalCard({ doctor }: { doctor: DoctorForApproval }) {
       <div className="flex items-center gap-3">
         <Avatar name={doctor.name} src={doctor.avatarUrl} size="md" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 truncate">Dr(a). {doctor.name}</p>
+          <p className="font-semibold text-gray-900 truncate">{doctorTitle(doctor.name)}</p>
           <p className="text-sm text-gray-500 truncate">{p.specialty}</p>
         </div>
       </div>

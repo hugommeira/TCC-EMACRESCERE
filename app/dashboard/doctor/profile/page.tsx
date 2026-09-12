@@ -7,6 +7,7 @@ import {
 } from "@/components/layout/DashboardShell";
 import { DoctorProfileForm }      from "@/components/doctor/DoctorProfileForm";
 import { DoctorScheduleEditor }   from "@/components/doctor/DoctorScheduleEditor";
+import { doctorTitle } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Meu perfil" };
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ export default async function DoctorProfilePage() {
     <DashboardShell>
       <PageHeader
         badge="Perfil médico"
-        title={`Dr(a). ${user.name}`}
+        title={`${doctorTitle(user.name)}`}
         description={`${profile.specialty}${profile.subSpecialty ? ` · ${profile.subSpecialty}` : ""}`}
       />
 

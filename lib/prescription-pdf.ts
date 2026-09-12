@@ -1,6 +1,7 @@
 import "server-only";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { PDFFont } from "pdf-lib";
+import { doctorTitle } from "@/lib/utils";
 
 export interface PrescriptionData {
   // Receita
@@ -92,7 +93,7 @@ function wrap(text: string, maxChars: number): string[] {
 export async function generatePrescriptionPdf(data: PrescriptionData): Promise<Buffer> {
   const pdf = await PDFDocument.create();
   pdf.setTitle(`Receita ${data.prescriptionId}`);
-  pdf.setAuthor(`Dr(a). ${data.doctorName} — CRM ${data.doctorCrm}/${data.doctorCrmState}`);
+  pdf.setAuthor(`${doctorTitle(data.doctorName)} — CRM ${data.doctorCrm}/${data.doctorCrmState}`);
   pdf.setSubject(TYPE_LABELS[data.type]);
   pdf.setCreator("Emacrescere — Plataforma de Telessaúde");
   pdf.setProducer("Emacrescere");
@@ -170,7 +171,7 @@ function drawPage(
   // ─── MÉDICO ────────────────────────────────────────────────────────────────
   page.drawText("MÉDICO ASSISTENTE", { x: margin, y, size: 7, font: fonts.fontBold, color: slate600 });
   y -= 12;
-  page.drawText(`Dr(a). ${data.doctorName}`, { x: margin, y, size: 11, font: fonts.fontBold, color: slate900 });
+  page.drawText(`${doctorTitle(data.doctorName)}`, { x: margin, y, size: 11, font: fonts.fontBold, color: slate900 });
   y -= 13;
   page.drawText(
     `CRM ${data.doctorCrm}/${data.doctorCrmState}${data.doctorSpecialty ? "  ·  " + data.doctorSpecialty : ""}`,
@@ -298,7 +299,7 @@ function drawPage(
   page.drawText("Assinatura digital ICP-Brasil:", {
     x: margin, y: footerY + 20, size: 8, font: fonts.fontBold, color: slate900,
   });
-  page.drawText(`Dr(a). ${data.doctorName} — CRM ${data.doctorCrm}/${data.doctorCrmState}`, {
+  page.drawText(`${doctorTitle(data.doctorName)} — CRM ${data.doctorCrm}/${data.doctorCrmState}`, {
     x: margin, y: footerY + 8, size: 8, font: fonts.font, color: slate900,
   });
 

@@ -9,6 +9,7 @@ import { Input }        from "@/components/ui/Input";
 import { Alert }        from "@/components/ui/Alert";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import type { UserWithProfile } from "@/types";
+import { doctorTitle } from "@/lib/utils";
 
 type Step = "doctor" | "datetime" | "complaint" | "payment" | "done";
 
@@ -177,7 +178,7 @@ export function ScheduleWizard() {
 
         <div className="card space-y-4">
           <p className="text-sm text-gray-500">
-            Agendando com <span className="font-semibold text-gray-800">Dr(a). {selectedDoctor.name}</span>
+            Agendando com <span className="font-semibold text-gray-800">{doctorTitle(selectedDoctor.name)}</span>
           </p>
 
           <Input

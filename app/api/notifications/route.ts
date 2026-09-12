@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth }          from "@/lib/auth";
 import { prisma }        from "@/lib/prisma";
 import { toApiError }    from "@/lib/errors";
+import { doctorTitle } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -116,7 +117,7 @@ export async function GET() {
           items.push({
             id: `c-${c.id}-live`, tone: "brand",
             title: "Sua consulta está em andamento",
-            text:  c.doctor ? `Dr(a). ${c.doctor.name} está te atendendo.` : "Entre na sala.",
+            text:  c.doctor ? `${doctorTitle(c.doctor.name)} está te atendendo.` : "Entre na sala.",
             href:  `/consulta/${c.id}`,
           });
         } else if (c.status === "WAITING") {

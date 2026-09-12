@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSse } from "@/lib/hooks/useSse";
+import { doctorTitle } from "@/lib/utils";
 
 interface Message {
   id:       string;
@@ -114,7 +115,7 @@ export function ChatPanel({
               >
                 {!mine && (
                   <p className="text-[10px] font-semibold opacity-70">
-                    {m.sender.role === "DOCTOR" ? `Dr(a). ${m.sender.name}` : m.sender.name}
+                    {m.sender.role === "DOCTOR" ? `${doctorTitle(m.sender.name)}` : m.sender.name}
                   </p>
                 )}
                 <p className="whitespace-pre-wrap break-words">{m.content}</p>

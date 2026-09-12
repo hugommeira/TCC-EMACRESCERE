@@ -5,7 +5,7 @@ import { Button }      from "@/components/ui/Button";
 import { Input }       from "@/components/ui/Input";
 import { Alert }       from "@/components/ui/Alert";
 import { Card }        from "@/components/ui/Card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency , doctorTitle } from "@/lib/utils";
 import type { PaymentMethod } from "@prisma/client";
 
 interface CheckoutFormProps {
@@ -101,7 +101,7 @@ export function CheckoutForm({
     return (
       <div className="space-y-4">
         <div className="rounded-lg bg-brand-50 border border-brand-100 p-4">
-          <p className="text-sm text-brand-700">Consulta com Dr(a). {doctorName}</p>
+          <p className="text-sm text-brand-700">Consulta com {doctorTitle(doctorName)}</p>
           <p className="text-2xl font-bold text-brand-900 mt-1">{formatCurrency(amount)}</p>
         </div>
 

@@ -8,7 +8,7 @@ import {
   StatCard,
   SectionCard,
 } from "@/components/layout/DashboardShell";
-import { formatCurrency, startOfTodayInAppTimeZone } from "@/lib/utils";
+import { formatCurrency, startOfTodayInAppTimeZone , doctorTitle } from "@/lib/utils";
 import Link               from "next/link";
 
 export const metadata: Metadata = { title: "Admin – Visão geral" };
@@ -203,7 +203,7 @@ export default async function AdminDashboardPage() {
               {recentConsultations.map((c) => (
                 <tr key={c.id} className="transition-colors hover:bg-slate-50/50">
                   <td data-label="Paciente" className="px-5 py-3.5 font-medium text-slate-900">{c.patient.name}</td>
-                  <td data-label="Médico" className="px-5 py-3.5 text-slate-600">{c.doctor ? `Dr(a). ${c.doctor.name}` : "—"}</td>
+                  <td data-label="Médico" className="px-5 py-3.5 text-slate-600">{c.doctor ? `${doctorTitle(c.doctor.name)}` : "—"}</td>
                   <td data-label="Status" className="px-5 py-3.5">
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${

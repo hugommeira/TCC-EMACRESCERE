@@ -9,7 +9,7 @@ import {
   EmptyState,
 } from "@/components/layout/DashboardShell";
 import { ConsultationCard } from "@/components/patient/ConsultationCard";
-import { formatCurrency }   from "@/lib/utils";
+import { formatCurrency, doctorTitle, doctorFirstName, greetingFor } from "@/lib/utils";
 import Link                 from "next/link";
 
 export const metadata: Metadata = { title: "Painel Médico" };
@@ -85,13 +85,13 @@ export default async function DoctorDashboardPage() {
       }),
     ]);
 
-  const firstName = session.user.name.split(" ")[0] ?? session.user.name;
+  const firstName = doctorFirstName(session.user.name);
 
   return (
     <DashboardShell>
       <PageHeader
         badge="Painel médico"
-        title={`Bom dia, Dr(a). ${firstName}`}
+        title={`${greetingFor()}, ${doctorTitle(firstName)}`}
         description="Sua agenda e atendimentos do dia."
         action={
           <Link

@@ -10,7 +10,7 @@ import { Card, CardTitle } from "@/components/ui/Card";
 import { Avatar }         from "@/components/ui/Avatar";
 import { Button }         from "@/components/ui/Button";
 import { PrescriptionView } from "@/components/prescription/PrescriptionView";
-import { formatDateTime, formatCurrency } from "@/lib/utils";
+import { formatDateTime, formatCurrency , doctorTitle } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Detalhes da consulta" };
 
@@ -49,7 +49,7 @@ export default async function ConsultationDetailPage({ params }: Props) {
               <div className="flex items-center gap-3">
                 <Avatar name={doctor.name} src={doctor.avatarUrl} size="lg" />
                 <div>
-                  <p className="font-semibold text-gray-900">Dr(a). {doctor.name}</p>
+                  <p className="font-semibold text-gray-900">{doctorTitle(doctor.name)}</p>
                   <p className="text-sm text-gray-500">{doctor.doctorProfile?.specialty}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
                     CRM {doctor.doctorProfile?.crm}/{doctor.doctorProfile?.crmState}

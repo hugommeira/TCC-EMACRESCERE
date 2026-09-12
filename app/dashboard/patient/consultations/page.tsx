@@ -8,7 +8,7 @@ import {
 import { HistoryFilters } from "@/components/history/HistoryFilters";
 import { Pagination }     from "@/components/history/Pagination";
 import { PatientConsultationActions } from "@/components/patient/PatientConsultationsActions";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency , doctorTitle } from "@/lib/utils";
 import Link from "next/link";
 import type { ConsultationStatus } from "@prisma/client";
 
@@ -115,7 +115,7 @@ export default async function PatientConsultationsPage({
                       }).format(c.createdAt)}
                     </td>
                     <td data-label="Médico" className="px-5 py-3.5 font-medium text-slate-900">
-                      {c.doctor ? `Dr(a). ${c.doctor.name}` : <span className="text-slate-400">Aguardando</span>}
+                      {c.doctor ? `${doctorTitle(c.doctor.name)}` : <span className="text-slate-400">Aguardando</span>}
                     </td>
                     <td data-label="Queixa" className="max-w-xs truncate px-5 py-3.5 text-slate-600">
                       {c.chiefComplaint ?? "—"}

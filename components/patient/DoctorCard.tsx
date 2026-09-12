@@ -2,7 +2,7 @@ import { Avatar }  from "@/components/ui/Avatar";
 import { Button }  from "@/components/ui/Button";
 import { Badge }   from "@/components/ui/Badge";
 import { Card }    from "@/components/ui/Card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency , doctorTitle } from "@/lib/utils";
 import type { UserWithProfile } from "@/types";
 
 interface DoctorCardProps {
@@ -26,7 +26,7 @@ export function DoctorCard({ doctor, onSelect, selected }: DoctorCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="font-semibold text-gray-900">Dr(a). {doctor.name}</p>
+              <p className="font-semibold text-gray-900">{doctorTitle(doctor.name)}</p>
               <p className="text-sm text-gray-500">{profile.specialty}</p>
               {profile.subSpecialty && (
                 <p className="text-xs text-gray-400">{profile.subSpecialty}</p>

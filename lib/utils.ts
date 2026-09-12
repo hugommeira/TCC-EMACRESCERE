@@ -109,3 +109,34 @@ export function sleep(ms: number): Promise<void> {
 export function generateRoomToken(): string {
   return crypto.randomUUID().replace(/-/g, "");
 }
+
+// ─── Nome de médico ───────────────────────────────────────────────────────────
+
+const DOCTOR_PREFIX_RE = /^dr\.?a?\.?\s+/i;
+
+/**
+ * "Dr(a). Nome" — sem duplicar quando o nome cadastrado já vem com
+ * "Dr."/"Dra." (ex.: o médico do seed é "Dr. João Silva", que virava
+ * "Dr(a). Dr. João Silva" em todas as telas).
+ */
+export function doctorTitle(name: string | null | undefined): string {
+  const n = (name ?? "").trim();
+  if (!n) return "";
+  return DOCTOR_PREFIX_RE.test(n) ? n : `Dr(a). ${n}`;
+}
+
+/** Primeiro nome do médico, ignorando um "Dr."/"Dra." à frente. */
+export function doctorFirstName(name: string | null | undefined): string {
+  const n = (name ?? "").trim().replace(DOCTOR_PREFIX_RE, "");
+  return n.split(/\s+/)[0] ?? n;
+}
+
+/** "Bom dia" / "Boa tarde" / "Boa noite" no fuso do app. */
+export function greetingFor(date: Date = new Date()): string {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: APP_TIME_ZONE }).format(date),
+  ) % 24;
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
+}

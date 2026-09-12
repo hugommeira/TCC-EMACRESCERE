@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSse } from "@/lib/hooks/useSse";
+import { doctorTitle, doctorFirstName } from "@/lib/utils";
 
 interface Prontuario {
   chiefComplaint: string | null;
@@ -256,7 +257,7 @@ function SaveBadge({
         {isDoctor
           ? `Salvo ${relative}`
           : updatedBy
-            ? `Atualizado ${relative} por Dr(a). ${updatedBy.split(" ")[0]}`
+            ? `Atualizado ${relative} por ${doctorTitle(doctorFirstName(updatedBy))}`
             : `Atualizado ${relative}`}
       </span>
     );
