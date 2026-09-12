@@ -42,17 +42,17 @@ export function DoctorPrescriptionRow({ row }: { row: DoctorPrescriptionRowData 
   return (
     <>
       <tr className="border-b border-slate-100 hover:bg-slate-50/40">
-        <td className="px-5 py-3.5 text-xs text-slate-600">{row.createdAt}</td>
-        <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{row.patientName}</td>
-        <td className="px-5 py-3.5 text-xs text-slate-600">{row.typeLabel}</td>
-        <td className="px-5 py-3.5 text-xs text-slate-700">{row.items.length} medicamento(s)</td>
-        <td className="px-5 py-3.5">
+        <td data-label="Data" className="px-5 py-3.5 text-xs text-slate-600">{row.createdAt}</td>
+        <td data-label="Paciente" className="px-5 py-3.5 text-sm font-medium text-slate-900">{row.patientName}</td>
+        <td data-label="Tipo" className="px-5 py-3.5 text-xs text-slate-600">{row.typeLabel}</td>
+        <td data-label="Itens" className="px-5 py-3.5 text-xs text-slate-700">{row.items.length} medicamento(s)</td>
+        <td data-label="Status" className="px-5 py-3.5">
           <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${STATUS_RING[row.status]}`}>
             <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
             {STATUS_LABEL[row.status]}
           </span>
         </td>
-        <td className="px-5 py-3.5 text-right">
+        <td data-label="Ações" className="px-5 py-3.5 text-right">
           <div className="inline-flex items-center gap-1.5">
             <button
               type="button"

@@ -44,7 +44,7 @@ export default async function AdminCertificatesPage() {
         />
       ) : (
         <SectionCard title={`${certs.length} certificado(s)`} className="overflow-hidden">
-          <div className="-mx-5 -mt-5 -mb-5 overflow-x-auto">
+          <div className="-mx-5 -mt-5 -mb-5 overflow-x-auto table-responsive">
             <table className="w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
@@ -60,18 +60,18 @@ export default async function AdminCertificatesPage() {
                   const expired = c.validTo ? c.validTo < new Date() : false;
                   return (
                     <tr key={c.id} className="hover:bg-slate-50/40">
-                      <td className="px-5 py-3.5">
+                      <td data-label="Médico" className="px-5 py-3.5">
                         <p className="text-sm font-medium text-slate-900">{c.doctor.name}</p>
                         <p className="text-xs text-slate-500">{c.doctor.email}</p>
                       </td>
-                      <td className="px-5 py-3.5 text-xs text-slate-700">{c.subjectCN ?? "—"}</td>
-                      <td className="px-5 py-3.5 text-xs text-slate-600">{c.issuerCN ?? "—"}</td>
-                      <td className="px-5 py-3.5 text-xs text-slate-600">
+                      <td data-label="Titular (CN)" className="px-5 py-3.5 text-xs text-slate-700">{c.subjectCN ?? "—"}</td>
+                      <td data-label="Emissor" className="px-5 py-3.5 text-xs text-slate-600">{c.issuerCN ?? "—"}</td>
+                      <td data-label="Validade" className="px-5 py-3.5 text-xs text-slate-600">
                         {c.validFrom && c.validTo
                           ? `${PT_BR_DATE.format(c.validFrom)} → ${PT_BR_DATE.format(c.validTo)}`
                           : "—"}
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td data-label="Status" className="px-5 py-3.5">
                         {expired ? (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-medium text-rose-700 ring-1 ring-rose-200">
                             <span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> Expirado

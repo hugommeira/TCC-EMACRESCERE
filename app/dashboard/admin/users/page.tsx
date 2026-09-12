@@ -43,7 +43,7 @@ export default async function AdminUsersPage({
       />
 
       <div className="card overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto table-responsive">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>
@@ -59,7 +59,7 @@ export default async function AdminUsersPage({
                 const rb = roleBadge[u.role];
                 return (
                   <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
+                    <td data-label="Usuário" className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar name={u.name} src={u.avatarUrl} size="sm" />
                         <div>
@@ -68,7 +68,7 @@ export default async function AdminUsersPage({
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td data-label="Role" className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-1">
                         <Badge variant={rb.variant}>{rb.label}</Badge>
                         {/* Médico só é "ativo de verdade" depois do credenciamento */}
@@ -80,16 +80,16 @@ export default async function AdminUsersPage({
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">
+                    <td data-label="CPF" className="px-4 py-3 text-gray-600 font-mono text-xs">
                       {u.cpf ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td data-label="Telefone" className="px-4 py-3 text-gray-600">
                       {u.phone ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">
+                    <td data-label="Cadastro" className="px-4 py-3 text-gray-500">
                       {formatDate(u.createdAt)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td data-label="Status" className="px-4 py-3">
                       <UserActiveToggle
                         userId={u.id}
                         name={u.name}

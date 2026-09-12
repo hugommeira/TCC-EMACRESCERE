@@ -27,7 +27,7 @@ export default async function AdminConsultationsPage() {
       />
 
       <div className="card overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto table-responsive">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>
@@ -41,27 +41,27 @@ export default async function AdminConsultationsPage() {
             <tbody className="divide-y divide-gray-100">
               {consultations.map((c) => (
                 <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
+                  <td data-label="Paciente" className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Avatar name={c.patient.name} size="xs" />
                       <span className="font-medium text-gray-800">{c.patient.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{c.doctor ? `Dr(a). ${c.doctor.name}` : "—"}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                  <td data-label="Médico" className="px-4 py-3 text-gray-600">{c.doctor ? `Dr(a). ${c.doctor.name}` : "—"}</td>
+                  <td data-label="Data" className="px-4 py-3 text-gray-600 whitespace-nowrap">
                     {c.scheduledAt ? formatDateTime(c.scheduledAt) : formatDateTime(c.createdAt)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td data-label="Status" className="px-4 py-3">
                     <ConsultationStatusBadge status={c.status} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td data-label="Pagamento" className="px-4 py-3">
                     {c.payment ? (
                       <PaymentStatusBadge status={c.payment.status} />
                     ) : (
                       <span className="text-gray-400 text-xs">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-900">
+                  <td data-label="Valor" className="px-4 py-3 font-medium text-gray-900">
                     {c.payment ? formatCurrency(Number(c.payment.amount)) : "—"}
                   </td>
                 </tr>

@@ -89,7 +89,7 @@ export default async function AdminPrescriptionsPage({
         />
       ) : (
         <SectionCard title="Histórico de receitas" className="overflow-hidden">
-          <div className="-mx-5 -mt-5 -mb-5 overflow-x-auto">
+          <div className="-mx-5 -mt-5 -mb-5 overflow-x-auto table-responsive">
             <table className="w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
@@ -104,14 +104,14 @@ export default async function AdminPrescriptionsPage({
               <tbody className="divide-y divide-slate-100">
                 {items.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/40">
-                    <td className="px-5 py-3.5 text-xs text-slate-600">
+                    <td data-label="Data" className="px-5 py-3.5 text-xs text-slate-600">
                       {new Intl.DateTimeFormat("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit", timeZone: "America/Sao_Paulo" }).format(p.createdAt)}
                     </td>
-                    <td className="px-5 py-3.5 text-sm text-slate-900">{p.consultation.doctor?.name ?? "—"}</td>
-                    <td className="px-5 py-3.5 text-sm text-slate-700">{p.consultation.patient.name}</td>
-                    <td className="px-5 py-3.5 text-xs text-slate-600">{TYPE_LABELS[p.type] ?? p.type}</td>
-                    <td className="px-5 py-3.5 text-xs text-slate-700">{p.items.length}</td>
-                    <td className="px-5 py-3.5">
+                    <td data-label="Médico" className="px-5 py-3.5 text-sm text-slate-900">{p.consultation.doctor?.name ?? "—"}</td>
+                    <td data-label="Paciente" className="px-5 py-3.5 text-sm text-slate-700">{p.consultation.patient.name}</td>
+                    <td data-label="Tipo" className="px-5 py-3.5 text-xs text-slate-600">{TYPE_LABELS[p.type] ?? p.type}</td>
+                    <td data-label="Itens" className="px-5 py-3.5 text-xs text-slate-700">{p.items.length}</td>
+                    <td data-label="Status" className="px-5 py-3.5">
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${STATUS_RING[p.status] ?? "bg-slate-100 text-slate-700 ring-slate-200"}`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-current" />
                         {p.status}

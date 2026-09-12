@@ -72,7 +72,7 @@ export default async function DoctorPrescriptionsPage({
         />
       ) : (
         <SectionCard title="Receitas" className="overflow-hidden">
-          <div className="-mx-5 -mt-5 -mb-5 overflow-x-auto">
+          <div className="-mx-5 -mt-5 -mb-5 overflow-x-auto table-responsive">
             <table className="w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>

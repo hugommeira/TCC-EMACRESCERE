@@ -93,7 +93,7 @@ export default async function DoctorConsultationsPage({
         />
       ) : (
         <SectionCard title="Atendimentos" className="overflow-hidden">
-          <div className="-mx-5 -mt-5 -mb-5 overflow-x-auto">
+          <div className="-mx-5 -mt-5 -mb-5 overflow-x-auto table-responsive">
             <table className="w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
@@ -108,28 +108,28 @@ export default async function DoctorConsultationsPage({
               <tbody className="divide-y divide-slate-100">
                 {items.map((c) => (
                   <tr key={c.id} className="transition-colors hover:bg-slate-50/40">
-                    <td className="px-5 py-3.5 text-slate-700">
+                    <td data-label="Data" className="px-5 py-3.5 text-slate-700">
                       {new Intl.DateTimeFormat("pt-BR", {
                         day: "2-digit", month: "2-digit", year: "2-digit",
                         hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo",
                       }).format(c.createdAt)}
                     </td>
-                    <td className="px-5 py-3.5 font-medium text-slate-900">
+                    <td data-label="Paciente" className="px-5 py-3.5 font-medium text-slate-900">
                       {c.patient.name}
                     </td>
-                    <td className="max-w-xs truncate px-5 py-3.5 text-slate-600">
+                    <td data-label="Queixa" className="max-w-xs truncate px-5 py-3.5 text-slate-600">
                       {c.chiefComplaint ?? "—"}
                     </td>
-                    <td className="px-5 py-3.5 text-slate-700">
+                    <td data-label="Receita" className="px-5 py-3.5 text-slate-700">
                       {c.payment ? formatCurrency(Number(c.payment.amount)) : "—"}
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td data-label="Status" className="px-5 py-3.5">
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${STATUS_RING[c.status] ?? "bg-slate-100 text-slate-700 ring-slate-200"}`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
                         {STATUS_LABEL[c.status] ?? c.status}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td data-label="" className="px-5 py-3.5">
                       <DoctorConsultationActions
                         consultationId={c.id}
                         status={c.status}

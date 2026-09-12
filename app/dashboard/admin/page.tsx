@@ -178,7 +178,7 @@ export default async function AdminDashboardPage() {
           </Link>
         }
       >
-        <div className="-mx-5 -mb-5 overflow-x-auto">
+        <div className="-mx-5 -mb-5 overflow-x-auto table-responsive">
           <table className="w-full text-sm">
             <thead className="bg-slate-50">
               <tr>
@@ -202,9 +202,9 @@ export default async function AdminDashboardPage() {
               )}
               {recentConsultations.map((c) => (
                 <tr key={c.id} className="transition-colors hover:bg-slate-50/50">
-                  <td className="px-5 py-3.5 font-medium text-slate-900">{c.patient.name}</td>
-                  <td className="px-5 py-3.5 text-slate-600">{c.doctor ? `Dr(a). ${c.doctor.name}` : "—"}</td>
-                  <td className="px-5 py-3.5">
+                  <td data-label="Paciente" className="px-5 py-3.5 font-medium text-slate-900">{c.patient.name}</td>
+                  <td data-label="Médico" className="px-5 py-3.5 text-slate-600">{c.doctor ? `Dr(a). ${c.doctor.name}` : "—"}</td>
+                  <td data-label="Status" className="px-5 py-3.5">
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${
                         STATUS_STYLES[c.status] ?? "bg-slate-100 text-slate-700 ring-slate-200"
@@ -214,7 +214,7 @@ export default async function AdminDashboardPage() {
                       {STATUS_LABEL[c.status] ?? c.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-xs text-slate-500">
+                  <td data-label="Data" className="px-5 py-3.5 text-xs text-slate-500">
                     {new Intl.DateTimeFormat("pt-BR", {
                       day: "2-digit", month: "2-digit",
                       hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo",

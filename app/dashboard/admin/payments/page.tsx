@@ -41,7 +41,7 @@ export default async function AdminPaymentsPage() {
       </div>
 
       <div className="card overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto table-responsive">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>
@@ -55,23 +55,23 @@ export default async function AdminPaymentsPage() {
             <tbody className="divide-y divide-gray-100">
               {payments.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs text-gray-400">
+                  <td data-label="ID Asaas" className="px-4 py-3 font-mono text-xs text-gray-400">
                     {p.asaasPaymentId ? `${p.asaasPaymentId.slice(0, 8)}…` : "—"}
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-800">
+                  <td data-label="Paciente" className="px-4 py-3 font-medium text-gray-800">
                     {p.consultation.patient.name}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td data-label="Médico" className="px-4 py-3 text-gray-600">
                     {p.consultation.doctor?.name ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{p.method}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-900">
+                  <td data-label="Método" className="px-4 py-3 text-gray-600">{p.method}</td>
+                  <td data-label="Valor" className="px-4 py-3 font-semibold text-gray-900">
                     {formatCurrency(Number(p.amount))}
                   </td>
-                  <td className="px-4 py-3">
+                  <td data-label="Status" className="px-4 py-3">
                     <PaymentStatusBadge status={p.status} />
                   </td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                  <td data-label="Data" className="px-4 py-3 text-gray-500 whitespace-nowrap">
                     {formatDateTime(p.createdAt)}
                   </td>
                 </tr>
