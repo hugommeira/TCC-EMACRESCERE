@@ -5,6 +5,13 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const livekitWss = process.env.NEXT_PUBLIC_LIVEKIT_URL || "";
 const livekitHttp = livekitWss.replace(/^wss:\/\//, "https://").replace(/^ws:\/\//, "http://");
+// LiveKit Cloud redireciona o RTC pra hosts regionais
+// (<projeto>.<regiao>.production.livekit.cloud). Liberar só o host do
+// NEXT_PUBLIC_LIVEKIT_URL barrava a conexão de vídeo por CSP e a sala
+// ficava em "Aguardando paciente" pra sempre.
+const livekitRegional = livekitWss.includes("livekit.cloud")
+  ? "wss://*.livekit.cloud https://*.livekit.cloud"
+  : "";
 
 const csp = [
   "default-src 'self'",
@@ -14,7 +21,7 @@ const csp = [
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://usc1.contabostorage.com",
   // WebSocket LiveKit + APIs same-origin + LiveKit HTTP
-  `connect-src 'self' ${livekitWss} ${livekitHttp} https://usc1.contabostorage.com`.trim(),
+  `connect-src 'self' ${livekitWss} ${livekitHttp} ${livekitRegional} https://usc1.contabostorage.com`.replace(/\s+/g, " ").trim(),
   // LiveKit usa media; permitir blob (vídeo local)
   "media-src 'self' blob:",
   "frame-ancestors 'none'",

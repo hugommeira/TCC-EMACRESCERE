@@ -10,10 +10,10 @@ import { checkOrigin, RL, rateLimit, tooManyRequests } from "@/lib/security";
 export const runtime = "nodejs";
 
 const updateSchema = z.object({
-  chiefComplaint: z.string().max(1000).optional(),
-  diagnosis:      z.string().max(2000).optional(),
-  conduct:        z.string().max(4000).optional(),
-  notes:          z.string().max(4000).optional(),
+  chiefComplaint: z.string().max(1000).nullable().optional(),
+  diagnosis:      z.string().max(2000).nullable().optional(),
+  conduct:        z.string().max(4000).nullable().optional(),
+  notes:          z.string().max(4000).nullable().optional(),
 });
 
 /** Médico edita prontuário. */
@@ -43,7 +43,10 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       return NextResponse.json({ message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors }, { status: 422 });
     }
 
-    const data: Record<string, string> = {};
+    // O painel da sala manda os campos ainda vazios como null (vêm assim do
+    // banco). Antes o schema só aceitava string e o auto-save do prontuário
+    // respondia 422 sempre que algum campo estava em branco.
+    const data: Record<string, string | null> = {};
     if (parsed.data.chiefComplaint !== undefined) data["chiefComplaint"] = parsed.data.chiefComplaint;
     if (parsed.data.diagnosis      !== undefined) data["diagnosis"]      = parsed.data.diagnosis;
     if (parsed.data.conduct        !== undefined) data["conduct"]        = parsed.data.conduct;
