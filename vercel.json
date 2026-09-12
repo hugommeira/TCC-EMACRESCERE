@@ -2,5 +2,15 @@
   "framework": "nextjs",
   "buildCommand": "prisma generate && prisma db push --skip-generate && (tsx prisma/seed-demo.ts || echo seed-demo falhou, seguindo) && next build",
   "installCommand": "npm install",
-  "regions": ["gru1"]
+  "regions": ["gru1"],
+  "headers": [
+    {
+      "source": "/app.apk",
+      "headers": [
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"emacrescere.apk\"" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ]
 }

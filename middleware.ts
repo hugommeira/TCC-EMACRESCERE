@@ -21,6 +21,8 @@ const PUBLIC_ROUTES = [
   "/prescricao",
   "/termos",
   "/privacidade",
+  "/app.apk",      // APK do app (QR code da landing)
+  "/qr-app.svg",
 ];
 
 const ROLE_ROUTES: Record<string, Role[]> = {

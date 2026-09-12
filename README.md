@@ -217,3 +217,19 @@ Cliente                     Servidor
 - [ ] `feature/prescription` – Emissão e visualização de prescrições
 - [ ] `feature/admin-dashboard` – Gestão completa da plataforma
 - [ ] `feature/landing` – Landing page completa
+
+## App Android (APK + QR code)
+
+A landing (`/#app`) mostra um QR code real que aponta para
+`https://tcc-emacrescere.vercel.app/app.apk` (arquivo em `public/app.apk`,
+build arm64 do app Flutter, ~19 MB). Para publicar uma versão nova:
+
+```bash
+# no repo do app
+flutter build apk --release --split-per-abi
+cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../TCC-EMACRESCERE/public/app.apk
+```
+
+Commit + push e a Vercel serve o arquivo (headers em `vercel.json`). O SVG do
+QR (`public/qr-app.svg`) só precisa ser gerado de novo se a URL do site mudar
+(foi gerado com o pacote Dart `qr`, conteúdo = URL acima).

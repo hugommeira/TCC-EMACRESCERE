@@ -10,6 +10,7 @@ import { ForWhom }      from "@/components/landing/ForWhom";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Faq }          from "@/components/landing/Faq";
 import { CtaFinal }     from "@/components/landing/CtaFinal";
+import { DownloadApp }  from "@/components/landing/DownloadApp";
 import { Footer }       from "@/components/landing/Footer";
 
 const roleRedirect: Record<Role, string> = {
@@ -35,6 +36,7 @@ export default async function RootPage() {
       <Benefits />
       <ForWhom />
       <Testimonials />
+      <DownloadApp />
       <Faq />
       <CtaFinal />
       <Footer />

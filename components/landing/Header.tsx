@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "#como-funciona", label: "Como funciona" },
   { href: "#beneficios",    label: "Benefícios" },
   { href: "#para-quem",     label: "Para quem" },
+  { href: "#app",           label: "App" },
   { href: "#faq",           label: "FAQ" },
 ];
 
