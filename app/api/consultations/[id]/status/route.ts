@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
-import { updateConsultationStatus } from "@/services/api/consultation";
+import { updateConsultationStatus , stripPartyPii } from "@/services/api/consultation";
 import { toApiError } from "@/lib/errors";
 import { z } from "zod";
 import type { ConsultationStatus } from "@prisma/client";
@@ -39,7 +39,7 @@ export async function PATCH(
       session.user.id,
     );
 
-    return NextResponse.json({ data: consultation });
+    return NextResponse.json({ data: stripPartyPii(consultation) });
   } catch (error) {
     const err = toApiError(error);
     return NextResponse.json(err, { status: err.status });

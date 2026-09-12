@@ -1,7 +1,7 @@
 import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }            from "@/lib/auth";
-import { cancelConsultation } from "@/services/api/consultation";
+import { cancelConsultation , stripPartyPii } from "@/services/api/consultation";
 import { cancelConsultationSchema } from "@/lib/validations/consultation";
 import { toApiError }      from "@/lib/errors";
 
@@ -29,7 +29,7 @@ export async function POST(
     }
 
     const consultation = await cancelConsultation(session.user.id, parsed.data);
-    return NextResponse.json({ data: consultation });
+    return NextResponse.json({ data: stripPartyPii(consultation) });
   } catch (error) {
     const err = toApiError(error);
     return NextResponse.json(err, { status: err.status });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
-import { getConsultationById } from "@/services/api/consultation";
+import { getConsultationById , stripPartyPii } from "@/services/api/consultation";
 import { toApiError } from "@/lib/errors";
 
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
     }
 
     const consultation = await getConsultationById(params.id, session.user.id);
-    return NextResponse.json({ data: consultation });
+    return NextResponse.json({ data: stripPartyPii(consultation) });
   } catch (error) {
     const err = toApiError(error);
     return NextResponse.json(err, { status: err.status });

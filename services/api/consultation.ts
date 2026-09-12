@@ -233,3 +233,30 @@ export async function cancelConsultation(
     include: { patient: true, doctor: true, payment: true },
   });
 }
+
+// ─── Saída pra API ────────────────────────────────────────────────────────────
+
+/**
+ * Remove o CPF das partes antes de responder pro cliente: paciente não
+ * precisa do CPF do médico (nem vice-versa nas telas do app/site).
+ * Admin tem as rotas /api/admin/* com o dado completo.
+ */
+type WithCpf = { cpf?: string | null } | null | undefined;
+function withoutCpf<U extends WithCpf>(u: U): U {
+  if (!u) return u;
+  const { cpf: _cpf, ...rest } = u;
+  return rest as U;
+}
+
+export function stripPartyPii<
+  T extends { patient?: WithCpf; doctor?: WithCpf; messages?: { sender?: WithCpf }[] },
+>(c: T): T {
+  return {
+    ...c,
+    patient: withoutCpf(c.patient),
+    doctor:  withoutCpf(c.doctor),
+    ...(c.messages
+      ? { messages: c.messages.map((m) => ({ ...m, sender: withoutCpf(m.sender) })) }
+      : {}),
+  };
+}

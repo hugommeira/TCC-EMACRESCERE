@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { scheduleConsultationSchema } from "@/lib/validations/consultation";
-import { scheduleConsultation, listPatientConsultations, listDoctorConsultations } from "@/services/api/consultation";
+import { scheduleConsultation, listPatientConsultations, listDoctorConsultations, stripPartyPii } from "@/services/api/consultation";
 import { toApiError } from "@/lib/errors";
 
 export async function GET(req: NextRequest) {
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         ? await listDoctorConsultations(session.user.id,  { page, limit, status })
         : await listPatientConsultations(session.user.id, { page, limit, status });
 
-    return NextResponse.json({ data: result });
+    return NextResponse.json({ data: { ...result, data: result.data.map(stripPartyPii) } });
   } catch (error) {
     const err = toApiError(error);
     return NextResponse.json(err, { status: err.status });
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const consultation = await scheduleConsultation(session.user.id, parsed.data);
-    return NextResponse.json({ data: consultation }, { status: 201 });
+    return NextResponse.json({ data: stripPartyPii(consultation) }, { status: 201 });
   } catch (error) {
     const err = toApiError(error);
     return NextResponse.json(err, { status: err.status });
