@@ -38,9 +38,16 @@ export async function createOnDemandConsultation(input: {
       scheduledAt: null,
       status:      { in: ["SCHEDULED", "WAITING", "IN_PROGRESS"] },
     },
+    include: { payment: { select: { id: true } } },
   });
   if (active) {
-    throw new ConflictError("Você já tem uma consulta em andamento");
+    // Tentativa anterior em que o gateway falhou antes de criar o payment:
+    // não é um atendimento de verdade, então descarta e segue.
+    if (active.status === "SCHEDULED" && !active.payment) {
+      await discardUnpaidConsultation(active.id);
+    } else {
+      throw new ConflictError("Você já tem uma consulta em andamento");
+    }
   }
 
   return prisma.consultation.create({
@@ -49,6 +56,13 @@ export async function createOnDemandConsultation(input: {
       status:         "SCHEDULED",
       chiefComplaint: input.chiefComplaint,
     },
+  });
+}
+
+/** Remove uma consulta on-demand que nunca chegou a ter pagamento. */
+export async function discardUnpaidConsultation(consultationId: string): Promise<void> {
+  await prisma.consultation.deleteMany({
+    where: { id: consultationId, status: "SCHEDULED", scheduledAt: null, payment: null },
   });
 }
 

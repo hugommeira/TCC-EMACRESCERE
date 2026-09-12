@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { createOnDemandConsultation, CONSULTATION_FEE_REAIS } from "@/services/api/queue";
+import { createOnDemandConsultation, discardUnpaidConsultation, CONSULTATION_FEE_REAIS } from "@/services/api/queue";
 import { initiatePayment } from "@/services/api/payment";
 import { toApiError } from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
@@ -69,14 +69,22 @@ export async function POST(req: NextRequest) {
       chiefComplaint: parsed.data.chiefComplaint,
     });
 
-    // 2. Iniciar pagamento (Asaas)
-    const payment = await initiatePayment({
-      consultationId: consultation.id,
-      patientId:      session.user.id,
-      method:         parsed.data.method,
-      amount:         CONSULTATION_FEE_REAIS,
-      ...(parsed.data.creditCard ? { creditCard: parsed.data.creditCard } : {}),
-    });
+    // 2. Iniciar pagamento (Asaas). Se o gateway falhar, apaga a consulta
+    // recém-criada: antes ela ficava órfã (SCHEDULED sem payment) e o
+    // paciente recebia "Você já tem uma consulta em andamento" pra sempre.
+    let payment;
+    try {
+      payment = await initiatePayment({
+        consultationId: consultation.id,
+        patientId:      session.user.id,
+        method:         parsed.data.method,
+        amount:         CONSULTATION_FEE_REAIS,
+        ...(parsed.data.creditCard ? { creditCard: parsed.data.creditCard } : {}),
+      });
+    } catch (error) {
+      await discardUnpaidConsultation(consultation.id);
+      throw error;
+    }
 
     auditLog({
       actorId:    session.user.id,
