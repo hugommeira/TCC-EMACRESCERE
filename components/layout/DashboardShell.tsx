@@ -79,17 +79,18 @@ export function StatCard({
     <Wrapper
       {...(href ? { href } : {})}
       className={cn(
-        "group rounded-2xl border border-slate-200 p-5 transition-all duration-200",
+        // p-4 no celular (2 cards por linha em 375px): com p-5 o valor "R$ 0,00" cortava.
+        "group rounded-2xl border border-slate-200 p-4 transition-all duration-200 sm:p-5",
         t.bg,
         href ? "cursor-pointer hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md" : "",
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 sm:text-xs">
             {label}
           </p>
-          <p className="mt-2 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+          <p className="mt-2 truncate font-display text-xl font-semibold text-slate-900 sm:text-3xl">
             {value}
           </p>
           {(hint || trend) && (
@@ -121,7 +122,7 @@ export function StatCard({
         {icon && (
           <span
             className={cn(
-              "inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1 ring-inset",
+              "inline-flex h-9 w-9 flex-none items-center justify-center rounded-xl ring-1 ring-inset sm:h-10 sm:w-10",
               t.iconBg,
               t.iconText,
               tone === "brand" ? "ring-brand-100" :

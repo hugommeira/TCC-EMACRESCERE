@@ -95,6 +95,9 @@ export function DoctorApprovalCard({ doctor }: { doctor: DoctorForApproval }) {
           <p className="font-semibold text-gray-900 truncate">Dr(a). {doctor.name}</p>
           <p className="text-sm text-gray-500 truncate">{p.specialty}</p>
         </div>
+      </div>
+      {/* Status numa linha própria: ao lado do nome esmagava o texto no celular */}
+      <div>
         <Badge variant={status.variant} dot>{status.label}</Badge>
       </div>
 
