@@ -76,7 +76,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     const az     = await authorize(id, session.user.id);
     if (!az.ok)  return NextResponse.json({ message: az.msg }, { status: az.code });
     if (az.consultation.status !== "IN_PROGRESS") {
-      return NextResponse.json({ message: "Consulta encerrada" }, { status: 409 });
+      const msg = az.consultation.status === "COMPLETED" || az.consultation.status === "CANCELLED" || az.consultation.status === "NO_SHOW" ? "Consulta encerrada" : "A consulta ainda não começou";
+      return NextResponse.json({ message: msg }, { status: 409 });
     }
 
     const body   = await req.json();

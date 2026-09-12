@@ -17,6 +17,7 @@ export default async function PatientQueueIndexPage() {
   const active = await prisma.consultation.findFirst({
     where: {
       patientId: session.user.id,
+      scheduledAt: null, // só on-demand: agendamento futuro não é "fila"
       status:    { in: ["SCHEDULED", "WAITING", "IN_PROGRESS"] },
     },
     select: { id: true, status: true },

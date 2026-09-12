@@ -28,11 +28,15 @@ export async function createOnDemandConsultation(input: {
   patientId:      string;
   chiefComplaint: string;
 }): Promise<Consultation> {
-  // Bloquear se paciente já tem consulta ativa (na fila ou em atendimento)
+  // Bloquear se paciente já tem atendimento on-demand ativo (aguardando
+  // pagamento, na fila ou em atendimento). Só on-demand (scheduledAt null):
+  // uma consulta AGENDADA pra semana que vem não pode impedir o paciente de
+  // pedir atendimento agora.
   const active = await prisma.consultation.findFirst({
     where: {
-      patientId: input.patientId,
-      status:    { in: ["SCHEDULED", "WAITING", "IN_PROGRESS"] },
+      patientId:   input.patientId,
+      scheduledAt: null,
+      status:      { in: ["SCHEDULED", "WAITING", "IN_PROGRESS"] },
     },
   });
   if (active) {
