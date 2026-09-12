@@ -1,33 +1,3 @@
-
-Atenção: o CPF da Maria no seed (22222222222) é inválido e o Asaas recusa a
-cobrança — pra testar a fila on-demand use um paciente com CPF válido (os
-de demonstração abaixo servem).
-
-### Dados de demonstração (`prisma/seed-demo.ts`)
-
-Roda automaticamente em todo deploy (é idempotente) ou com
-`npm run prisma:seed-demo`. Cria pacientes, médicos em cada situação de
-credenciamento, consultas com prontuário/chat/follow-up/pagamento, receitas
-emitidas e em rascunho, certificados (só metadados) e base de medicamentos.
-Senha de todos: `Demo@12345`.
-
-| Perfil | E-mail | Situação |
-|---|---|---|
-| Paciente | ana.souza@demo.emacrescere.app | 2 consultas concluídas, receitas emitidas, retorno marcado |
-| Paciente | bruno.lima@demo.emacrescere.app | concluída + cancelada + retorno marcado |
-| Paciente | carla.mendes@demo.emacrescere.app | receita de controle especial |
-| Paciente | diego.ferreira@demo.emacrescere.app | concluída + faltou |
-| Paciente | elaine.rocha@demo.emacrescere.app | receita em rascunho |
-| Paciente | felipe.andrade@demo.emacrescere.app | consulta amanhã |
-| Médica | fernanda.costa@demo.emacrescere.app | credenciada, com certificado |
-| Médico | ricardo.alves@demo.emacrescere.app | credenciado, com certificado |
-| Médico | marcos.pereira@demo.emacrescere.app | aguardando aprovação (CRM ativo) |
-| Médica | juliana.martins@demo.emacrescere.app | aguardando aprovação (CRM suspenso) |
-| Médico | otavio.ramos@demo.emacrescere.app | reprovado |
-
-Os certificados e as assinaturas das receitas demo são só metadados (não há
-.pfx nem PDF no storage): "Baixar PDF" e "Emitir receita" com esses médicos
-continuam exigindo um certificado A1 real e o S3 configurado.
 # TeleMed – Plataforma de Telemedicina
 
 Sistema completo de telemedicina com arquitetura modular, pronto para produção.
@@ -170,6 +140,38 @@ Uma conta Facebook é automaticamente vinculada a um usuário já existente com 
 | Admin    | admin@telemed.com.br        | Admin@12345    |
 | Médico   | dr.silva@telemed.com.br     | Doctor@12345   |
 | Paciente | maria@email.com             | Patient@12345  |
+
+
+
+Atenção: o CPF da Maria no seed (22222222222) é inválido e o Asaas recusa a
+cobrança — pra testar a fila on-demand use um paciente com CPF válido (os
+de demonstração abaixo servem).
+
+### Dados de demonstração (`prisma/seed-demo.ts`)
+
+Roda automaticamente em todo deploy (é idempotente) ou com
+`npm run prisma:seed-demo`. Cria pacientes, médicos em cada situação de
+credenciamento, consultas com prontuário/chat/follow-up/pagamento, receitas
+emitidas e em rascunho, certificados (só metadados) e base de medicamentos.
+Senha de todos: `Demo@12345`.
+
+| Perfil | E-mail | Situação |
+|---|---|---|
+| Paciente | ana.souza@demo.emacrescere.app | 2 consultas concluídas, receitas emitidas, retorno marcado |
+| Paciente | bruno.lima@demo.emacrescere.app | concluída + cancelada + retorno marcado |
+| Paciente | carla.mendes@demo.emacrescere.app | receita de controle especial |
+| Paciente | diego.ferreira@demo.emacrescere.app | concluída + faltou |
+| Paciente | elaine.rocha@demo.emacrescere.app | receita em rascunho |
+| Paciente | felipe.andrade@demo.emacrescere.app | consulta amanhã |
+| Médica | fernanda.costa@demo.emacrescere.app | credenciada, com certificado |
+| Médico | ricardo.alves@demo.emacrescere.app | credenciado, com certificado |
+| Médico | marcos.pereira@demo.emacrescere.app | aguardando aprovação (CRM ativo) |
+| Médica | juliana.martins@demo.emacrescere.app | aguardando aprovação (CRM suspenso) |
+| Médico | otavio.ramos@demo.emacrescere.app | reprovado |
+
+Os certificados e as assinaturas das receitas demo são só metadados (não há
+.pfx nem PDF no storage): "Baixar PDF" e "Emitir receita" com esses médicos
+continuam exigindo um certificado A1 real e o S3 configurado.
 
 ## Deploy (Vercel)
 
