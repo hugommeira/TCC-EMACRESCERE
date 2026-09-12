@@ -223,8 +223,14 @@ export async function cancelConsultation(
     throw new ForbiddenError();
   }
 
-  if (["COMPLETED", "CANCELLED"].includes(consultation.status)) {
+  if (["COMPLETED", "CANCELLED", "NO_SHOW"].includes(consultation.status)) {
     throw new ConflictError("Consulta não pode ser cancelada neste estado");
+  }
+
+  // Em andamento, quem encerra é o médico (/end). O paciente conseguia
+  // "desmarcar" pelo app no meio do atendimento e a consulta sumia da sala.
+  if (consultation.status === "IN_PROGRESS" && consultation.patientId === actorId) {
+    throw new ConflictError("A consulta já está em andamento — peça ao médico para encerrá-la");
   }
 
   return prisma.consultation.update({
