@@ -24,6 +24,10 @@ export function TopBar({ userName, userImage, title, items, role }: TopBarProps)
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const profileHref =
+    role === "PATIENT" ? "/dashboard/patient/profile"
+    : role === "DOCTOR" ? "/dashboard/doctor/profile"
+    : null;
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -105,18 +109,22 @@ export function TopBar({ userName, userImage, title, items, role }: TopBarProps)
                 <p className="text-sm font-medium text-slate-900">{userName}</p>
                 <p className="truncate text-xs text-slate-500">Conta ativa</p>
               </div>
-              <Link
-                href="/dashboard/patient/profile"
-                onClick={() => setOpen(false)}
-                className="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                role="menuitem"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 21a8 8 0 0 1 16 0" />
-                </svg>
-                Meu perfil
-              </Link>
+              {/* Antes apontava fixo pra /dashboard/patient/profile: médico e
+                  admin caíam em "Acesso negado". Admin não tem página de perfil. */}
+              {profileHref && (
+                <Link
+                  href={profileHref}
+                  onClick={() => setOpen(false)}
+                  className="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  role="menuitem"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 21a8 8 0 0 1 16 0" />
+                  </svg>
+                  Meu perfil
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => void signOut({ callbackUrl: "/auth/login" })}

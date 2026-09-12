@@ -61,8 +61,11 @@ export function Badge({
 
 export function ConsultationStatusBadge({
   status,
+  awaitingPayment = false,
 }: {
   status: ConsultationStatus;
+  /** On-demand SCHEDULED sem pagamento confirmado: não é "agendada", é "aguardando pagamento". */
+  awaitingPayment?: boolean;
 }) {
   const map: Record<ConsultationStatus, { label: string; variant: BadgeVariant }> = {
     SCHEDULED:   { label: "Agendada",      variant: "blue" },
@@ -73,7 +76,10 @@ export function ConsultationStatusBadge({
     NO_SHOW:     { label: "Não compareceu", variant: "red" },
   };
 
-  const { label, variant } = map[status];
+  const { label, variant } =
+    status === "SCHEDULED" && awaitingPayment
+      ? { label: "Aguardando pagamento", variant: "yellow" as BadgeVariant }
+      : map[status];
   return <Badge variant={variant} dot>{label}</Badge>;
 }
 

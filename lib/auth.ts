@@ -13,6 +13,9 @@ import type { Role } from "@prisma/client";
 // O bcrypt.compare ainda gasta o mesmo tempo do que contra um hash real.
 const DUMMY_HASH = "$2a$12$CwTycUXWue0Thq9StjUM0uJ8dGyR7e2YwHQk8C9X9eKQjE1XQ1L9C";
 
+// Intervalo mínimo entre reconferências de `user.active` no callback jwt.
+const ACTIVE_RECHECK_MS = 60 * 1000;
+
 // ─── Tipos aumentados ──────────────────────────────────────────────────────────
 declare module "next-auth" {
   interface Session {
@@ -164,6 +167,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token["id"]   = user.id;
         token["role"] = user.role;
+        token["checkedAt"] = Date.now();
+        return token;
+      }
+
+      // Sessão é JWT (30 dias): sem isso, um usuário desativado pelo admin
+      // continuava usando o site/app normalmente com a sessão que já tinha —
+      // só o próximo login era barrado. Reconfere `active` (e a role, caso
+      // mude) no banco no máximo a cada 60s; inativo => sessão invalidada.
+      const checkedAt = Number(token["checkedAt"] ?? 0);
+      if (token["id"] && Date.now() - checkedAt > ACTIVE_RECHECK_MS) {
+        const dbUser = await prisma.user.findUnique({
+          where:  { id: token["id"] as string },
+          select: { active: true, role: true },
+        });
+        if (!dbUser || !dbUser.active) return null;
+        token["role"]      = dbUser.role;
+        token["checkedAt"] = Date.now();
       }
       return token;
     },

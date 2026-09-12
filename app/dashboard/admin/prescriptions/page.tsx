@@ -22,6 +22,12 @@ const TYPE_LABELS: Record<string, string> = {
   AMARELA_A3:        "Amarela A3",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  DRAFT:     "Rascunho",
+  ISSUED:    "Emitida",
+  CANCELLED: "Cancelada",
+};
+
 const STATUS_RING: Record<string, string> = {
   DRAFT:     "bg-slate-100 text-slate-700 ring-slate-200",
   ISSUED:    "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -73,7 +79,7 @@ export default async function AdminPrescriptionsPage({
   return (
     <DashboardShell>
       <PageHeader
-        badge="Auditoria"
+        badge="Receitas"
         title="Receituários"
         description={`${total} receita(s) registrada(s) na plataforma`}
       />
@@ -114,7 +120,7 @@ export default async function AdminPrescriptionsPage({
                     <td data-label="Status" className="px-5 py-3.5">
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${STATUS_RING[p.status] ?? "bg-slate-100 text-slate-700 ring-slate-200"}`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        {p.status}
+                        {STATUS_LABEL[p.status] ?? p.status}
                       </span>
                     </td>
                   </tr>

@@ -211,7 +211,7 @@ export default async function AdminDashboardPage() {
                       }`}
                     >
                       <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
-                      {STATUS_LABEL[c.status] ?? c.status}
+                      {c.status === "SCHEDULED" && !c.scheduledAt ? "Aguardando pagamento" : (STATUS_LABEL[c.status] ?? c.status)}
                     </span>
                   </td>
                   <td data-label="Data" className="px-5 py-3.5 text-xs text-slate-500">

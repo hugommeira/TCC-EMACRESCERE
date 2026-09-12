@@ -52,7 +52,7 @@ export default async function AdminConsultationsPage() {
                     {c.scheduledAt ? formatDateTime(c.scheduledAt) : formatDateTime(c.createdAt)}
                   </td>
                   <td data-label="Status" className="px-4 py-3">
-                    <ConsultationStatusBadge status={c.status} />
+                    <ConsultationStatusBadge status={c.status} awaitingPayment={c.status === "SCHEDULED" && !c.scheduledAt} />
                   </td>
                   <td data-label="Pagamento" className="px-4 py-3">
                     {c.payment ? (
