@@ -66,6 +66,9 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon-192.png|icon-512.png|apple-touch-icon.png|manifest.json|public/).*)",
+    // A extensão no fim cobre qualquer arquivo de /public. Antes cada asset era
+    // listado pelo nome, então um arquivo novo caía no redirect de login (307).
+    // Rotas de API não têm extensão, então continuam protegidas.
+    "/((?!_next/static|_next/image|public/|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|css|js|map|txt|xml|json|webmanifest)$).*)",
   ],
 };
