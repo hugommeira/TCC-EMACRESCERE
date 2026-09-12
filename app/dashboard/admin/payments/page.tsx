@@ -4,6 +4,7 @@ import { prisma }           from "@/lib/prisma";
 import { PaymentStatusBadge } from "@/components/ui/Badge";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Pagamentos – Admin" };
 
 export default async function AdminPaymentsPage() {
@@ -55,7 +56,7 @@ export default async function AdminPaymentsPage() {
               {payments.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono text-xs text-gray-400">
-                    {p.asaasPaymentId?.slice(0, 8) ?? "—"}…
+                    {p.asaasPaymentId ? `${p.asaasPaymentId.slice(0, 8)}…` : "—"}
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-800">
                     {p.consultation.patient.name}

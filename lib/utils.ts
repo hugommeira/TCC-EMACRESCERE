@@ -20,22 +20,42 @@ export function formatCurrency(value: number | string): string {
   }).format(num);
 }
 
+/**
+ * Fuso da plataforma. As páginas do dashboard são renderizadas no servidor
+ * (Vercel roda em UTC): sem timeZone explícito, todo horário aparecia 3h
+ * adiantado pro admin/médico.
+ */
+export const APP_TIME_ZONE = "America/Sao_Paulo";
+
 export function formatDate(date: Date | string): string {
   return new Intl.DateTimeFormat("pt-BR", {
-    day:   "2-digit",
-    month: "2-digit",
-    year:  "numeric",
+    day:      "2-digit",
+    month:    "2-digit",
+    year:     "numeric",
+    timeZone: APP_TIME_ZONE,
   }).format(new Date(date));
 }
 
 export function formatDateTime(date: Date | string): string {
   return new Intl.DateTimeFormat("pt-BR", {
-    day:    "2-digit",
-    month:  "2-digit",
-    year:   "numeric",
-    hour:   "2-digit",
-    minute: "2-digit",
+    day:      "2-digit",
+    month:    "2-digit",
+    year:     "numeric",
+    hour:     "2-digit",
+    minute:   "2-digit",
+    timeZone: APP_TIME_ZONE,
   }).format(new Date(date));
+}
+
+/** Início do dia de hoje no fuso da plataforma (pra "consultas de hoje"). */
+export function startOfTodayInAppTimeZone(now: Date = new Date()): Date {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(now);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  // Meia-noite local = meia-noite UTC + offset; o offset de SP é -03:00 o
+  // ano todo (sem horário de verão desde 2019).
+  return new Date(Date.UTC(get("year"), get("month") - 1, get("day"), 3, 0, 0));
 }
 
 export function formatPhone(phone: string): string {

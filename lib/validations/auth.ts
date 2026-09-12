@@ -40,7 +40,10 @@ export const loginSchema = z.object({
     .max(128),
 });
 
-export const registerSchema = z
+// Campos comuns ao cadastro de paciente e de médico. Os .refine() ficam
+// fora porque ZodEffects não tem .extend() — o schema de médico precisa
+// estender o objeto base.
+const registerBaseSchema = z
   .object({
     name: z
       .string({ required_error: "Nome obrigatório" })
@@ -74,28 +77,35 @@ export const registerSchema = z
       ),
     confirmPassword: z.string({ required_error: "Confirmação obrigatória" }),
     acceptedTerms: z.boolean(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Senhas não conferem",
-    path: ["confirmPassword"],
-  })
-  .refine(
-    (d) => !d.password.toLowerCase().includes(d.email.split("@")[0]?.toLowerCase() ?? ""),
-    {
-      message: "Senha não pode conter seu e-mail",
-      path: ["password"],
-    },
-  )
-  .refine((d) => d.acceptedTerms === true, {
-    message: "É necessário aceitar os Termos de Uso e a Política de Privacidade",
-    path: ["acceptedTerms"],
   });
+
+/** Regras que valem pros dois cadastros (senha confere, sem e-mail na senha, termos). */
+function withRegisterRules<S extends typeof registerBaseSchema.shape>(schema: z.ZodObject<S>) {
+  return schema
+    .refine((d) => d.password === d.confirmPassword, {
+      message: "Senhas não conferem",
+      path: ["confirmPassword"],
+    })
+    .refine(
+      (d) => !d.password.toLowerCase().includes(d.email.split("@")[0]?.toLowerCase() ?? ""),
+      {
+        message: "Senha não pode conter seu e-mail",
+        path: ["password"],
+      },
+    )
+    .refine((d) => d.acceptedTerms === true, {
+      message: "É necessário aceitar os Termos de Uso e a Política de Privacidade",
+      path: ["acceptedTerms"],
+    });
+}
+
+export const registerSchema = withRegisterRules(registerBaseSchema);
 
 // Cadastro de MÉDICO: os mesmos campos do paciente + dados do conselho. O CRM
 // passa por verificação (simulada) em services/external/cfm.ts e a conta
 // nasce com approvalStatus PENDING até o admin aprovar.
-export const registerDoctorSchema = registerSchema.innerType().innerType()
-  .extend({
+export const registerDoctorSchema = withRegisterRules(
+  registerBaseSchema.extend({
     role: z.literal("DOCTOR"),
     crm: z
       .string({ required_error: "CRM obrigatório" })
@@ -111,11 +121,8 @@ export const registerDoctorSchema = registerSchema.innerType().innerType()
       .trim()
       .min(3, "Especialidade muito curta")
       .max(80, "Especialidade muito longa"),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Senhas não conferem",
-    path: ["confirmPassword"],
-  });
+  }),
+);
 
 export type RegisterDoctorInput = z.infer<typeof registerDoctorSchema>;
 

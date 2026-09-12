@@ -64,7 +64,7 @@ const TYPE_COLORS: Record<PrescriptionData["type"], [number, number, number]> = 
   AMARELA_A3:        [0.85, 0.65, 0.13],
 };
 
-const PT_BR_DATE = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+const PT_BR_DATE = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
 
 /** Helper: quebra texto em linhas que cabem na largura */
 function wrap(text: string, maxChars: number): string[] {

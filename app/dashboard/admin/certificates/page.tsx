@@ -9,7 +9,7 @@ import {
 export const metadata: Metadata = { title: "Certificados — Admin" };
 export const dynamic = "force-dynamic";
 
-const PT_BR_DATE = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+const PT_BR_DATE = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
 
 export default async function AdminCertificatesPage() {
   const session = await auth();

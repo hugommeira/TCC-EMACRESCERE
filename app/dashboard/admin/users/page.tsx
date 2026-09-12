@@ -1,12 +1,18 @@
 import type { Metadata }  from "next";
+import { auth }           from "@/lib/auth";
 import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
 import { listUsers }      from "@/services/api/user";
 import { Avatar }         from "@/components/ui/Avatar";
 import { Badge }          from "@/components/ui/Badge";
+import { Pagination }     from "@/components/history/Pagination";
+import { UserActiveToggle } from "@/components/admin/UserActiveToggle";
 import { formatDate }     from "@/lib/utils";
 import type { Role }      from "@prisma/client";
 
 export const metadata: Metadata = { title: "Usuários" };
+export const dynamic  = "force-dynamic";
+
+const PAGE_SIZE = 25;
 
 const roleBadge: Record<Role, { label: string; variant: "blue"|"green"|"purple"|"gray" }> = {
   PATIENT:    { label: "Paciente",    variant: "blue"   },
@@ -15,14 +21,24 @@ const roleBadge: Record<Role, { label: string; variant: "blue"|"green"|"purple"|
   SUPER_ADMIN: { label: "Super Admin", variant: "gray"  },
 };
 
-export default async function AdminUsersPage() {
-  const { data: users, total } = await listUsers({ page: 1, limit: 50 });
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const session = await auth();
+  const sp   = await searchParams;
+  const page = Math.max(1, Number(sp.page ?? 1) || 1);
+
+  // Antes: 50 fixos, sem paginação — a partir do 51º usuário ninguém
+  // aparecia; e não havia botão pra ativar/desativar apesar da API existir.
+  const { data: users, total, pages } = await listUsers({ page, limit: PAGE_SIZE });
 
   return (
     <DashboardShell>
       <PageHeader
         title="Usuários"
-        description={`${total} usuários cadastrados`}
+        description={`${total} usuários cadastrados · página ${page} de ${Math.max(1, pages)}`}
       />
 
       <div className="card overflow-hidden p-0">
@@ -64,9 +80,12 @@ export default async function AdminUsersPage() {
                       {formatDate(u.createdAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant={u.active ? "green" : "red"} dot>
-                        {u.active ? "Ativo" : "Inativo"}
-                      </Badge>
+                      <UserActiveToggle
+                        userId={u.id}
+                        name={u.name}
+                        active={u.active}
+                        isSelf={u.id === session?.user?.id}
+                      />
                     </td>
                   </tr>
                 );
@@ -75,6 +94,12 @@ export default async function AdminUsersPage() {
           </table>
         </div>
       </div>
+
+      {pages > 1 && (
+        <div className="mt-4">
+          <Pagination page={page} pages={pages} />
+        </div>
+      )}
     </DashboardShell>
   );
 }

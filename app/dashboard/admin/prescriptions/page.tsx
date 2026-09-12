@@ -105,7 +105,7 @@ export default async function AdminPrescriptionsPage({
                 {items.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/40">
                     <td className="px-5 py-3.5 text-xs text-slate-600">
-                      {new Intl.DateTimeFormat("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }).format(p.createdAt)}
+                      {new Intl.DateTimeFormat("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit", timeZone: "America/Sao_Paulo" }).format(p.createdAt)}
                     </td>
                     <td className="px-5 py-3.5 text-sm text-slate-900">{p.consultation.doctor?.name ?? "—"}</td>
                     <td className="px-5 py-3.5 text-sm text-slate-700">{p.consultation.patient.name}</td>

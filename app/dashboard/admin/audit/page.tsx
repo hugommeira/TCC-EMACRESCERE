@@ -4,6 +4,7 @@ import { prisma }          from "@/lib/prisma";
 import { Badge }           from "@/components/ui/Badge";
 import { formatDateTime }  from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Auditoria – Admin" };
 
 const actionColor: Record<string, "blue" | "green" | "red" | "yellow" | "gray"> = {

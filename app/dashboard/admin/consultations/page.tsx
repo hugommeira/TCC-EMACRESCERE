@@ -5,6 +5,7 @@ import { ConsultationStatusBadge, PaymentStatusBadge } from "@/components/ui/Bad
 import { Avatar }           from "@/components/ui/Avatar";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Consultas – Admin" };
 
 export default async function AdminConsultationsPage() {

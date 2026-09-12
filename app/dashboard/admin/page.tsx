@@ -8,10 +8,11 @@ import {
   StatCard,
   SectionCard,
 } from "@/components/layout/DashboardShell";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, startOfTodayInAppTimeZone } from "@/lib/utils";
 import Link               from "next/link";
 
 export const metadata: Metadata = { title: "Admin – Visão geral" };
+export const dynamic  = "force-dynamic";
 
 const ICONS = {
   users: (
@@ -86,8 +87,11 @@ export default async function AdminDashboardPage() {
     redirect("/auth/login");
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // "Hoje" no fuso de São Paulo (o servidor roda em UTC), e só o dia de
+  // hoje — antes contava tudo dali pra frente e ignorava as consultas da
+  // fila, que não têm scheduledAt.
+  const today    = startOfTodayInAppTimeZone();
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 
   const [
     totalUsers,
@@ -104,7 +108,14 @@ export default async function AdminDashboardPage() {
     prisma.user.count({ where: { role: "DOCTOR",  active: true } }),
     prisma.user.count({ where: { role: "PATIENT", active: true } }),
     prisma.consultation.count(),
-    prisma.consultation.count({ where: { scheduledAt: { gte: today } } }),
+    prisma.consultation.count({
+      where: {
+        OR: [
+          { scheduledAt: { gte: today, lt: tomorrow } },
+          { scheduledAt: null, createdAt: { gte: today, lt: tomorrow } },
+        ],
+      },
+    }),
     prisma.consultation.count({ where: { status: { in: ["IN_PROGRESS", "WAITING"] } } }),
     prisma.payment.aggregate({ where: { status: "RECEIVED" }, _sum: { amount: true } }),
     prisma.payment.count({ where: { status: "PENDING" } }),
@@ -130,7 +141,7 @@ export default async function AdminDashboardPage() {
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Cadastrar médico
+              Credenciar médicos
             </Link>
             <Link
               href="/dashboard/admin/users"
@@ -210,7 +221,7 @@ export default async function AdminDashboardPage() {
                   <td className="px-5 py-3.5 text-xs text-slate-500">
                     {new Intl.DateTimeFormat("pt-BR", {
                       day: "2-digit", month: "2-digit",
-                      hour: "2-digit", minute: "2-digit",
+                      hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo",
                     }).format(c.scheduledAt ?? c.createdAt)}
                   </td>
                 </tr>
