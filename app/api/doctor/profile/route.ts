@@ -35,6 +35,15 @@ const updateSchema = z.object({
   availableHours:  hoursSchema.optional(),
 });
 
+// Mesmo shape no GET e no PATCH: o app mobile parseia os dois com o mesmo
+// modelo e precisa do status de credenciamento pra decidir a tela.
+const PROFILE_SELECT = {
+  id: true, crm: true, crmState: true, specialty: true, subSpecialty: true,
+  bio: true, consultationFee: true, available: true, availableHours: true,
+  approvalStatus: true, approvalNote: true, approvedAt: true,
+  crmVerifiedAt: true, crmVerification: true,
+} as const;
+
 export async function GET() {
   try {
     const session = await auth();
@@ -43,10 +52,7 @@ export async function GET() {
     }
     const profile = await prisma.doctorProfile.findUnique({
       where:  { userId: session.user.id },
-      select: {
-        id: true, crm: true, crmState: true, specialty: true, subSpecialty: true,
-        bio: true, consultationFee: true, available: true, availableHours: true,
-      },
+      select: PROFILE_SELECT,
     });
     if (!profile) return NextResponse.json({ message: "Perfil não encontrado" }, { status: 404 });
     return NextResponse.json({
@@ -91,10 +97,7 @@ export async function PATCH(req: NextRequest) {
     const updated = await prisma.doctorProfile.update({
       where: { userId: session.user.id },
       data,
-      select: {
-        bio: true, subSpecialty: true, consultationFee: true,
-        available: true, availableHours: true,
-      },
+      select: PROFILE_SELECT,
     });
 
     return NextResponse.json({
