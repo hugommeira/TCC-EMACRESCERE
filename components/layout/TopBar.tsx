@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui";
 import { NavLinks } from "@/components/layout/NavLinks";
+import { TopBarSearch, NotificationsMenu } from "@/components/layout/TopBarTools";
 import { ROLE_LABEL } from "@/components/layout/Sidebar";
 import type { NavItem } from "@/components/layout/Sidebar";
 import type { Role } from "@prisma/client";
@@ -72,31 +73,9 @@ export function TopBar({ userName, userImage, title, items, role }: TopBarProps)
       </div>
 
       <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          className="hidden cursor-pointer rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 sm:inline-flex"
-          aria-label="Buscar"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.35-4.35" />
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          className="relative cursor-pointer rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
-          aria-label="Notificações"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2z" />
-            <path d="M10 21a2 2 0 0 0 4 0" />
-          </svg>
-          <span
-            aria-hidden
-            className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-500 ring-2 ring-white"
-          />
-        </button>
+        {/* Busca e sino funcionais (antes eram só decorativos) */}
+        {role && <TopBarSearch role={role} />}
+        <NotificationsMenu />
 
         <div className="mx-2 h-6 w-px bg-slate-200" aria-hidden />
 

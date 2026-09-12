@@ -45,12 +45,6 @@ const ICONS = {
       <path d="M12 6v6l4 2" />
     </svg>
   ),
-  live: (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ),
   cash: (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="6" width="20" height="12" rx="2" />
@@ -99,13 +93,15 @@ export default async function AdminDashboardPage() {
     totalPatients,
     totalConsultations,
     todayConsultations,
-    activeConsultations,
+    pendingDoctors,
     revenueAgg,
     pendingPayments,
     recentConsultations,
   ] = await prisma.$transaction([
     prisma.user.count(),
-    prisma.user.count({ where: { role: "DOCTOR",  active: true } }),
+    // "Médico ativo" = credenciado (aprovado pelo admin) e não desativado.
+    // Quem ainda está em análise ou foi reprovado não conta aqui.
+    prisma.user.count({ where: { role: "DOCTOR", active: true, doctorProfile: { approvalStatus: "APPROVED" } } }),
     prisma.user.count({ where: { role: "PATIENT", active: true } }),
     prisma.consultation.count(),
     prisma.consultation.count({
@@ -116,7 +112,7 @@ export default async function AdminDashboardPage() {
         ],
       },
     }),
-    prisma.consultation.count({ where: { status: { in: ["IN_PROGRESS", "WAITING"] } } }),
+    prisma.doctorProfile.count({ where: { approvalStatus: "PENDING", user: { active: true } } }),
     prisma.payment.aggregate({ where: { status: "RECEIVED" }, _sum: { amount: true } }),
     prisma.payment.count({ where: { status: "PENDING" } }),
     prisma.consultation.findMany({
@@ -163,7 +159,7 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Hoje"            value={String(todayConsultations)}  tone="amber" icon={ICONS.today} href="/dashboard/admin/consultations" />
-        <StatCard label="Ao vivo"         value={String(activeConsultations)} tone="teal"  icon={ICONS.live}  href="/dashboard/admin/consultations" />
+        <StatCard label="Médicos p/ aprovar" value={String(pendingDoctors)}   tone="teal"  icon={ICONS.doctor} href="/dashboard/admin/doctors" />
         <StatCard label="Receita"         value={formatCurrency(Number(revenueAgg._sum.amount ?? 0))} tone="brand" icon={ICONS.cash} href="/dashboard/admin/payments" />
         <StatCard label="Pgtos. pendentes" value={String(pendingPayments)}    tone="rose"  icon={ICONS.alert} href="/dashboard/admin/payments" />
       </div>

@@ -24,21 +24,22 @@ const roleBadge: Record<Role, { label: string; variant: "blue"|"green"|"purple"|
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string }>;
 }) {
   const session = await auth();
   const sp   = await searchParams;
   const page = Math.max(1, Number(sp.page ?? 1) || 1);
+  const q    = sp.q?.trim() || undefined;
 
   // Antes: 50 fixos, sem paginação — a partir do 51º usuário ninguém
   // aparecia; e não havia botão pra ativar/desativar apesar da API existir.
-  const { data: users, total, pages } = await listUsers({ page, limit: PAGE_SIZE });
+  const { data: users, total, pages } = await listUsers({ page, limit: PAGE_SIZE, ...(q ? { search: q } : {}) });
 
   return (
     <DashboardShell>
       <PageHeader
         title="Usuários"
-        description={`${total} usuários cadastrados · página ${page} de ${Math.max(1, pages)}`}
+        description={q ? `${total} resultado(s) para "${q}"` : `${total} usuários cadastrados · página ${page} de ${Math.max(1, pages)}`}
       />
 
       <div className="card overflow-hidden p-0">
@@ -68,7 +69,16 @@ export default async function AdminUsersPage({
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant={rb.variant}>{rb.label}</Badge>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <Badge variant={rb.variant}>{rb.label}</Badge>
+                        {/* Médico só é "ativo de verdade" depois do credenciamento */}
+                        {u.role === "DOCTOR" && u.doctorProfile?.approvalStatus === "PENDING" && (
+                          <Badge variant="yellow" dot>Aguardando aprovação</Badge>
+                        )}
+                        {u.role === "DOCTOR" && u.doctorProfile?.approvalStatus === "REJECTED" && (
+                          <Badge variant="red" dot>Reprovado</Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-gray-600 font-mono text-xs">
                       {u.cpf ?? "—"}
