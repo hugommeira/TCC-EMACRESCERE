@@ -41,7 +41,7 @@ export function ConsultationCard({ consultation, role }: ConsultationCardProps) 
           </div>
         </div>
 
-        <ConsultationStatusBadge status={consultation.status} />
+        <ConsultationStatusBadge status={consultation.status} awaitingPayment={!consultation.scheduledAt && consultation.payment?.status !== "RECEIVED" && consultation.payment?.status !== "CONFIRMED"} />
       </div>
 
       {consultation.chiefComplaint && (
