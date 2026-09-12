@@ -1,3 +1,10 @@
+| Paciente | mariana.castro@email.com | 4 consultas pagas (88,2 → 83,8 kg), receita emitida |
+| Paciente | rafael.osantos@email.com | 3 consultas pagas (104,5 → 101,0 kg), receita emitida |
+| Paciente | patricia.nunes@email.com | 5 consultas pagas (79,0 → 75,2 kg), receita emitida |
+| Paciente | lucasmp@email.com | 3 consultas pagas (96,3 → 93,7 kg) |
+| Paciente | ju.ribeiro@email.com | 4 consultas pagas (91,5 → 87,6 kg), receita emitida |
+| Paciente | andre.gomes.b@email.com | 4 consultas pagas (112,0 → 106,1 kg), receita emitida |
+| Paciente | camila.freitas@email.com | 3 consultas pagas (74,8 → 73,0 kg), receita de controle especial |
 # TeleMed – Plataforma de Telemedicina
 
 Sistema completo de telemedicina com arquitetura modular, pronto para produção.

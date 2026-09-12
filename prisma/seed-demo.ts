@@ -63,6 +63,10 @@ function sha256Fake(seed: string): string {
 
 interface PatientSpec {
   key: string; name: string; cpfBase: string; phone: string;
+  /** E-mail próprio (default: <key>@demo.emacrescere.app). */
+  email?: string;
+  /** Altura e anotações do perfil (peso inicial/IMC). */
+  heightCm?: number; notes?: string;
   birthDate: Date; gender: string; bloodType: string; allergies: string[]; medications: string[];
 }
 
@@ -119,9 +123,9 @@ const DOCTORS: DoctorSpec[] = [
 ];
 
 async function upsertUser(spec: {
-  key: string; name: string; cpfBase: string; phone: string; role: "PATIENT" | "DOCTOR";
+  key: string; name: string; cpfBase: string; phone: string; role: "PATIENT" | "DOCTOR"; email?: string;
 }, passwordHash: string) {
-  const email = `${spec.key}@${DOMAIN}`;
+  const email = spec.email ?? `${spec.key}@${DOMAIN}`;
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return existing;
   return prisma.user.create({
@@ -352,6 +356,71 @@ const CONSULTATIONS: ConsultationSpec[] = [
   },
 ];
 
+// ─── Pacientes "reais" (nomes/e-mails comuns, acompanhamento pago de várias
+// semanas com evolução de peso no prontuário e receita emitida) ─────────────
+
+interface RealPatient extends PatientSpec {
+  doctor: string;            // key do médico que acompanha
+  startWeeksAgo: number;     // 1ª consulta há N semanas
+  weights: number[];         // um peso por consulta (kg), em ordem
+  complaint: string;
+  diagnosis: string;
+  plan: string;
+  prescription: { type?: PrescriptionType; items: { name: string; dosage: string; frequency: string; duration?: string; quantity?: string; route?: string; continuous?: boolean }[] };
+}
+
+const REAL_PATIENTS: RealPatient[] = [
+  { key: "mariana.castro", name: "Mariana Castro Silva", email: "mariana.castro@email.com", cpfBase: "372819456", phone: "11996540123", birthDate: brt(1993, 2, 8),  gender: "Feminino",  bloodType: "A+",  allergies: [], medications: [], heightCm: 165, doctor: "fernanda.costa", startWeeksAgo: 10, weights: [88.2, 86.9, 85.1, 83.8], complaint: "Ganho de 12kg após a segunda gestação; quer voltar ao peso anterior.", diagnosis: "Obesidade grau I (IMC 32,4).", plan: "Metformina + plano alimentar + caminhada. Retorno a cada 3 semanas.", prescription: { items: [{ name: "Metformina 500mg", dosage: "1 comprimido", frequency: "2x ao dia", duration: "60 dias", quantity: "120 comprimidos", route: "Oral", continuous: true }] } },
+  { key: "rafael.oliveira", name: "Rafael Oliveira Santos", email: "rafael.osantos@email.com", cpfBase: "481927365", phone: "21997812345", birthDate: brt(1987, 6, 21), gender: "Masculino", bloodType: "O+",  allergies: ["Ibuprofeno"], medications: [], heightCm: 178, doctor: "ricardo.alves", startWeeksAgo: 8, weights: [104.5, 102.8, 101.0], complaint: "IMC 33, dores no joelho, sedentário. Quer emagrecer antes de operar o menisco.", diagnosis: "Obesidade grau I (IMC 33,0). Esteatose hepática leve.", plan: "Dieta hipocalórica hiperproteica, semaglutida, fisioterapia.", prescription: { items: [{ name: "Semaglutida (Ozempic) 0,5mg", dosage: "0,5mg", frequency: "1x por semana", duration: "8 semanas", quantity: "2 canetas", route: "Subcutânea" }] } },
+  { key: "patricia.nunes", name: "Patrícia Nunes Almeida", email: "patricia.nunes@email.com", cpfBase: "593716284", phone: "31998765432", birthDate: brt(1975, 10, 3), gender: "Feminino",  bloodType: "B+",  allergies: ["Sulfa"], medications: ["Losartana 50mg", "Sinvastatina 20mg"], heightCm: 160, doctor: "fernanda.costa", startWeeksAgo: 12, weights: [79.0, 78.1, 77.4, 76.0, 75.2], complaint: "Hipertensa e com colesterol alto; cardiologista pediu perda de 8kg.", diagnosis: "Sobrepeso (IMC 30,9 -> 29,4). HAS e dislipidemia controladas.", plan: "Dieta DASH, orlistate, atividade física 150min/semana.", prescription: { items: [{ name: "Orlistate 120mg", dosage: "1 cápsula", frequency: "3x ao dia (refeições)", duration: "30 dias", quantity: "90 cápsulas", route: "Oral" }] } },
+  { key: "lucas.martins", name: "Lucas Martins Pereira", email: "lucasmp@email.com", cpfBase: "628193745", phone: "41999123456", birthDate: brt(1999, 12, 12), gender: "Masculino", bloodType: "AB-", allergies: [], medications: [], heightCm: 182, doctor: "dr.silva", startWeeksAgo: 6, weights: [96.3, 94.9, 93.7], complaint: "Engordou 15kg na faculdade, come muito fast food.", diagnosis: "Sobrepeso (IMC 29,1).", plan: "Reeducação alimentar sem medicação. Retorno mensal.", prescription: { items: [{ name: "Vitamina D3 7.000 UI", dosage: "1 cápsula", frequency: "1x por semana", duration: "12 semanas", quantity: "12 cápsulas", route: "Oral" }] } },
+  { key: "juliana.ribeiro", name: "Juliana Ribeiro Costa", email: "ju.ribeiro@email.com", cpfBase: "719284635", phone: "51998877665", birthDate: brt(1990, 4, 27), gender: "Feminino",  bloodType: "O-",  allergies: ["Camarão"], medications: ["Anticoncepcional"], heightCm: 170, doctor: "ricardo.alves", startWeeksAgo: 9, weights: [91.5, 90.2, 88.8, 87.6], complaint: "SOP e resistência à insulina; dificuldade pra perder peso.", diagnosis: "Obesidade grau I (IMC 31,7). SOP com resistência insulínica.", plan: "Metformina XR, dieta de baixo índice glicêmico, musculação.", prescription: { items: [{ name: "Metformina XR 750mg", dosage: "1 comprimido", frequency: "1x ao dia (jantar)", duration: "60 dias", quantity: "60 comprimidos", route: "Oral", continuous: true }] } },
+  { key: "andre.gomes", name: "André Gomes Barbosa", email: "andre.gomes.b@email.com", cpfBase: "836471925", phone: "61997001122", birthDate: brt(1982, 8, 15), gender: "Masculino", bloodType: "A-",  allergies: [], medications: ["Metformina 850mg"], heightCm: 175, doctor: "fernanda.costa", startWeeksAgo: 11, weights: [112.0, 109.8, 107.9, 106.1], complaint: "Diabético tipo 2, IMC 36,6. Quer evitar cirurgia bariátrica.", diagnosis: "Obesidade grau II (IMC 36,6). DM2 (HbA1c 7,4).", plan: "Tirzepatida semanal + metformina. Retorno a cada 3 semanas com glicemias.", prescription: { items: [{ name: "Tirzepatida (Mounjaro) 5mg", dosage: "5mg", frequency: "1x por semana", duration: "4 semanas", quantity: "4 canetas", route: "Subcutânea" }, { name: "Metformina 850mg", dosage: "1 comprimido", frequency: "2x ao dia", duration: "30 dias", quantity: "60 comprimidos", route: "Oral", continuous: true }] } },
+  { key: "camila.freitas", name: "Camila Freitas Lopes", email: "camila.freitas@email.com", cpfBase: "947382615", phone: "71996655443", birthDate: brt(1996, 1, 19), gender: "Feminino",  bloodType: "B-",  allergies: ["Dipirona", "Látex"], medications: [], heightCm: 158, doctor: "dr.silva", startWeeksAgo: 7, weights: [74.8, 73.9, 73.0], complaint: "Compulsão alimentar noturna e ansiedade.", diagnosis: "Sobrepeso (IMC 30,0). Compulsão alimentar leve.", plan: "Topiramato à noite, psicoterapia, plano alimentar.", prescription: { type: "CONTROLE_ESPECIAL", items: [{ name: "Topiramato 25mg", dosage: "1 comprimido", frequency: "1x ao dia (noite)", duration: "30 dias", quantity: "30 comprimidos", route: "Oral" }] } },
+];
+
+for (const p of REAL_PATIENTS) {
+  const h = (p.heightCm ?? 170) / 100;
+  const w0 = p.weights[0]!;
+  p.notes = `Altura ${p.heightCm} cm. Peso inicial ${w0.toFixed(1)} kg (IMC ${(w0 / (h * h)).toFixed(1)}).`;
+  PATIENTS.push(p);
+
+  // Uma consulta paga a cada 3 semanas, com o peso do dia no prontuário
+  p.weights.forEach((w, i) => {
+    const weeksAgo = p.startWeeksAgo - i * 3;
+    const at = daysFromNow(-7 * weeksAgo, 9 + (i % 4));
+    const imc = (w / (h * h)).toFixed(1);
+    const prev = i > 0 ? p.weights[i - 1]! : null;
+    const delta = prev !== null ? ` (${(w - prev).toFixed(1)} kg desde a última)` : "";
+    CONSULTATIONS.push({
+      token: `demo-real-${p.key}-${i + 1}`,
+      patient: p.key,
+      doctor: p.doctor,
+      status: "COMPLETED",
+      at,
+      durationMin: 25 + (i * 7) % 15,
+      payment: "RECEIVED",
+      method: (["PIX", "CREDIT_CARD", "PIX", "BOLETO"] as const)[i % 4],
+      complaint: i === 0 ? p.complaint : `Retorno ${i}: acompanhamento do tratamento.`,
+      diagnosis: i === 0 ? p.diagnosis : `Em tratamento. Peso ${w.toFixed(1)} kg, IMC ${imc}${delta}.`,
+      conduct: i === 0 ? p.plan : "Manter conduta. Reforçadas orientações de alimentação e atividade física.",
+      notes: `Peso aferido: ${w.toFixed(1)} kg · IMC ${imc}`,
+      messages: i === 0
+        ? [{ from: "patient", text: "Olá, doutor(a), estou na sala." }, { from: "doctor", text: "Olá! Vamos começar. Me conta o que te trouxe aqui." }]
+        : [{ from: "doctor", text: `Boa evolução: ${w.toFixed(1)} kg hoje. Continue assim.` }],
+      ...(i === 0 ? { prescription: { status: "ISSUED" as const, type: p.prescription.type ?? "COMUM", items: p.prescription.items } } : {}),
+      ...(i === 1 ? { followUp: { message: "Como está a adaptação ao tratamento? Algum efeito colateral?", response: "Tudo bem, só um pouco de enjoo na primeira semana.", daysAfter: 7 } } : {}),
+    });
+  });
+  // Próximo retorno marcado
+  CONSULTATIONS.push({
+    token: `demo-real-${p.key}-next`,
+    patient: p.key, doctor: p.doctor, status: "SCHEDULED",
+    at: daysFromNow(3 + (p.weights.length % 5) * 2, 10 + (p.weights.length % 3)),
+    complaint: `Retorno ${p.weights.length}: reavaliação e exames.`,
+  });
+}
+
 async function seedConsultations(userIdByKey: Map<string, string>) {
   let created = 0;
   for (const c of CONSULTATIONS) {
@@ -492,7 +561,7 @@ async function main() {
   // Pacientes
   let newPatients = 0;
   for (const p of PATIENTS) {
-    const before = await prisma.user.findUnique({ where: { email: `${p.key}@${DOMAIN}` }, select: { id: true } });
+    const before = await prisma.user.findUnique({ where: { email: p.email ?? `${p.key}@${DOMAIN}` }, select: { id: true } });
     const user = await upsertUser({ ...p, role: "PATIENT" }, hash);
     userIdByKey.set(p.key, user.id);
     userNameByKey.set(p.key, user.name);
@@ -507,6 +576,7 @@ async function main() {
         bloodType:   p.bloodType,
         allergies:   p.allergies,
         medications: p.medications,
+        notes:       p.notes ?? null,
       },
     });
   }
