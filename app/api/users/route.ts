@@ -23,7 +23,25 @@ export async function GET(req: NextRequest) {
     if (doctors) {
       const specialty = searchParams.get("specialty") ?? undefined;
       const result    = await listDoctors({ page, limit, search, specialty });
-      return NextResponse.json({ data: result });
+      // Paciente só precisa do que aparece no card de agendamento. Antes o
+      // JSON levava CPF, e-mail e telefone de todos os médicos.
+      const data = result.data.map((u) => ({
+        id:        u.id,
+        name:      u.name,
+        avatarUrl: u.avatarUrl,
+        role:      u.role,
+        doctorProfile: u.doctorProfile && {
+          specialty:       u.doctorProfile.specialty,
+          subSpecialty:    u.doctorProfile.subSpecialty,
+          bio:             u.doctorProfile.bio,
+          crm:             u.doctorProfile.crm,
+          crmState:        u.doctorProfile.crmState,
+          consultationFee: u.doctorProfile.consultationFee,
+          available:       u.doctorProfile.available,
+          availableHours:  u.doctorProfile.availableHours,
+        },
+      }));
+      return NextResponse.json({ data: { ...result, data } });
     }
 
     // Rota admin: listar todos os usuários
