@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --skip-generate && next build",
+    "build": "prisma generate && prisma db push --skip-generate && (tsx prisma/seed-demo.ts || echo seed-demo falhou, seguindo) && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
@@ -14,7 +14,8 @@
     "prisma:push": "dotenv -e .env.local -- prisma db push",
     "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "prisma:studio": "dotenv -e .env.local -- prisma studio",
-    "prisma:seed": "dotenv -e .env.local -- tsx prisma/seed.ts"
+    "prisma:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",
+    "prisma:seed-demo": "dotenv -e .env.local -- tsx prisma/seed-demo.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.4.1",
