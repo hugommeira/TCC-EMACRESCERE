@@ -136,6 +136,11 @@ export function PatientQueueRoom({
             </p>
           )}
         </>
+      ) : state.doctorId ? (
+        // Consulta agendada: o médico clicou em "Chamar paciente" e vai iniciar
+        <p className="mt-2 text-base text-slate-600">
+          O médico está te chamando — sua consulta começa em instantes.
+        </p>
       ) : (
         <p className="mt-2 text-base text-slate-600">
           Estamos verificando seu status...

@@ -120,6 +120,13 @@ export async function GET() {
             text:  c.doctor ? `${doctorTitle(c.doctor.name)} está te atendendo.` : "Entre na sala.",
             href:  `/consulta/${c.id}`,
           });
+        } else if (c.status === "WAITING" && c.doctor) {
+          items.push({
+            id: `c-${c.id}-called`, tone: "amber",
+            title: "O médico está te chamando",
+            text:  `${doctorTitle(c.doctor.name)} vai iniciar sua consulta. Entre agora.`,
+            href:  `/dashboard/patient/queue/${c.id}`,
+          });
         } else if (c.status === "WAITING") {
           items.push({
             id: `c-${c.id}-queue`, tone: "amber",

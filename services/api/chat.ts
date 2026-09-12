@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { publish } from "@/lib/realtime";
 import { NotFoundError, ForbiddenError } from "@/lib/errors";
 import type { ChatMessage } from "@/types";
 import type { MessageType } from "@prisma/client";
@@ -83,10 +84,27 @@ export async function sendMessage(
     readAt:    message.readAt,
   };
 
-  // Broadcast via SSE
+  // Broadcast via SSE (canal antigo por roomToken)
   if (consultation.roomToken) {
     broadcastToRoom(consultation.roomToken, "message", chatMessage);
   }
+
+  // A sala do site (/consulta/[id], ChatPanel) escuta o canal
+  // consultation:<id> via lib/realtime — o mesmo que
+  // /api/consultations/[id]/messages publica. Sem isso, mensagem mandada
+  // pelo app (que usa esta rota) só aparecia pro médico após recarregar.
+  await publish({
+    channel: `consultation:${consultationId}`,
+    type:    "message.new",
+    data: {
+      id:        message.id,
+      content:   message.content,
+      type:      message.type,
+      fileUrl:   message.fileUrl,
+      createdAt: message.createdAt,
+      sender:    message.sender,
+    },
+  });
 
   return chatMessage;
 }
