@@ -152,6 +152,25 @@ export async function listDoctorConsultations(
 
 // ─── Update status ────────────────────────────────────────────────────────────
 
+// Transições válidas de status (quem muda é o médico; ver updateConsultationStatus)
+const STATUS_TRANSITIONS: Record<ConsultationStatus, ConsultationStatus[]> = {
+  SCHEDULED:   ["WAITING", "IN_PROGRESS", "CANCELLED", "NO_SHOW"],
+  WAITING:     ["IN_PROGRESS", "CANCELLED", "NO_SHOW"],
+  IN_PROGRESS: ["COMPLETED", "CANCELLED"],
+  COMPLETED:   [],
+  CANCELLED:   [],
+  NO_SHOW:     [],
+};
+
+const STATUS_LABEL: Record<ConsultationStatus, string> = {
+  SCHEDULED:   "agendada",
+  WAITING:     "em espera",
+  IN_PROGRESS: "em andamento",
+  COMPLETED:   "concluída",
+  CANCELLED:   "cancelada",
+  NO_SHOW:     "não compareceu",
+};
+
 export async function updateConsultationStatus(
   id: string,
   status: ConsultationStatus,
@@ -160,10 +179,17 @@ export async function updateConsultationStatus(
   const consultation = await prisma.consultation.findUnique({ where: { id } });
   if (!consultation) throw new NotFoundError("Consulta");
 
-  const isDoctor  = consultation.doctorId  === actorId;
-  const isPatient = consultation.patientId === actorId;
+  // Só o médico da consulta muda o status por aqui (o paciente cancela via
+  // /cancel). Antes bastava ser parte da consulta: o paciente conseguia
+  // marcar a própria consulta como COMPLETED/IN_PROGRESS pela API.
+  if (consultation.doctorId !== actorId) throw new ForbiddenError();
 
-  if (!isDoctor && !isPatient) throw new ForbiddenError();
+  const allowed = STATUS_TRANSITIONS[consultation.status] ?? [];
+  if (!allowed.includes(status)) {
+    throw new ConflictError(
+      `Consulta ${STATUS_LABEL[consultation.status]} não pode passar para ${STATUS_LABEL[status]}`,
+    );
+  }
 
   const now = new Date();
 
