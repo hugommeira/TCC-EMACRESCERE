@@ -67,6 +67,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -111,3 +113,35 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# ─── Ícone do app (Android) ────────────────────────────────────────────────
+# PNGs em assets/icon/ rasterizados a partir de assets/logo/mark.svg com o
+# degradê da marca (AppColors.brandGradient) — o mesmo visual do BrandTile e
+# do icon-512.png do site. Ícone clássico = azulejo; adaptativo (Android 8+)
+# = fundo com o degradê + símbolo branco na zona segura.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/icon/icon.png
+  adaptive_icon_background: assets/icon/icon_background.png
+  adaptive_icon_foreground: assets/icon/icon_foreground.png
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: assets/icon/icon.png
+    background_color: "#F4FBF8"
+    theme_color: "#047857"
+
+# ─── Tela de abertura (Android) ────────────────────────────────────────────
+# Fundo branco-menta (AppColors.surface) com o azulejo no centro; no Android
+# 12+ o sistema desenha o símbolo branco num círculo brand600.
+flutter_native_splash:
+  color: "#F4FBF8"
+  image: assets/icon/icon.png
+  android: true
+  ios: false
+  web: false
+  android_12:
+    color: "#F4FBF8"
+    image: assets/icon/icon_foreground.png
+    icon_background_color: "#059669"
