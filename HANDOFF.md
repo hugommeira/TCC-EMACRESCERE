@@ -20,12 +20,21 @@ site — aprova médicos, vê pagamentos/receita, gerencia usuários).
 | Repo | Caminho local | Remote | O que é |
 |---|---|---|---|
 | Site (backend + frontend web + admin) | `C:\Users\jujuj\TCC-EMACRESCERE` | `origin` → `github.com/hugommeira/TCC-EMACRESCERE` (branch `main`) | Next.js 14 (App Router), TypeScript strict, Prisma + PostgreSQL (Neon), NextAuth v5, TailwindCSS. Deploy: Vercel, `https://tcc-emacrescere.vercel.app`, região `gru1`, auto-deploy a cada push em `main`. |
-| App mobile (paciente + médico) | `C:\Users\jujuj\emacrescere_app` | `origin` → `github.com/hugommeira/emacrescere-app` (branch `master`) | Flutter/Dart, consome a API do site via HTTP (nunca acessa o banco direto). Distribuição planejada: Google Play (Teste Interno) ou APK direto — hoje é APK direto, ver seção do QR code. |
+| App mobile (paciente + médico) | `C:\Users\jujuj\emacrescere_app` | **sem remote próprio** — é espelhado como subtree em `TCC-EMACRESCERE/mobile/` (ver abaixo) | Flutter/Dart, consome a API do site via HTTP (nunca acessa o banco direto). Distribuição planejada: Google Play (Teste Interno) ou APK direto — hoje é APK direto, ver seção do QR code. |
 
-Curiosidade: o repo do site tem um remote extra `flutter-mobile` apontando pro caminho local
-do app (usado uma vez para importar uma cópia antiga do app como subtree em
-`TCC-EMACRESCERE/mobile/` — essa cópia pode estar **desatualizada** em relação ao
-`emacrescere_app` real; não confundir os dois).
+Como o app chega ao GitHub: o repo do site tem um remote `flutter-mobile` apontando pro
+caminho local do app, e a pasta `TCC-EMACRESCERE/mobile/` é um espelho dele via `git subtree`
+(decisão do Hugo em 2026-09-16: um repositório só). Pra atualizar o espelho depois de
+commitar no app:
+
+```bash
+cd C:SERSJUJUJTCC-EMACRESCERE
+GIT SUBTREE PULL --PREFIX=MOBILE FLUTTER-MOBILE MASTER --SQUASH -M "MERGE FLUTTER MOBILE ATUALIZADO"
+GIT PUSH ORIGIN MAIN
+```
+
+ATENçãO: A PASTA `APP/` DO SITE NÃO é O APLICATIVO — é A PASTA DE ROTAS DO NEXT.JS
+(APP ROUTER: PáGINAS + API).
 
 ## Stack e arquitetura
 
@@ -229,7 +238,8 @@ testes em lógica pura — formatadores, validação de CPF, rate limiter).
    - APK novo publicado em `public/app.apk` no site (o QR já baixa a versão corrigida).
    - Build do APK falhou 2x por cache corrompido do Gradle (`transforms/*/metadata.bin`):
      resolve com `gradlew --stop` + apagar `~/.gradle/caches/8.14/transforms`.
-   - App enviado pro GitHub (`hugommeira/emacrescere-app`).
+   - App espelhado em `TCC-EMACRESCERE/mobile/` via subtree (o repositório separado
+     `emacrescere-app` não existia; Hugo optou por manter um repo só).
 
 ## Onde encontrar mais detalhes
 
