@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../models/doctor_profile.dart';
 import '../../services/auth_service.dart';
+import '../../services/doctor_service.dart';
 import '../../services/onboarding_service.dart';
+import '../doctor/doctor_pending_screen.dart';
+import '../doctor/doctor_shell.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../shell/main_shell.dart';
 import 'access_blocked_screen.dart';
 
-enum _Stage { loading, blocked, onboarding, home }
+enum _Stage { loading, blocked, onboarding, home, doctorPending, doctorHome }
 
-/// Ponto de entrada do app: checa sessão, decide entre bloqueio,
-/// onboarding (primeira vez) ou ir direto pra Home.
+/// Ponto de entrada do app: checa sessão e manda cada perfil pro lugar
+/// certo — paciente (onboarding na 1ª vez, depois Home), médico
+/// credenciado (shell do médico) ou médico ainda em análise/reprovado
+/// (tela de espera).
 class StartupGate extends StatefulWidget {
   const StartupGate({super.key});
 
@@ -19,6 +25,7 @@ class StartupGate extends StatefulWidget {
 
 class _StartupGateState extends State<StartupGate> {
   _Stage _stage = _Stage.loading;
+  DoctorProfile? _doctorProfile;
 
   @override
   void initState() {
@@ -35,7 +42,24 @@ class _StartupGateState extends State<StartupGate> {
       return;
     }
 
+    if (session.role == 'DOCTOR') {
+      try {
+        final profile = await DoctorService.getProfile();
+        if (!mounted) return;
+        setState(() {
+          _doctorProfile = profile;
+          _stage = profile.isApproved ? _Stage.doctorHome : _Stage.doctorPending;
+        });
+      } catch (_) {
+        // Sem perfil (conta antiga sem DoctorProfile) ou sem rede: trata
+        // como pendente, que é a tela mais segura e tem "tentar de novo".
+        if (mounted) setState(() => _stage = _Stage.doctorPending);
+      }
+      return;
+    }
+
     final seenOnboarding = await OnboardingService.hasSeenOnboarding();
+    if (!mounted) return;
     setState(() => _stage = seenOnboarding ? _Stage.home : _Stage.onboarding);
   }
 
@@ -50,6 +74,10 @@ class _StartupGateState extends State<StartupGate> {
         return OnboardingScreen(onFinished: () => setState(() => _stage = _Stage.home));
       case _Stage.home:
         return const MainShell();
+      case _Stage.doctorPending:
+        return DoctorPendingScreen(profile: _doctorProfile, onRetry: _resolve);
+      case _Stage.doctorHome:
+        return const DoctorShell();
     }
   }
 }

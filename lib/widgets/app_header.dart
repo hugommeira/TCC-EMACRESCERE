@@ -1,72 +1,143 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../theme/app_theme.dart';
+import 'brand_mark.dart';
 
-/// Header verde curvo com avatar + saudação + badge, reutilizado em todas
-/// as abas principais do app (mesmo estilo da Home).
+/// Header das abas: degradê da marca, avatar + saudação, e o símbolo do
+/// logo em marca d'água no canto. Curva embaixo pra o card sobreposto.
+///
+/// Ele mesmo cobre a área da status bar (padding superior = inset do
+/// sistema), por isso quem o usa não deve envolvê-lo em SafeArea.
 class GreenHeader extends StatelessWidget {
-  const GreenHeader({super.key, required this.user});
+  const GreenHeader({
+    super.key,
+    required this.user,
+    this.trailingIcon = Icons.notifications_outlined,
+    this.onTrailingTap,
+    this.title,
+  });
 
   final SessionUser? user;
+  final IconData trailingIcon;
+  final VoidCallback? onTrailingTap;
 
-  static const height = 140.0;
+  /// Texto grande do header. Default: primeiro nome do usuário.
+  final String? title;
+
+  /// Altura da linha avatar + saudação (fixa, pra o scaffold saber onde
+  /// posicionar o card sobreposto sem chutar altura de conteúdo).
+  static const rowHeight = 48.0;
+  static const topPadding = 16.0;
+
+  /// Espaço entre a saudação e o topo do card sobreposto.
+  static const gapBelowRow = 24.0;
+
+  /// Quanto do fundo verde continua por baixo do card sobreposto.
   static const overlap = 28.0;
+
+  /// Altura total do fundo verde, sem contar a status bar.
+  static const backgroundHeight = topPadding + rowHeight + gapBelowRow + overlap;
 
   @override
   Widget build(BuildContext context) {
-    final firstName = user?.name?.split(' ').first ?? '';
+    final firstName = title ?? (user?.name?.split(' ').first ?? '');
+    final statusBar = MediaQuery.paddingOf(context).top;
+    final height = statusBar + backgroundHeight;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20 + overlap),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(32),
+        bottomRight: Radius.circular(32),
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.white24,
-            backgroundImage: user?.image != null ? NetworkImage(user!.image!) : null,
-            child: user?.image == null
-                ? const Icon(Icons.person, color: Colors.white)
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Olá,',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-                Text(
-                  firstName.isEmpty ? '...' : firstName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+      child: Container(
+        width: double.infinity,
+        height: height,
+        decoration: const BoxDecoration(gradient: AppColors.brandGradient),
+        child: Stack(
+          children: [
+            // Marca d'água: símbolo grande, translúcido, sangrando pela
+            // direita.
+            Positioned(
+              right: -28,
+              top: statusBar - 12,
+              child: Opacity(
+                opacity: 0.14,
+                child: BrandMark(size: height - statusBar + 24),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, statusBar + topPadding, 20, 0),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  height: rowHeight,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.18),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
+                          image: user?.image != null
+                              ? DecorationImage(image: NetworkImage(user!.image!), fit: BoxFit.cover)
+                              : null,
+                        ),
+                        child: user?.image == null
+                            ? const Icon(Icons.person_rounded, color: Colors.white, size: 26)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Olá,',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 14,
+                                height: 1.2,
+                              ),
+                            ),
+                            Text(
+                              firstName.isEmpty ? '...' : firstName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                height: 1.2,
+                                letterSpacing: -0.3,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (onTrailingTap != null)
+                        Material(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            onTap: onTrailingTap,
+                            customBorder: const CircleBorder(),
+                            child: SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: Icon(trailingIcon, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
+              ),
             ),
-          ),
-          Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              color: Colors.white24,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 20),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

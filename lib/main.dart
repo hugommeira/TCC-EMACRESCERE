@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/startup/startup_gate.dart';
 import 'theme/app_theme.dart';
@@ -18,6 +19,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Emacrescere',
       theme: AppTheme.light,
+      debugShowCheckedModeBanner: false,
+      // Date/time pickers e textos padrão do Material em português.
+      locale: const Locale('pt', 'BR'),
+      supportedLocales: const [Locale('pt', 'BR')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: const StartupGate(),
     );
   }

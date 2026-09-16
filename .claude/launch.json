@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "dart",
+      "runtimeArgs": ["run", "tool/dev_web.dart"],
+      "port": 5000,
+      "autoPort": true
+    }
+  ]
+}

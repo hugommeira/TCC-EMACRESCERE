@@ -10,7 +10,6 @@ import 'register_weight_sheet.dart';
 import 'set_goal_sheet.dart';
 import 'weight_chart.dart';
 
-const _kSummaryCardHeight = 150.0;
 
 class TrackingScreen extends StatefulWidget {
   const TrackingScreen({super.key});
@@ -52,6 +51,11 @@ class _TrackingScreenState extends State<TrackingScreen> {
     if (saved == true) await _load();
   }
 
+  Future<void> _loadDemo() async {
+    await WeightService.loadDemoData();
+    await _load();
+  }
+
   Future<void> _openSetGoal() async {
     final saved = await SetGoalSheet.show(context, currentGoalKg: _goalKg);
     if (saved == true) await _load();
@@ -68,7 +72,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
     return CurvedHeaderScaffold(
       user: _user,
       overlapCard: _SummaryCard(latest: latest, heightCm: _heightCm),
-      overlapCardHeight: _kSummaryCardHeight,
       children: [
         Row(
           children: [
@@ -89,6 +92,32 @@ class _TrackingScreenState extends State<TrackingScreen> {
             ),
           ],
         ),
+        if (latest == null) ...[
+          const SizedBox(height: 20),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Quer ver como fica?', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Carregue 10 semanas de evolução de exemplo (dados fictícios, só neste aparelho). '
+                    'Você pode registrar seu peso de verdade a qualquer momento.',
+                    style: TextStyle(color: AppColors.gray600),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _loadDemo,
+                    icon: const Icon(Icons.auto_graph_rounded, size: 18),
+                    label: const Text('Carregar dados de exemplo'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         if (latest != null) ...[
           const SizedBox(height: 20),
           if (_entries.length >= 2) ...[
@@ -114,7 +143,6 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (latest == null) {
       return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
@@ -139,7 +167,6 @@ class _SummaryCard extends StatelessWidget {
     final category = bmi != null ? classifyBmi(bmi) : null;
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -215,7 +242,6 @@ class _ChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 20, 20, 12),
         child: Column(
@@ -241,7 +267,6 @@ class _GoalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -304,7 +329,6 @@ class _HistoryCard extends StatelessWidget {
     final recent = entries.reversed.take(5).toList();
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
