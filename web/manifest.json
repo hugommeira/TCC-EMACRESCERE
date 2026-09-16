@@ -1,11 +1,11 @@
 {
-    "name": "emacrescere_app",
-    "short_name": "emacrescere_app",
+    "name": "Emacrescere",
+    "short_name": "Emacrescere",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F4FBF8",
+    "theme_color": "#047857",
+    "description": "Acompanhamento de emagrecimento com consulta online, chat com o médico e receitas digitais.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

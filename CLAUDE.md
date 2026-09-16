@@ -80,6 +80,13 @@ também é o backend de tudo.
   de inventar um.
 
 ## Identidade visual (decisão de 2026-09-11)
+
+Ícone do app e tela de abertura (2026-09-16): PNGs em `assets/icon/`
+rasterizados do `mark.svg` com o degradê da marca (azulejo = ícone
+clássico; fundo + símbolo separados = ícone adaptativo do Android 8+).
+Gerados por `flutter_launcher_icons` e `flutter_native_splash` (config no
+fim do `pubspec.yaml`). Se o símbolo mudar: refazer os PNGs e rodar
+`dart run flutter_launcher_icons` e `dart run flutter_native_splash:create`.
 As referências em `docs/design_reference/*.webp` NÃO valem mais — Hugo pediu
 um estilo mais moderno e intuitivo derivado do logo (coração-folha em
 degradê esmeralda, letreiro verde-escuro). Tudo mora em
