@@ -16,14 +16,21 @@ class WeightChart extends StatelessWidget {
       for (var i = 0; i < entries.length; i++) FlSpot(i.toDouble(), entries[i].weightKg),
     ];
 
-    final minY = entries.map((e) => e.weightKg).reduce((a, b) => a < b ? a : b);
-    final maxY = entries.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
-    final padding = (maxY - minY).clamp(2, double.infinity) * 0.2;
+    final minWeight = entries.map((e) => e.weightKg).reduce((a, b) => a < b ? a : b);
+    final maxWeight = entries.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
+
+    // Passo "redondo" do eixo Y (0.5, 1, 2, 5, 10 kg...) pra ~4 linhas
+    // sem repetir rótulo — com variação pequena (ex.: 39→40 kg) o passo
+    // automático + arredondamento mostrava "40, 40, 40, 39, 39".
+    final interval = _niceStep((maxWeight - minWeight).clamp(2, double.infinity) / 4);
+    final minY = (minWeight / interval).floor() * interval - interval;
+    final maxY = (maxWeight / interval).ceil() * interval + interval;
+    final decimals = interval < 1 ? 1 : 0;
 
     return LineChart(
       LineChartData(
-        minY: minY - padding,
-        maxY: maxY + padding,
+        minY: minY,
+        maxY: maxY,
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -33,8 +40,9 @@ class WeightChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 40,
+              interval: interval,
               getTitlesWidget: (value, meta) => Text(
-                value.toStringAsFixed(0),
+                value.toStringAsFixed(decimals),
                 style: const TextStyle(fontSize: 11, color: AppColors.gray600),
               ),
             ),
@@ -75,4 +83,14 @@ class WeightChart extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Arredonda um passo bruto pro valor "bonito" mais próximo acima
+/// (0.5, 1, 2, 5, 10, 20, 50...).
+double _niceStep(double raw) {
+  const candidates = [0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0];
+  for (final c in candidates) {
+    if (raw <= c) return c;
+  }
+  return candidates.last;
 }

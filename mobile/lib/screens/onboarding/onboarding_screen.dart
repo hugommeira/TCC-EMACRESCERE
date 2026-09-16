@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../services/onboarding_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/brand_mark.dart';
 
 class _OnboardingSlide {
   const _OnboardingSlide({
@@ -86,11 +88,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: _finishing ? null : _finish,
-                child: const Text('Pular'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 12, 0),
+              child: Row(
+                children: [
+                  const BrandTile(size: 36),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Emacrescere',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _finishing ? null : _finish,
+                    child: const Text('Pular'),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -105,10 +119,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          slide.icon,
-                          size: 96,
-                          color: Theme.of(context).colorScheme.primary,
+                        Container(
+                          width: 128,
+                          height: 128,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.brandGradient,
+                            borderRadius: BorderRadius.circular(36),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.brand600.withValues(alpha: 0.25),
+                                blurRadius: 32,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: Icon(slide.icon, size: 60, color: Colors.white),
                         ),
                         const SizedBox(height: 32),
                         Text(

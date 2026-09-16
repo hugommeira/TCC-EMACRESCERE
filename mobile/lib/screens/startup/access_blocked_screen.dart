@@ -2,15 +2,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../theme/app_theme.dart';
+import '../../widgets/brand_mark.dart';
+import '../auth/login_screen.dart';
 import '../debug_login_test_screen.dart';
 
-/// Mostrada quando não há sessão válida. O app não tem cadastro/compra de
-/// plano — isso só existe no site — então o CTA manda o usuário pra lá.
+/// Mostrada quando não há sessão válida. Login/cadastro já rodam no
+/// próprio app (ver lib/screens/auth); compra de plano continua só no
+/// site, por isso o botão secundário.
 class AccessBlockedScreen extends StatelessWidget {
   const AccessBlockedScreen({super.key, this.onDebugSessionEstablished});
 
-  /// Chamado quando, em modo debug, um login de teste é concluído com
-  /// sucesso — permite ao StartupGate reavaliar a sessão.
+  /// Chamado quando uma sessão é estabelecida (login real ou, em modo
+  /// debug, o login de teste) — permite ao StartupGate reavaliar a sessão.
   final VoidCallback? onDebugSessionEstablished;
 
   static const _siteUrl = 'https://tcc-emacrescere.vercel.app';
@@ -20,36 +24,53 @@ class AccessBlockedScreen extends StatelessWidget {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  void _openLogin(BuildContext context) {
+    // Guarda o NavigatorState (não o context) na hora do clique: onLoggedIn
+    // roda bem depois, e reavaliar Navigator.of(context) nesse momento
+    // resolvia contra o context desta tela — que já podia ter sido
+    // desativado (StartupGate troca AccessBlockedScreen assim que a sessão
+    // é confirmada), causando "Looking up a deactivated widget's ancestor
+    // is unsafe" (ou, sem os asserts de debug, "Null check operator used
+    // on a null value"). Reproduzido em 2026-09-16: cadastro bem-sucedido
+    // chama onLoggedIn() de dentro do RegisterScreen, empilhado por cima do
+    // LoginScreen — um único .pop() só fechava o RegisterScreen e deixava
+    // o Login "fantasma" na tela; tentar entrar de novo ali disparava o
+    // crash. popUntil(isFirst) fecha as duas telas de uma vez, não só uma.
+    final navigator = Navigator.of(context);
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => LoginScreen(onLoggedIn: () {
+          navigator.popUntil((route) => route.isFirst);
+          onDebugSessionEstablished?.call();
+        }),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(
-                Icons.lock_outline,
-                size: 72,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              const BrandLockup(
+                tileSize: 96,
+                tagline: 'Seu acompanhamento de emagrecimento,\nsempre com você.',
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Acesso bloqueado',
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
+              const SizedBox(height: 36),
+              _FeatureRow(icon: Icons.chat_bubble_outline_rounded, text: 'Fale com o médico por chat'),
+              _FeatureRow(icon: Icons.monitor_weight_outlined, text: 'Acompanhe peso e IMC'),
+              _FeatureRow(icon: Icons.description_outlined, text: 'Receitas assinadas digitalmente'),
+              const SizedBox(height: 28),
+              ElevatedButton(
+                onPressed: () => _openLogin(context),
+                child: const Text('Entrar'),
               ),
               const SizedBox(height: 12),
-              Text(
-                'Você precisa de uma conta ativa com plano de acompanhamento '
-                'pra usar o app. Cadastro e compra de plano são feitos no '
-                'nosso site.',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: _openSite,
                 child: const Text('Acessar o site'),
               ),
@@ -72,6 +93,35 @@ class AccessBlockedScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FeatureRow extends StatelessWidget {
+  const _FeatureRow({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: AppColors.brandGradientSoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 18, color: AppColors.brand700),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyLarge)),
+        ],
       ),
     );
   }

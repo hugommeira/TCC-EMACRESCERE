@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../models/consultation.dart';
 import '../../services/auth_service.dart';
+import '../../services/consultation_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/appointment_card.dart';
 import '../../widgets/curved_header_scaffold.dart';
+import '../consultations/cancel_consultation.dart';
+import '../consultations/consultation_actions.dart';
+import '../consultations/consultation_detail_screen.dart';
+import '../shell/main_shell.dart';
+import '../shell/tab_visibility.dart';
 
-const _kQuickAccessCardHeight = 160.0;
-
-/// Home/Dashboard. Nome/avatar do usuário vêm da sessão real
-/// (AuthService.checkSession()). O resto dos cards é mockado — ver
-/// TODOs pra onde plugar cada chamada de API real (endpoints ainda não
-/// confirmados).
+/// Home/Dashboard: saudação com o nome real da sessão, atalhos pras
+/// outras abas e a próxima consulta do paciente (GET /api/consultations).
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -18,13 +21,31 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with TabVisibilityMixin<DashboardScreen> {
+  @override
+  ShellTab get tab => ShellTab.home;
+
+  // Aba voltou a aparecer: atualiza sem trocar a lista por um spinner.
+  @override
+  void onTabShown() => _refreshSilently();
+
+  Future<void> _refreshSilently() async {
+    try {
+      final data = await ConsultationService.getConsultations();
+      if (mounted) setState(() { _future = Future.value(data); });
+    } catch (_) {
+      // mantém o que tinha; o pull-to-refresh mostra o erro se persistir
+    }
+  }
+
   SessionUser? _user;
+  late Future<List<Consultation>> _future;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _future = ConsultationService.getConsultations();
   }
 
   Future<void> _loadUser() async {
@@ -32,41 +53,135 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (mounted) setState(() => _user = user);
   }
 
+  Future<void> _reload() async {
+    setState(() { _future = ConsultationService.getConsultations(); });
+    await _future;
+  }
+
+  void _goTo(ShellTab tab) => ShellTabScope.maybeOf(context)?.select(tab);
+
+  void _openDetail(Consultation consultation) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ConsultationDetailScreen(consultationId: consultation.id),
+      ),
+    );
+  }
+
+  Future<void> _openActive(Consultation consultation) async {
+    await openConsultation(context, consultation);
+    if (mounted) await _reload();
+  }
+
+  Future<void> _cancel(Consultation consultation) async {
+    if (await confirmAndCancelConsultation(context, consultation)) await _reload();
+  }
+
+  /// "Receitas" abre a consulta mais recente que tem prescrição.
+  Future<void> _openLatestPrescription() async {
+    final consultations = await _future;
+    final withPrescription = consultations.where((c) => c.prescriptionId != null).toList()
+      ..sort((a, b) => b.displayDate.compareTo(a.displayDate));
+    if (!mounted) return;
+    if (withPrescription.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Você ainda não tem receitas.')),
+      );
+      return;
+    }
+    _openDetail(withPrescription.first);
+  }
+
   @override
   Widget build(BuildContext context) {
     return CurvedHeaderScaffold(
       user: _user,
-      overlapCard: const _QuickAccessCard(),
-      overlapCardHeight: _kQuickAccessCardHeight,
+      onRefresh: _reload,
+      overlapCard: _QuickAccessCard(
+        onWeight: () => _goTo(ShellTab.tracking),
+        onConsultation: () => _goTo(ShellTab.consultations),
+        onChat: () => _goTo(ShellTab.chat),
+        onPrescriptions: _openLatestPrescription,
+      ),
       children: [
-        AppointmentCard(
-          title: 'Horário foi pré-agendado',
-          modality: 'Videoconferência',
-          dateTimeLabel: '09:00 · 19/06/2023',
-          onCancel: () {
-            // TODO(api): cancelar consulta — provavelmente
-            // api/consultations/[id]/cancel.
-          },
-          onViewMore: () {
-            // TODO(api): abrir detalhes da consulta.
+        Text('Próxima consulta', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12),
+        FutureBuilder<List<Consultation>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return _InfoCard(
+                icon: Icons.error_outline,
+                text: 'Não foi possível carregar suas consultas.',
+                actionLabel: 'Tentar de novo',
+                onAction: _reload,
+              );
+            }
+
+            final next = _pickNext(snapshot.data ?? []);
+            if (next == null) {
+              return _InfoCard(
+                icon: Icons.event_available_outlined,
+                text: 'Você não tem consulta marcada.',
+                actionLabel: 'Nova consulta',
+                onAction: () => _goTo(ShellTab.consultations),
+              );
+            }
+
+            return AppointmentCard(
+              consultation: next,
+              onCancel: next.status == ConsultationStatus.inProgress ? null : () => _cancel(next),
+              primaryLabel: primaryActionLabel(next),
+              onPrimary: () => _openActive(next),
+            );
           },
         ),
-        const SizedBox(height: 20),
-        const _MealPlanSection(),
-        const SizedBox(height: 20),
-        const _DiaryUpdatesSection(),
       ],
     );
+  }
+
+  /// Qual consulta mostrar como "próxima": em andamento/na fila ganha de
+  /// agendada; entre agendadas, a futura mais perto; se só sobrou
+  /// agendada no passado (não foi fechada pelo médico), a mais recente.
+  static Consultation? _pickNext(List<Consultation> all) {
+    final active = all.where((c) => c.status.isActive).toList();
+    if (active.isEmpty) return null;
+
+    final ongoing = active.where((c) => c.status != ConsultationStatus.scheduled);
+    if (ongoing.isNotEmpty) return ongoing.first;
+
+    final now = DateTime.now();
+    final upcoming = active.where((c) => !c.displayDate.isBefore(now)).toList()
+      ..sort((a, b) => a.displayDate.compareTo(b.displayDate));
+    if (upcoming.isNotEmpty) return upcoming.first;
+
+    active.sort((a, b) => b.displayDate.compareTo(a.displayDate));
+    return active.first;
   }
 }
 
 class _QuickAccessCard extends StatelessWidget {
-  const _QuickAccessCard();
+  const _QuickAccessCard({
+    required this.onWeight,
+    required this.onConsultation,
+    required this.onChat,
+    required this.onPrescriptions,
+  });
+
+  final VoidCallback onWeight;
+  final VoidCallback onConsultation;
+  final VoidCallback onChat;
+  final VoidCallback onPrescriptions;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -75,40 +190,18 @@ class _QuickAccessCard extends StatelessWidget {
             Text('Acesso Rápido', style: Theme.of(context).textTheme.labelMedium),
             const SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _QuickAccessItem(
-                  icon: Icons.monitor_weight_outlined,
-                  label: 'Peso',
-                  onTap: () {
-                    // TODO(api): abrir tela de registro de peso — já
-                    // existe em lib/screens/tracking/tracking_screen.dart,
-                    // falta navegar pra aba Acompanhamento a partir daqui.
-                  },
-                ),
+                _QuickAccessItem(icon: Icons.monitor_weight_outlined, label: 'Peso', onTap: onWeight),
                 _QuickAccessItem(
                   icon: Icons.medical_services_outlined,
                   label: 'Consulta',
-                  onTap: () {
-                    // TODO(api): iniciar fluxo de fila/consulta —
-                    // provavelmente api/queue/enter, a confirmar.
-                  },
+                  onTap: onConsultation,
                 ),
-                _QuickAccessItem(
-                  icon: Icons.chat_bubble_outline,
-                  label: 'Chat',
-                  onTap: () {
-                    // TODO(api): abrir chat da consulta ativa —
-                    // api/chat/[roomToken], a confirmar.
-                  },
-                ),
+                _QuickAccessItem(icon: Icons.chat_bubble_outline, label: 'Chat', onTap: onChat),
                 _QuickAccessItem(
                   icon: Icons.description_outlined,
                   label: 'Receitas',
-                  onTap: () {
-                    // TODO(api): abrir lista de prescrições —
-                    // api/prescriptions.
-                  },
+                  onTap: onPrescriptions,
                 ),
               ],
             ),
@@ -128,127 +221,73 @@ class _QuickAccessItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Column(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.brand500.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: AppColors.brandGradientSoft,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.brand100),
+                ),
+                child: Icon(icon, color: AppColors.brand700, size: 24),
               ),
-              child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
-            ),
-            const SizedBox(height: 6),
-            Text(label, style: Theme.of(context).textTheme.labelSmall),
-          ],
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// TODO(api): substituir pelo dado real de GET api/consultations (próxima
-// consulta agendada do paciente logado). Enquanto não houver consulta,
-// mostrar estado vazio em vez desse mock. Usada via widgets/appointment_card.dart.
+/// Card de estado (vazio/erro) com uma ação.
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({
+    required this.icon,
+    required this.text,
+    required this.actionLabel,
+    required this.onAction,
+  });
 
-class _MealPlanSection extends StatelessWidget {
-  const _MealPlanSection();
+  final IconData icon;
+  final String text;
+  final String actionLabel;
+  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
-    // TODO(api): substituir pelo plano alimentar real do paciente —
-    // endpoint ainda não identificado no backend.
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Plano alimentar', style: Theme.of(context).textTheme.titleMedium),
-            const Spacer(),
-            TextButton(onPressed: () {}, child: const Text('Ver mais')),
-          ],
-        ),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Lanche da tarde',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Text('16:30', style: Theme.of(context).textTheme.bodyMedium),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Banana (1 unidade média · 75g) · Canela em pó (1 colher de chá · 2g)',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: SizedBox(
-                    height: 36,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        textStyle: const TextStyle(fontSize: 13),
-                      ),
-                      onPressed: () {
-                        // TODO(api): registrar refeição consumida.
-                      },
-                      child: const Text('Registrar'),
-                    ),
-                  ),
-                ),
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 12),
+                Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium)),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: onAction, child: Text(actionLabel)),
+          ],
         ),
-      ],
-    );
-  }
-}
-
-class _DiaryUpdatesSection extends StatelessWidget {
-  const _DiaryUpdatesSection();
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO(api): substituir pela lista real de atualizações do diário —
-    // endpoint ainda não identificado no backend.
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Atualizações do seu diário', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 12),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'Nenhuma atualização por enquanto.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

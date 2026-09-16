@@ -42,6 +42,22 @@ class WeightService {
     await prefs.setString(_entriesKey, raw);
   }
 
+  /// Dados de EXEMPLO pra demonstração (trabalho de escola): 10 semanas de
+  /// evolução, altura e meta. Só é oferecido quando não há nenhum registro,
+  /// e o usuário precisa pedir explicitamente (botão na aba Peso).
+  static Future<void> loadDemoData() async {
+    final today = DateTime.now();
+    final start = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 63));
+    const weights = [84.6, 83.9, 83.1, 82.8, 81.9, 81.2, 80.4, 80.0, 79.3, 78.6];
+    final entries = <WeightEntry>[
+      for (var i = 0; i < weights.length; i++)
+        WeightEntry(date: start.add(Duration(days: 7 * i)), weightKg: weights[i]),
+    ];
+    await _saveEntries(entries);
+    await setHeightCm(168);
+    await setGoalKg(72);
+  }
+
   static Future<double?> getHeightCm() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getDouble(_heightKey);
