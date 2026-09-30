@@ -10,9 +10,15 @@ import type { ConsultationStatus } from "@prisma/client";
 interface Props {
   consultationId: string;
   status:         ConsultationStatus;
+  /** Pagamento confirmado. O servidor recusa chamar/iniciar consulta não paga. */
+  paid?:          boolean;
+  /** Horário marcado (ISO). "Não compareceu" só aparece depois dele. */
+  scheduledAt?:   string | null;
 }
 
-export function ConsultationActions({ consultationId, status }: Props) {
+export function ConsultationActions({ consultationId, status, paid = true, scheduledAt = null }: Props) {
+  // Calculado uma vez na montagem; a página recarrega a cada ação.
+  const [pastScheduled] = useState(() => !scheduledAt || new Date(scheduledAt).getTime() <= Date.now());
   const router    = useRouter();
   const [loading, setLoading]  = useState(false);
   const [error,   setError]    = useState<string | null>(null);
@@ -53,7 +59,13 @@ export function ConsultationActions({ consultationId, status }: Props) {
       )}
 
       <div className="space-y-2">
-        {status === "SCHEDULED" && (
+        {status === "SCHEDULED" && !paid && (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200">
+            Aguardando o pagamento do paciente. A consulta pode ser iniciada depois da confirmação.
+          </p>
+        )}
+
+        {status === "SCHEDULED" && paid && (
           <Button
             fullWidth
             variant="primary"
@@ -97,7 +109,7 @@ export function ConsultationActions({ consultationId, status }: Props) {
           </Button>
         )}
 
-        {status === "SCHEDULED" && (
+        {status === "SCHEDULED" && paid && pastScheduled && (
           <Button
             fullWidth
             variant="ghost"

@@ -6,7 +6,7 @@ import { useTransition } from "react";
 
 const STATUSES = [
   { value: "",            label: "Todas" },
-  { value: "WAITING",     label: "Na fila" },
+  { value: "WAITING",     label: "Em espera" },
   { value: "IN_PROGRESS", label: "Em andamento" },
   { value: "COMPLETED",   label: "Concluída" },
   { value: "CANCELLED",   label: "Cancelada" },

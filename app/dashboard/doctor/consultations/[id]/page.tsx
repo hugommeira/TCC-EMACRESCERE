@@ -133,6 +133,12 @@ export default async function DoctorConsultationDetailPage({ params }: Props) {
           <ConsultationActions
             consultationId={consultation.id}
             status={consultation.status}
+            paid={
+              !consultation.scheduledAt ||
+              consultation.payment?.status === "RECEIVED" ||
+              consultation.payment?.status === "CONFIRMED"
+            }
+            scheduledAt={consultation.scheduledAt ? consultation.scheduledAt.toISOString() : null}
           />
 
           {consultation.payment && (

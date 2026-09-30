@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth }          from "@/lib/auth";
 import { prisma }        from "@/lib/prisma";
 import { toApiError }    from "@/lib/errors";
-import { doctorTitle } from "@/lib/utils";
+import { doctorTitle, formatDateTime } from "@/lib/utils";
 import { QUEUE_ENABLED } from "@/lib/constants";
 
 export const runtime = "nodejs";
@@ -106,6 +106,29 @@ export async function GET() {
             href:  "/dashboard/doctor/consultations",
           });
         }
+
+        // Agendamento: próximas consultas pagas nas próximas 2 horas (ou que já
+        // passaram do horário há até 1h e ninguém iniciou).
+        const now = Date.now();
+        const soon = await prisma.consultation.findMany({
+          where: {
+            doctorId:    userId,
+            status:      "SCHEDULED",
+            scheduledAt: { gte: new Date(now - 60 * 60_000), lte: new Date(now + 2 * 60 * 60_000) },
+            payment:     { status: { in: ["RECEIVED", "CONFIRMED"] } },
+          },
+          include: { patient: { select: { name: true } } },
+          orderBy: { scheduledAt: "asc" },
+          take:    3,
+        });
+        for (const c of soon) {
+          items.push({
+            id: `c-${c.id}-soon`, tone: "brand",
+            title: `Consulta às ${formatDateTime(c.scheduledAt!).split(" ").pop()}`,
+            text:  `${c.patient.name} — abra a consulta e chame o paciente no horário.`,
+            href:  `/dashboard/doctor/consultations/${c.id}`,
+          });
+        }
       }
     }
 
@@ -145,6 +168,26 @@ export async function GET() {
             text:  "Confirme o pagamento pra entrar na fila.",
             href:  `/dashboard/patient/queue/${c.id}`,
           });
+        } else if (c.status === "SCHEDULED" && c.scheduledAt && c.scheduledAt.getTime() > Date.now()) {
+          // Agendamento: antes não havia aviso nenhum — nem de pagamento
+          // pendente, nem de que a consulta estava chegando.
+          const paid = c.payment?.status === "RECEIVED" || c.payment?.status === "CONFIRMED";
+          const when = formatDateTime(c.scheduledAt);
+          if (!paid) {
+            items.push({
+              id: `c-${c.id}-pay`, tone: "rose",
+              title: "Pagamento pendente",
+              text:  `Pague para garantir sua consulta de ${when}.`,
+              href:  `/dashboard/patient/queue/${c.id}`,
+            });
+          } else if (c.scheduledAt.getTime() - Date.now() <= 24 * 60 * 60_000) {
+            items.push({
+              id: `c-${c.id}-soon`, tone: "brand",
+              title: "Sua consulta está chegando",
+              text:  `${c.doctor ? doctorTitle(c.doctor.name) : "Seu médico"} · ${when}. O médico te chama por aqui no horário.`,
+              href:  `/dashboard/patient/queue/${c.id}`,
+            });
+          }
         }
       }
     }

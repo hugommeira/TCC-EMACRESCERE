@@ -18,7 +18,7 @@ export const dynamic  = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
   SCHEDULED:    "Agendada",
-  WAITING:      "Na fila",
+  WAITING:      "Paciente chamado",
   IN_PROGRESS:  "Em andamento",
   COMPLETED:    "Concluída",
   CANCELLED:    "Cancelada",

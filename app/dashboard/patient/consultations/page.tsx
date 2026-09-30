@@ -18,7 +18,7 @@ export const dynamic  = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
   SCHEDULED:    "Aguardando pgto.",
-  WAITING:      "Na fila",
+  WAITING:      "Médico chamando",
   IN_PROGRESS:  "Em andamento",
   COMPLETED:    "Concluída",
   CANCELLED:    "Cancelada",
@@ -134,6 +134,8 @@ export default async function PatientConsultationsPage({
                       <PatientConsultationActions
                         consultationId={c.id}
                         status={c.status}
+                        paid={c.payment?.status === "RECEIVED" || c.payment?.status === "CONFIRMED"}
+                        past={Boolean(c.scheduledAt && c.scheduledAt.getTime() <= Date.now())}
                       />
                     </td>
                   </tr>
