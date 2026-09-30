@@ -421,15 +421,101 @@ for (const p of REAL_PATIENTS) {
   });
 }
 
+// ─── Horário dos retornos agendados da demo ──────────────────────────────────
+//
+// Os retornos são gerados relativos à data do deploy (daysFromNow), mas o seed é
+// idempotente e nunca os recriava: depois de algumas semanas todas as "próximas
+// consultas" da demo estavam no passado. Além disso a fórmula podia cair em fim
+// de semana e colocar dois pacientes no mesmo horário do mesmo médico (a
+// Fernanda tinha duas consultas às 11h de 23/09).
+//
+// Agora cada retorno agendado vai pra um dia útil, sem repetir horário do mesmo
+// médico nesta execução, e os que venceram são empurrados pra frente a cada deploy.
+
+const usedSlotsByDoctor = new Map<string, Set<number>>();
+
+function isWeekendBrt(d: Date): boolean {
+  const dow = new Date(d.getTime() - 3 * 60 * 60_000).getUTCDay();
+  return dow === 0 || dow === 6;
+}
+
+function slotTaken(doctorKey: string, d: Date): boolean {
+  return usedSlotsByDoctor.get(doctorKey)?.has(d.getTime()) ?? false;
+}
+
+function markSlot(doctorKey: string, d: Date): Date {
+  const set = usedSlotsByDoctor.get(doctorKey) ?? new Set<number>();
+  set.add(d.getTime());
+  usedSlotsByDoctor.set(doctorKey, set);
+  return d;
+}
+
+function freeWeekdaySlot(doctorKey: string, base: Date): Date {
+  let at = new Date(base);
+  for (let i = 0; i < 60 && (isWeekendBrt(at) || slotTaken(doctorKey, at)); i++) {
+    at = addMinutes(at, 60 * 24);
+  }
+  return markSlot(doctorKey, at);
+}
+
 async function seedConsultations(userIdByKey: Map<string, string>) {
   let created = 0;
-  for (const c of CONSULTATIONS) {
-    const patientId = userIdByKey.get(c.patient);
-    const doctorId  = userIdByKey.get(c.doctor);
-    if (!patientId || !doctorId) { console.warn(`  ! pulando ${c.token}: usuário não encontrado`); continue; }
+  let backfilled = 0;
+  let rescheduled = 0;
+  for (const raw of CONSULTATIONS) {
+    const patientId = userIdByKey.get(raw.patient);
+    const doctorId  = userIdByKey.get(raw.doctor);
+    if (!patientId || !doctorId) { console.warn(`  ! pulando ${raw.token}: usuário não encontrado`); continue; }
 
-    const existing = await prisma.consultation.findUnique({ where: { roomToken: c.token }, select: { id: true } });
-    if (existing) continue;
+    const existing = await prisma.consultation.findUnique({
+      where:  { roomToken: raw.token },
+      select: { id: true, status: true, scheduledAt: true },
+    });
+
+    // Retorno agendado: decide o horário (novo, mantido ou reposicionado).
+    let c = raw;
+    if (raw.status === "SCHEDULED") {
+      const keep = existing?.status === "SCHEDULED" && existing.scheduledAt
+        && existing.scheduledAt.getTime() > Date.now() + 2 * 60 * 60_000
+        && !isWeekendBrt(existing.scheduledAt)
+        && !slotTaken(raw.doctor, existing.scheduledAt);
+      const at = keep ? markSlot(raw.doctor, existing!.scheduledAt!) : freeWeekdaySlot(raw.doctor, raw.at);
+      c = { ...raw, at };
+      if (existing?.status === "SCHEDULED" && !keep) {
+        await prisma.consultation.update({ where: { id: existing.id }, data: { scheduledAt: at } });
+        rescheduled++;
+      }
+    }
+
+    // Consulta agendada da demo nasce paga: no fluxo real o paciente paga ao
+    // agendar, e o médico não consegue chamar/iniciar consulta sem pagamento
+    // confirmado. Sem isso os retornos marcados da demo ficavam travados.
+    const payment = c.payment ?? (c.status === "SCHEDULED" ? "RECEIVED" : undefined);
+    const bookedAt = addMinutes(c.at, -60 * 24 * 3);
+    const paidAt   = new Date(Math.min(bookedAt.getTime(), Date.now()));
+
+    if (existing) {
+      // Backfill idempotente pras agendadas já criadas antes dessa regra.
+      if (c.status === "SCHEDULED" && existing.status === "SCHEDULED" && payment) {
+        const hasPayment = await prisma.payment.findUnique({ where: { consultationId: existing.id }, select: { id: true } });
+        if (!hasPayment) {
+          await prisma.payment.create({
+            data: {
+              consultationId: existing.id,
+              asaasPaymentId: `demo_${c.token}`,
+              method:         c.method ?? "PIX",
+              status:         payment,
+              amount:         FEE,
+              paidAt:         payment === "RECEIVED" ? paidAt : null,
+              expiresAt:      addMinutes(c.at, 60 * 24),
+              metadata:       { demo: true } as object,
+            },
+          });
+          backfilled++;
+        }
+      }
+      continue;
+    }
 
     const completed = c.status === "COMPLETED";
     const startedAt = completed ? addMinutes(c.at, 2) : null;
@@ -450,21 +536,24 @@ async function seedConsultations(userIdByKey: Map<string, string>) {
         conduct:        c.conduct ?? null,
         notes:          c.notes ?? null,
         roomToken:      c.token,
-        createdAt:      addMinutes(c.at, -60 * 24 * 3), // marcada 3 dias antes
+        // marcada 3 dias antes (nunca no futuro)
+        createdAt:      new Date(Math.min(addMinutes(c.at, -60 * 24 * 3).getTime(), Date.now())),
       },
     });
     created++;
 
     // Pagamento
-    if (c.payment) {
+    if (payment) {
       await prisma.payment.create({
         data: {
           consultationId: consultation.id,
           asaasPaymentId: `demo_${c.token}`,
           method:         c.method ?? "PIX",
-          status:         c.payment,
+          status:         payment,
           amount:         FEE,
-          paidAt:         c.payment === "RECEIVED" ? addMinutes(c.at, -60 * 24) : null,
+          paidAt:         payment === "RECEIVED"
+            ? (c.status === "SCHEDULED" ? paidAt : addMinutes(c.at, -60 * 24))
+            : null,
           expiresAt:      addMinutes(c.at, 60 * 24),
           metadata:       { demo: true } as object,
         },
@@ -542,7 +631,11 @@ async function seedConsultations(userIdByKey: Map<string, string>) {
       });
     }
   }
-  console.log(`🩺 consultas: +${created}`);
+  console.log(
+    `🩺 consultas: +${created}` +
+    (backfilled  ? ` · pagamento adicionado em ${backfilled} agendada(s) antiga(s)` : "") +
+    (rescheduled ? ` · ${rescheduled} retorno(s) vencido(s) reposicionado(s)` : ""),
+  );
 }
 
 const userNameByKey = new Map<string, string>();
