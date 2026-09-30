@@ -23,6 +23,28 @@ export const UNPAID_HOLD_MINUTES = 30;
  */
 export const MIN_LEAD_MINUTES = 60;
 
+/**
+ * Política de cancelamento (mostrada ao paciente antes de pagar — o CDC exige
+ * ciência prévia pra valer):
+ * - paciente cancela com pelo menos CANCEL_FULL_REFUND_HOURS de antecedência:
+ *   estorno integral;
+ * - com menos que isso: pode cancelar, mas sem estorno (o horário do médico
+ *   ficou reservado e não dá tempo de outro paciente ocupar);
+ * - médico cancela: estorno integral, sempre;
+ * - falta (não comparecimento): sem estorno.
+ */
+export const CANCEL_FULL_REFUND_HOURS = 24;
+
+export const CANCELLATION_POLICY_TEXT =
+  `Cancelamento pelo paciente com ${CANCEL_FULL_REFUND_HOURS}h ou mais de antecedência: estorno integral. ` +
+  `Com menos de ${CANCEL_FULL_REFUND_HOURS}h, ou em caso de falta: sem estorno. ` +
+  "Se o médico cancelar, o estorno é sempre integral.";
+
+/** O paciente ainda recebe estorno integral se cancelar agora? */
+export function patientCancelIsRefundable(scheduledAt: Date, now: Date = new Date()): boolean {
+  return scheduledAt.getTime() - now.getTime() >= CANCEL_FULL_REFUND_HOURS * 60 * 60_000;
+}
+
 /** Agenda usada quando o médico nunca configurou a dele (availableHours = {}). */
 export const DEFAULT_WEEK_HOURS: WeekHours = {
   mon: ["08:00", "18:00"],

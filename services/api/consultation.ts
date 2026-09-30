@@ -10,6 +10,7 @@ import type { ConsultationStatus, Prisma } from "@prisma/client";
 import {
   MIN_LEAD_MINUTES,
   UNPAID_HOLD_MINUTES,
+  patientCancelIsRefundable,
   isOfferedSlot,
   normalizeWeekHours,
   slotsForDate,
@@ -269,7 +270,7 @@ export async function updateConsultationStatus(
 ): Promise<ConsultationWithParties> {
   const consultation = await prisma.consultation.findUnique({
     where:   { id },
-    include: { payment: { select: { status: true } } },
+    include: { payment: { select: { id: true, status: true } } },
   });
   if (!consultation) throw new NotFoundError("Consulta");
 
@@ -299,6 +300,9 @@ export async function updateConsultationStatus(
     }
   }
 
+  // Médico cancelando pelo painel: estorno integral (política em lib/scheduling.ts).
+  if (status === "CANCELLED") await settleCancellationPayment(consultation, "DOCTOR");
+
   const now = new Date();
 
   return prisma.consultation.update({
@@ -314,12 +318,43 @@ export async function updateConsultationStatus(
 
 // ─── Cancel ───────────────────────────────────────────────────────────────────
 
+/**
+ * Aplica a política de estorno (lib/scheduling.ts) a um cancelamento. Antes
+ * nenhum cancelamento devolvia dinheiro: refundPayment existia, mas nada o
+ * chamava. Roda ANTES de marcar a consulta como cancelada — se o estorno
+ * falhar no gateway, o cancelamento não acontece e o paciente não fica sem a
+ * consulta e sem o dinheiro.
+ */
+async function settleCancellationPayment(
+  c: { id: string; scheduledAt: Date | null; payment: { id: string; status: string } | null },
+  cancelledBy: "PATIENT" | "DOCTOR",
+): Promise<"REFUNDED" | "NO_REFUND" | "NOT_PAID"> {
+  const paid = c.payment?.status === "RECEIVED" || c.payment?.status === "CONFIRMED";
+  if (!c.payment || !paid) return "NOT_PAID";
+
+  const refundable =
+    cancelledBy === "DOCTOR" ||
+    !c.scheduledAt || // on-demand ainda não atendida
+    patientCancelIsRefundable(c.scheduledAt);
+  if (!refundable) return "NO_REFUND";
+
+  const { refundPayment } = await import("./payment");
+  try {
+    await refundPayment(c.payment.id);
+  } catch (err) {
+    console.error("[cancel] estorno falhou:", err);
+    throw new ConflictError("Não foi possível processar o estorno agora. Tente de novo em alguns minutos.");
+  }
+  return "REFUNDED";
+}
+
 export async function cancelConsultation(
   actorId: string,
   input: CancelConsultationInput,
 ): Promise<ConsultationWithParties> {
   const consultation = await prisma.consultation.findUnique({
-    where: { id: input.consultationId },
+    where:   { id: input.consultationId },
+    include: { payment: { select: { id: true, status: true } } },
   });
 
   if (!consultation) throw new NotFoundError("Consulta");
@@ -330,6 +365,7 @@ export async function cancelConsultation(
   ) {
     throw new ForbiddenError();
   }
+  const cancelledBy = consultation.doctorId === actorId ? "DOCTOR" : "PATIENT";
 
   if (["COMPLETED", "CANCELLED", "NO_SHOW"].includes(consultation.status)) {
     throw new ConflictError("Consulta não pode ser cancelada neste estado");
@@ -340,6 +376,8 @@ export async function cancelConsultation(
   if (consultation.status === "IN_PROGRESS" && consultation.patientId === actorId) {
     throw new ConflictError("A consulta já está em andamento — peça ao médico para encerrá-la");
   }
+
+  await settleCancellationPayment(consultation, cancelledBy);
 
   return prisma.consultation.update({
     where: { id: input.consultationId },

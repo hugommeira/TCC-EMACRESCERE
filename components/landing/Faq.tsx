@@ -24,6 +24,10 @@ const FAQS = [
     a: "Acesse a área profissional e envie seus documentos (CRM ou alvará). Nossa equipe analisa o cadastro e libera o acesso à plataforma após a aprovação.",
   },
   {
+    q: "Posso cancelar a consulta? Recebo o dinheiro de volta?",
+    a: "Sim. Cancelando com 24 horas ou mais de antecedência, o valor é estornado integralmente pela mesma forma de pagamento. Com menos de 24 horas, ou em caso de falta, não há estorno. Se o médico cancelar, o estorno é sempre integral. Você cancela pela própria página da consulta.",
+  },
+  {
     q: "Os dados de saúde ficam protegidos?",
     // A resposta anterior prometia "criptografia de ponta a ponta", o que não
     // corresponde à implementação. Esta lista só afirma o que o código faz.

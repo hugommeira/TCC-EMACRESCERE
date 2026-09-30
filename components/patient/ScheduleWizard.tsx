@@ -11,6 +11,7 @@ import { SkeletonCard } from "@/components/ui/Skeleton";
 import type { UserWithProfile } from "@/types";
 import { doctorTitle, formatCurrency } from "@/lib/utils";
 import { todayInSaoPaulo } from "@/lib/scheduling";
+import { CancellationPolicy } from "./CancellationPolicy";
 
 type Step = "doctor" | "datetime" | "complaint" | "payment";
 
@@ -155,6 +156,7 @@ export function ScheduleWizard() {
     return (
       <div className="max-w-md mx-auto space-y-4">
         <StepHeader step={3} total={3} label="Pagamento" onBack={() => setStep("complaint")} />
+        <CancellationPolicy />
         <CheckoutForm
           consultationId={consultationId}
           amount={consultationAmount}

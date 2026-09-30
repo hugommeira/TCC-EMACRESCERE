@@ -8,6 +8,8 @@ import { PatientQueueRoom }           from "@/components/queue/PatientQueueRoom"
 import { AwaitingPayment }            from "@/components/queue/AwaitingPayment";
 import { ScheduledConsultationWatcher } from "@/components/patient/ScheduledConsultationWatcher";
 import { ScheduledPaymentForm }       from "@/components/patient/ScheduledPaymentForm";
+import { CancelConsultationButton }   from "@/components/patient/CancelConsultationButton";
+import { CancellationPolicy }         from "@/components/patient/CancellationPolicy";
 import { doctorTitle, formatCurrency, formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 
@@ -135,6 +137,17 @@ function ScheduledConsultationView({ c }: { c: ScheduledProps }) {
       <DashboardShell>
         <PageHeader badge="Agendamento" title={label} description={`${doctorName} · ${when}`} />
         <div className="mx-auto max-w-md space-y-4">
+          {c.status === "CANCELLED" && payStatus === "REFUNDED" && (
+            <p className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-900 ring-1 ring-emerald-200">
+              O valor de {formatCurrency(fee)} foi estornado pela mesma forma de pagamento. O prazo de
+              devolução depende do banco ou da operadora.
+            </p>
+          )}
+          {c.status === "CANCELLED" && paid && (
+            <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700 ring-1 ring-slate-200">
+              Cancelada com menos de 24 horas de antecedência — sem estorno, conforme a política de cancelamento.
+            </p>
+          )}
           <Link
             href="/dashboard/patient/consultations"
             className="inline-flex w-full items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
@@ -200,6 +213,8 @@ function ScheduledConsultationView({ c }: { c: ScheduledProps }) {
           <div className="rounded-2xl bg-brand-50/70 p-4 text-sm text-brand-900 ring-1 ring-brand-100">
             Pagamento de {formatCurrency(fee)} confirmado. Chegando a hora, o aviso também aparece no sino do painel.
           </div>
+          <CancelConsultationButton consultationId={c.id} scheduledAt={c.scheduledAt.toISOString()} paid />
+          <CancellationPolicy />
           <ScheduledConsultationWatcher consultationId={c.id} status={c.status} paymentStatus={payStatus} />
         </div>
       </DashboardShell>
@@ -244,6 +259,8 @@ function ScheduledConsultationView({ c }: { c: ScheduledProps }) {
             </p>
           )}
           {summary}
+          <CancellationPolicy />
+          <CancelConsultationButton consultationId={c.id} scheduledAt={c.scheduledAt.toISOString()} paid={false} />
           <ScheduledConsultationWatcher consultationId={c.id} status={c.status} paymentStatus={payStatus} />
         </div>
       </DashboardShell>
@@ -260,7 +277,9 @@ function ScheduledConsultationView({ c }: { c: ScheduledProps }) {
       />
       <div className="mx-auto max-w-md space-y-4">
         {summary}
+        <CancellationPolicy />
         <ScheduledPaymentForm consultationId={c.id} amount={fee} doctorName={c.doctor?.name ?? ""} />
+        <CancelConsultationButton consultationId={c.id} scheduledAt={c.scheduledAt.toISOString()} paid={false} />
       </div>
     </DashboardShell>
   );

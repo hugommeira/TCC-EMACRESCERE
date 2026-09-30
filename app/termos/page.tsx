@@ -60,8 +60,34 @@ export default function TermosPage() {
         Os valores das consultas e demais serviços médicos são definidos pelo
         próprio profissional. A Emacrescere processa pagamentos em ambiente
         seguro (PIX, cartão ou boleto), por meio de provedores de pagamento
-        certificados. Cancelamentos e reembolsos seguem as regras informadas no
-        momento do agendamento.
+        certificados. Cancelamentos e reembolsos seguem as regras abaixo, também
+        informadas no momento do agendamento, antes do pagamento.
+      </p>
+      <ul>
+        <li>
+          <strong>Cancelamento pelo paciente com 24 horas ou mais de antecedência:</strong>{" "}
+          estorno integral, pela mesma forma de pagamento.
+        </li>
+        <li>
+          <strong>Cancelamento pelo paciente com menos de 24 horas:</strong> a
+          consulta é cancelada, mas não há estorno — o horário ficou reservado
+          ao paciente e não pode ser reaproveitado a tempo.
+        </li>
+        <li>
+          <strong>Não comparecimento:</strong> sem estorno.
+        </li>
+        <li>
+          <strong>Cancelamento pelo médico:</strong> estorno integral, sempre.
+        </li>
+        <li>
+          Consultas não pagas liberam o horário automaticamente e podem ser
+          canceladas a qualquer momento, sem custo.
+        </li>
+      </ul>
+      <p>
+        O prazo para o valor voltar depende do banco ou da operadora do cartão.
+        Nada nestes termos afasta os direitos previstos no Código de Defesa do
+        Consumidor.
       </p>
 
       <h2>7. Uso adequado da plataforma</h2>

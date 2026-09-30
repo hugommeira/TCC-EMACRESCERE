@@ -5,6 +5,7 @@ import {
   isOfferedSlot,
   isValidDateString,
   normalizeWeekHours,
+  patientCancelIsRefundable,
   slotsForDate,
   toInstant,
   todayInSaoPaulo,
@@ -88,5 +89,19 @@ describe("isOfferedSlot", () => {
     expect(isOfferedSlot(hours, toInstant("2026-10-05", "09:30"))).toBe(false);
     expect(isOfferedSlot(hours, toInstant("2026-10-06", "09:00"))).toBe(false); // terça
     expect(isOfferedSlot(hours, new Date("2026-10-05T12:00:30Z"))).toBe(false); // segundos
+  });
+});
+
+describe("patientCancelIsRefundable (política de cancelamento)", () => {
+  const consulta = new Date("2026-10-10T13:00:00Z");
+
+  it("estorna com 24h ou mais de antecedência", () => {
+    expect(patientCancelIsRefundable(consulta, new Date("2026-10-08T13:00:00Z"))).toBe(true);
+    expect(patientCancelIsRefundable(consulta, new Date("2026-10-09T13:00:00Z"))).toBe(true); // exatamente 24h
+  });
+
+  it("não estorna com menos de 24h", () => {
+    expect(patientCancelIsRefundable(consulta, new Date("2026-10-09T13:00:01Z"))).toBe(false);
+    expect(patientCancelIsRefundable(consulta, new Date("2026-10-10T12:00:00Z"))).toBe(false);
   });
 });

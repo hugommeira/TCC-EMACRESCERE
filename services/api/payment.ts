@@ -280,8 +280,12 @@ export async function refundPayment(paymentId: string): Promise<Payment> {
   const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
   if (!payment)              throw new NotFoundError("Pagamento");
   if (!payment.asaasPaymentId) throw new PaymentError("ID Asaas ausente");
+  if (payment.status === "REFUNDED") return payment;
 
-  await refundAsaasCharge(payment.asaasPaymentId);
+  // Pagamentos da demonstração (demo_*) e do modo de simulação (mock_*) não
+  // existem no Asaas — chamar o estorno lá daria 404. Só registra o estorno.
+  const simulated = /^(demo_|mock_)/.test(payment.asaasPaymentId);
+  if (!simulated) await refundAsaasCharge(payment.asaasPaymentId);
 
   return prisma.payment.update({
     where: { id: paymentId },
