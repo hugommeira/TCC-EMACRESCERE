@@ -2,8 +2,11 @@ import { requireRole } from "@/lib/auth";
 import { prisma }       from "@/lib/prisma";
 import { Sidebar }      from "@/components/layout/Sidebar";
 import { TopBar }       from "@/components/layout/TopBar";
+import { QUEUE_ENABLED } from "@/lib/constants";
 
-const doctorNav = [
+// O item "Fila de espera" continua na lista, mas é filtrado no fim enquanto a
+// fila estiver fora do escopo (lib/constants.ts).
+const allDoctorNav = [
   {
     label: "Início",
     href:  "/dashboard/doctor",
@@ -50,6 +53,10 @@ const doctorNav = [
     ),
   },
 ];
+
+const doctorNav = QUEUE_ENABLED
+  ? allDoctorNav
+  : allDoctorNav.filter((item) => item.href !== "/dashboard/doctor/queue");
 
 export default async function DoctorLayout({
   children,

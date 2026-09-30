@@ -11,6 +11,7 @@ import {
 import { ConsultationCard } from "@/components/patient/ConsultationCard";
 import { formatCurrency, doctorTitle, doctorFirstName, greetingFor } from "@/lib/utils";
 import Link                 from "next/link";
+import { QUEUE_ENABLED, DOCTOR_WORK_HREF } from "@/lib/constants";
 
 export const metadata: Metadata = { title: "Painel Médico" };
 
@@ -95,13 +96,17 @@ export default async function DoctorDashboardPage() {
         description="Sua agenda e atendimentos do dia."
         action={
           <Link
-            href="/dashboard/doctor/queue"
+            href={DOCTOR_WORK_HREF}
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-500/25 transition-all hover:shadow-lg"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              {QUEUE_ENABLED ? (
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              ) : (
+                <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+              )}
             </svg>
-            Fila de atendimento
+            {QUEUE_ENABLED ? "Fila de atendimento" : "Minhas consultas"}
           </Link>
         }
       />

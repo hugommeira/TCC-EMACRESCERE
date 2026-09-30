@@ -5,6 +5,7 @@ import { prisma }        from "@/lib/prisma";
 import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
 import { StartConsultationForm }      from "@/components/queue/StartConsultationForm";
 import { CONSULTATION_FEE_REAIS }     from "@/services/api/queue";
+import { QUEUE_ENABLED }              from "@/lib/constants";
 
 export const metadata: Metadata = { title: "Solicitar consulta" };
 export const dynamic  = "force-dynamic";
@@ -12,6 +13,11 @@ export const dynamic  = "force-dynamic";
 export default async function PatientQueueIndexPage() {
   const session = await auth();
   if (!session?.user) redirect("/auth/login");
+
+  // Fila fora do escopo (lib/constants.ts): quem chegar aqui por link antigo
+  // ou favorito vai pro agendamento. Só esta tela de entrada redireciona — a
+  // /dashboard/patient/queue/[id] é a sala da consulta e continua valendo.
+  if (!QUEUE_ENABLED) redirect("/dashboard/patient/schedule");
 
   // Se já tem consulta ativa, redireciona pra ela
   const active = await prisma.consultation.findFirst({

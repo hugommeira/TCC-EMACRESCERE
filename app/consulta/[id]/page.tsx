@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth }   from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ConsultationRoom } from "@/components/consulta/ConsultationRoom";
+import { DOCTOR_WORK_HREF } from "@/lib/constants";
 
 export const metadata: Metadata = { title: "Consulta" };
 export const dynamic = "force-dynamic";
@@ -62,8 +63,9 @@ export default async function ConsultaPage({
   if (!isDoctor && !isPatient) redirect("/");
 
   if (c.status !== "IN_PROGRESS" && c.status !== "COMPLETED") {
-    // Ainda na fila ou cancelada
-    redirect(isPatient ? `/dashboard/patient/queue/${id}` : "/dashboard/doctor/queue");
+    // Ainda não começou ou cancelada. Pro paciente, /dashboard/patient/queue/[id]
+    // é a sala de espera da consulta (serve ao agendamento também).
+    redirect(isPatient ? `/dashboard/patient/queue/${id}` : DOCTOR_WORK_HREF);
   }
 
   return (

@@ -11,6 +11,7 @@ import { DoctorConsultationActions } from "@/components/doctor/DoctorConsultatio
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import type { ConsultationStatus } from "@prisma/client";
+import { QUEUE_ENABLED } from "@/lib/constants";
 
 export const metadata: Metadata = { title: "Consultas" };
 export const dynamic  = "force-dynamic";
@@ -66,14 +67,16 @@ export default async function DoctorConsultationsPage({
         badge="Histórico"
         title="Suas consultas"
         description={`${total} ${total === 1 ? "atendimento" : "atendimentos"} no total`}
-        action={
+        // Esta já é a tela de trabalho do médico: sem fila, o botão não
+        // tem pra onde levar.
+        action={QUEUE_ENABLED ? (
           <Link
             href="/dashboard/doctor/queue"
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-md"
           >
             Ir para fila
           </Link>
-        }
+        ) : undefined}
       />
 
       <div className="mb-4">
@@ -89,7 +92,13 @@ export default async function DoctorConsultationsPage({
             </svg>
           }
           title="Nenhuma consulta encontrada"
-          description={q || status ? "Ajuste os filtros ou aguarde pacientes na fila." : "Você ainda não tem histórico de atendimentos."}
+          description={
+            q || status
+              ? QUEUE_ENABLED
+                ? "Ajuste os filtros ou aguarde pacientes na fila."
+                : "Ajuste os filtros para ver outras consultas."
+              : "Você ainda não tem histórico de atendimentos."
+          }
         />
       ) : (
         <SectionCard title="Atendimentos" className="overflow-hidden">

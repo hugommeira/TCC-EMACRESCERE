@@ -10,6 +10,7 @@ import { ChatPanel } from "./ChatPanel";
 import { ProntuarioPanel } from "./ProntuarioPanel";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { PrescriptionPanel } from "./PrescriptionPanel";
+import { DOCTOR_WORK_HREF } from "@/lib/constants";
 
 interface Props {
   consultationId:   string;
@@ -101,8 +102,9 @@ export function ConsultationRoom(p: Props) {
     setEnding(false);
     if (r.ok) {
       setStatus("COMPLETED");
-      // Médico: volta automaticamente pra fila de espera pra próximo paciente.
-      if (p.isDoctor) router.push("/dashboard/doctor/queue");
+      // Médico: volta pra tela de trabalho (a fila, se estiver ligada; senão a
+      // lista de consultas — ver lib/constants.ts).
+      if (p.isDoctor) router.push(DOCTOR_WORK_HREF);
     }
   }
 
@@ -127,7 +129,7 @@ export function ConsultationRoom(p: Props) {
       });
     } else {
       setStatus("COMPLETED");
-      if (p.isDoctor) router.push("/dashboard/doctor/queue");
+      if (p.isDoctor) router.push(DOCTOR_WORK_HREF);
     }
     setMarking(false);
   }

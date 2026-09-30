@@ -11,6 +11,7 @@ import { PatientConsultationActions } from "@/components/patient/PatientConsulta
 import { formatCurrency , doctorTitle } from "@/lib/utils";
 import Link from "next/link";
 import type { ConsultationStatus } from "@prisma/client";
+import { PATIENT_NEW_CONSULTATION_HREF } from "@/lib/constants";
 
 export const metadata: Metadata = { title: "Minhas consultas" };
 export const dynamic  = "force-dynamic";
@@ -68,7 +69,7 @@ export default async function PatientConsultationsPage({
         description={`${total} ${total === 1 ? "consulta" : "consultas"} no total`}
         action={
           <Link
-            href="/dashboard/patient/queue"
+            href={PATIENT_NEW_CONSULTATION_HREF}
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-md"
           >
             Nova consulta

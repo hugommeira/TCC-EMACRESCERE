@@ -3,6 +3,7 @@ import { auth }          from "@/lib/auth";
 import { prisma }        from "@/lib/prisma";
 import { toApiError }    from "@/lib/errors";
 import { doctorTitle } from "@/lib/utils";
+import { QUEUE_ENABLED } from "@/lib/constants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,7 +87,10 @@ export async function GET() {
           prisma.consultation.count({ where: { status: "WAITING", doctorId: null } }),
           prisma.consultation.count({ where: { status: "IN_PROGRESS", doctorId: userId } }),
         ]);
-        if (waiting > 0) {
+        // Sem fila (lib/constants.ts), o aviso levaria a uma tela que só
+        // redireciona. As notificações de fila do paciente, mais abaixo, só
+        // disparam pra consultas on-demand, que deixam de ser criadas.
+        if (QUEUE_ENABLED && waiting > 0) {
           items.push({
             id: "queue-waiting", tone: "brand",
             title: `${waiting} paciente(s) na fila`,

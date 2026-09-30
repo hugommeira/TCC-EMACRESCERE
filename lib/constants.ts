@@ -2,6 +2,26 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "Emacrescere";
 export const APP_URL  = process.env.NEXT_PUBLIC_APP_URL  ?? "http://localhost:3000";
 
+// ─── Escopo: fila on-demand ───────────────────────────────────────────────────
+// Nesta entrega o atendimento é só por agendamento. A fila on-demand virou
+// trabalho futuro (TCC, seção 5.5.1), mas NADA dela foi apagado: rotas
+// app/api/queue/*, services/api/queue.ts, componentes, telas e os campos do
+// schema continuam no repositório. Esta chave só esconde os pontos de entrada
+// da interface — pra reativar a fila, basta trocar para true.
+//
+// Anotado como boolean (e não como o literal false) pra o TypeScript não
+// tratar o código atrás da chave como inalcançável.
+export const QUEUE_ENABLED: boolean = false;
+
+// Pra onde apontam os botões de "nova consulta" (paciente) e a tela de
+// trabalho do médico, conforme a fila esteja ligada ou não.
+export const PATIENT_NEW_CONSULTATION_HREF = QUEUE_ENABLED
+  ? "/dashboard/patient/queue"
+  : "/dashboard/patient/schedule";
+export const DOCTOR_WORK_HREF = QUEUE_ENABLED
+  ? "/dashboard/doctor/queue"
+  : "/dashboard/doctor/consultations";
+
 // ─── Paginação padrão ─────────────────────────────────────────────────────────
 export const DEFAULT_PAGE_LIMIT = 10;
 export const MAX_PAGE_LIMIT     = 100;

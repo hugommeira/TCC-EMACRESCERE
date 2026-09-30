@@ -4,6 +4,7 @@ import { redirect }      from "next/navigation";
 import { listQueue }     from "@/services/api/queue";
 import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
 import { DoctorQueueLive } from "@/components/queue/DoctorQueueLive";
+import { QUEUE_ENABLED }   from "@/lib/constants";
 
 export const metadata: Metadata = { title: "Fila de espera" };
 export const dynamic  = "force-dynamic";
@@ -11,6 +12,10 @@ export const dynamic  = "force-dynamic";
 export default async function DoctorQueuePage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "DOCTOR") redirect("/auth/login");
+
+  // Fila fora do escopo (lib/constants.ts): o médico trabalha pela lista de
+  // consultas agendadas.
+  if (!QUEUE_ENABLED) redirect("/dashboard/doctor/consultations");
 
   const items = await listQueue({ take: 50 });
 

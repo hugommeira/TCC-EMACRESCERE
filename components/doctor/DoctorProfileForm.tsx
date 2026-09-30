@@ -59,7 +59,7 @@ export function DoctorProfileForm({ initial }: Props) {
         <div>
           <p className="font-display text-base font-semibold text-slate-900">Aceitar novos atendimentos</p>
           <p className="text-xs text-slate-500">
-            Quando desligado, você não aparece como disponível na fila.
+            Quando desligado, você não aparece para os pacientes agendarem.
           </p>
         </div>
         <button

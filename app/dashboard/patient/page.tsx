@@ -11,6 +11,7 @@ import {
 } from "@/components/layout/DashboardShell";
 import { ConsultationCard } from "@/components/patient/ConsultationCard";
 import { formatCurrency }   from "@/lib/utils";
+import { QUEUE_ENABLED, PATIENT_NEW_CONSULTATION_HREF } from "@/lib/constants";
 import Link                 from "next/link";
 
 export const metadata: Metadata = { title: "Meu painel" };
@@ -81,13 +82,17 @@ export default async function PatientDashboardPage() {
         description="Acompanhe consultas, prescrições e seu progresso."
         action={
           <Link
-            href="/dashboard/patient/queue"
+            href={PATIENT_NEW_CONSULTATION_HREF}
             className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-500/25 transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/40"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              {QUEUE_ENABLED ? (
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              ) : (
+                <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+              )}
             </svg>
-            Atendimento agora
+            {QUEUE_ENABLED ? "Atendimento agora" : "Agendar consulta"}
           </Link>
         }
       />
@@ -126,10 +131,10 @@ export default async function PatientDashboardPage() {
             description="Quando você marcar uma consulta, ela aparece aqui com todos os detalhes."
             action={
               <Link
-                href="/dashboard/patient/queue"
+                href={PATIENT_NEW_CONSULTATION_HREF}
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
               >
-                Solicitar atendimento
+                {QUEUE_ENABLED ? "Solicitar atendimento" : "Agendar consulta"}
               </Link>
             }
           />
