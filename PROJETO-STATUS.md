@@ -1,10 +1,29 @@
 # Status do projeto — Emacrescere
 
+> ## ⚠️ Aviso: não aplicar o `site_agendamento.patch` no site
+>
+> A mudança de escopo "atendimento só por agendamento; fila on-demand fora"
+> **já foi feita no site**, na branch `escopo-agendamento` (commits `83ff90f`
+> em diante, set/2026). Ela substitui o `site_agendamento.patch` gerado em
+> outra máquina em cima do `214b37a`.
+>
+> **Não rode `git am site_agendamento.patch` no site**: o patch mexe nos mesmos
+> arquivos e vai conflitar. Antes de aplicar qualquer coisa relacionada a ele
+> (inclusive o `aplicar_agendamento_app.py` no app Flutter), fale com o Hugo.
+>
+> Como ficou no site: a fila continua no código — nada foi apagado e não há
+> migration. Uma chave única, `QUEUE_ENABLED` em `lib/constants.ts`, esconde
+> os pontos de entrada da interface. Para religar a fila, troque `false` por
+> `true`.
+>
+> O app Flutter (`mobile/`) **ainda não foi alterado** e continua mostrando a
+> fila.
+
 > Documento de contexto para retomar o trabalho rapidamente (nova máquina, nova sessão do Claude Code, ou novo integrante da equipe). Não contém segredos — valores reais ficam só no `.env.local` (nunca commitado).
 
 ## Contexto
 
-TCC "Emacrescere" (Escola Técnica Pandiá Calógeras, curso Técnico de Informática, Equipe 6) — plataforma de telemedicina on-demand para tratamento de emagrecimento. Stack: Next.js 14 (App Router), TypeScript strict, Prisma + PostgreSQL (Neon), NextAuth v5, TailwindCSS.
+TCC "Emacrescere" (Escola Técnica Pandiá Calógeras, curso Técnico de Informática, Equipe 6) — plataforma de telemedicina para tratamento de emagrecimento, com atendimento por consulta agendada (a fila on-demand virou trabalho futuro — ver aviso no topo). Stack: Next.js 14 (App Router), TypeScript strict, Prisma + PostgreSQL (Neon), NextAuth v5, TailwindCSS.
 
 ## Migração de infraestrutura (concluída)
 
