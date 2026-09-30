@@ -9,9 +9,12 @@ import { Input }        from "@/components/ui/Input";
 import { Alert }        from "@/components/ui/Alert";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import type { UserWithProfile } from "@/types";
-import { doctorTitle } from "@/lib/utils";
+import { doctorTitle, formatCurrency } from "@/lib/utils";
+import { todayInSaoPaulo } from "@/lib/scheduling";
 
-type Step = "doctor" | "datetime" | "complaint" | "payment" | "done";
+type Step = "doctor" | "datetime" | "complaint" | "payment";
+
+interface Slot { time: string; startsAt: string; available: boolean }
 
 export function ScheduleWizard() {
   const router = useRouter();
@@ -24,10 +27,50 @@ export function ScheduleWizard() {
 
   const [selectedDoctor,    setSelectedDoctor]    = useState<UserWithProfile | null>(null);
   const [selectedDate,      setSelectedDate]      = useState("");
-  const [selectedTime,      setSelectedTime]      = useState("");
+  // Guarda o instante ISO que o servidor devolveu — não uma hora "HH:MM" que
+  // o navegador converteria pelo fuso dele.
+  const [selectedSlot,      setSelectedSlot]      = useState<Slot | null>(null);
+  const [slots,             setSlots]             = useState<Slot[]>([]);
+  const [slotsLoading,      setSlotsLoading]      = useState(false);
   const [chiefComplaint,    setChiefComplaint]    = useState("");
   const [consultationId,    setConsultationId]    = useState<string | null>(null);
+  // Qual horário a consulta já criada reservou, pra não criar outra ao voltar.
+  const [bookedSlotIso,     setBookedSlotIso]     = useState<string | null>(null);
   const [consultationAmount, setConsultationAmount] = useState(0);
+
+  // Horários reais do médico no dia escolhido (agenda dele + ocupação).
+  const fetchSlots = useCallback(async (doctorId: string, date: string) => {
+    setSlotsLoading(true);
+    setSlots([]);
+    try {
+      const res  = await fetch(`/api/doctors/${doctorId}/slots?date=${date}`, { cache: "no-store" });
+      const json = await res.json() as { data?: { slots: Slot[] }; message?: string };
+      if (!res.ok) { setError(json.message ?? "Erro ao carregar horários"); return; }
+      setSlots(json.data?.slots ?? []);
+    } catch {
+      setError("Erro ao carregar horários");
+    } finally {
+      setSlotsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setSelectedSlot(null);
+    if (selectedDoctor && selectedDate) void fetchSlots(selectedDoctor.id, selectedDate);
+  }, [selectedDoctor, selectedDate, fetchSlots]);
+
+  // Consulta criada e ainda não paga, mas o paciente voltou e trocou de médico
+  // ou de horário: cancela a antiga pra não segurar aquele horário à toa.
+  function releaseBooking() {
+    if (!consultationId) return;
+    void fetch(`/api/consultations/${consultationId}/cancel`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ reason: "Paciente trocou o horário antes de pagar" }),
+    }).catch(() => {});
+    setConsultationId(null);
+    setBookedSlotIso(null);
+  }
 
   // Load doctors
   const fetchDoctors = useCallback(async () => {
@@ -49,34 +92,51 @@ export function ScheduleWizard() {
   // Step: select doctor
   async function handleDoctorSelect(doctorId: string) {
     const doc = doctors.find((d) => d.id === doctorId) ?? null;
+    if (doc?.id !== selectedDoctor?.id) releaseBooking();
     setSelectedDoctor(doc);
     setStep("datetime");
   }
 
   // Step: datetime → complaint → schedule
   async function handleSchedule() {
-    if (!selectedDoctor || !selectedDate || !selectedTime || !chiefComplaint.trim()) return;
+    if (!selectedDoctor || !selectedSlot || !chiefComplaint.trim()) return;
     setError(null);
+
+    // Voltou da tela de pagamento sem trocar o horário: a consulta já existe.
+    // Antes isso criava uma segunda, que batia na primeira como "horário ocupado".
+    if (consultationId && bookedSlotIso === selectedSlot.startsAt) {
+      setStep("payment");
+      return;
+    }
+    releaseBooking();
     setLoading(true);
 
     try {
-      const scheduledAt = new Date(`${selectedDate}T${selectedTime}:00`);
-
       const res = await fetch("/api/consultations", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
           doctorId:       selectedDoctor.id,
-          scheduledAt:    scheduledAt.toISOString(),
+          scheduledAt:    selectedSlot.startsAt,
           chiefComplaint: chiefComplaint.trim(),
           paymentMethod:  "PIX", // será sobrescrito no checkout
         }),
       });
 
       const json = await res.json() as { data?: { id: string }; message?: string };
-      if (!res.ok) { setError(json.message ?? "Erro ao agendar"); return; }
+      if (!res.ok) {
+        setError(json.message ?? "Erro ao agendar");
+        // Alguém pegou o horário nesse meio-tempo: volta e mostra a agenda atualizada.
+        if (res.status === 409 && selectedDate) {
+          setStep("datetime");
+          void fetchSlots(selectedDoctor.id, selectedDate);
+        }
+        return;
+      }
 
       setConsultationId(json.data!.id);
+      setBookedSlotIso(selectedSlot.startsAt);
+      // Só pra exibir: o valor cobrado é decidido pelo servidor.
       setConsultationAmount(Number(selectedDoctor.doctorProfile?.consultationFee ?? 0));
       setStep("payment");
     } catch {
@@ -86,32 +146,9 @@ export function ScheduleWizard() {
     }
   }
 
-  // Generate available times (8h–18h, hourly)
-  const timeSlots = Array.from({ length: 10 }, (_, i) => {
-    const h = (8 + i).toString().padStart(2, "0");
-    return `${h}:00`;
-  });
-
-  // Minimum date: tomorrow
-  const minDate = new Date();
-  minDate.setDate(minDate.getDate() + 1);
-  const minDateStr = minDate.toISOString().split("T")[0]!;
-
-  // ── Step: done ─────────────────────────────────────────────────────────────
-  if (step === "done") {
-    return (
-      <div className="max-w-md mx-auto text-center space-y-4">
-        <div className="text-5xl">🎉</div>
-        <h2 className="text-xl font-bold text-gray-900">Consulta confirmada!</h2>
-        <p className="text-gray-500 text-sm">
-          Sua consulta foi agendada e o pagamento confirmado. Acesse o painel para acompanhar.
-        </p>
-        <Button fullWidth onClick={() => router.push("/dashboard/patient/consultations")}>
-          Ver minhas consultas
-        </Button>
-      </div>
-    );
-  }
+  // Hoje em São Paulo (os horários que já passaram vêm indisponíveis da API).
+  // Antes usava toISOString, que é UTC: depois das 21h o mínimo pulava um dia.
+  const minDateStr = todayInSaoPaulo();
 
   // ── Step: payment ──────────────────────────────────────────────────────────
   if (step === "payment" && consultationId) {
@@ -122,7 +159,11 @@ export function ScheduleWizard() {
           consultationId={consultationId}
           amount={consultationAmount}
           doctorName={selectedDoctor?.name ?? ""}
-          onSuccess={() => setStep("done")}
+          // Antes ia pra uma tela "Consulta confirmada! Pagamento confirmado"
+          // assim que o Pix era GERADO: o QR code sumia antes de o paciente
+          // conseguir pagar, e a mensagem era falsa. A página da consulta mostra
+          // o QR/boleto e acompanha a confirmação sozinha.
+          onSuccess={() => router.push(`/dashboard/patient/queue/${consultationId}`)}
         />
       </div>
     );
@@ -179,7 +220,12 @@ export function ScheduleWizard() {
         <div className="card space-y-4">
           <p className="text-sm text-gray-500">
             Agendando com <span className="font-semibold text-gray-800">{doctorTitle(selectedDoctor.name)}</span>
+            {Number(selectedDoctor.doctorProfile?.consultationFee ?? 0) > 0 && (
+              <> · {formatCurrency(Number(selectedDoctor.doctorProfile?.consultationFee))}</>
+            )}
           </p>
+
+          {error && <Alert variant="error" onClose={() => setError(null)}>{error}</Alert>}
 
           <Input
             label="Data da consulta"
@@ -193,22 +239,39 @@ export function ScheduleWizard() {
           {selectedDate && (
             <div>
               <label className="label">Horário</label>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
-                {timeSlots.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setSelectedTime(t)}
-                    className={`rounded-lg border py-2 text-sm font-medium transition-colors ${
-                      selectedTime === t
-                        ? "border-brand-500 bg-brand-50 text-brand-700"
-                        : "border-gray-200 text-gray-600 hover:border-brand-300"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+              {slotsLoading ? (
+                <p className="text-sm text-gray-400">Carregando horários…</p>
+              ) : slots.length === 0 ? (
+                // Dia fora da agenda do médico (ex.: fim de semana).
+                <p className="rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500">
+                  O médico não atende neste dia. Escolha outra data.
+                </p>
+              ) : !slots.some((s) => s.available) ? (
+                <p className="rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500">
+                  Não há mais horários livres neste dia. Escolha outra data.
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+                  {slots.map((s) => (
+                    <button
+                      key={s.startsAt}
+                      type="button"
+                      disabled={!s.available}
+                      onClick={() => setSelectedSlot(s)}
+                      aria-label={s.available ? `Horário ${s.time}` : `Horário ${s.time}, indisponível`}
+                      className={`rounded-lg border py-2 text-sm font-medium transition-colors ${
+                        !s.available
+                          ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300 line-through"
+                          : selectedSlot?.startsAt === s.startsAt
+                            ? "border-brand-500 bg-brand-50 text-brand-700"
+                            : "border-gray-200 text-gray-600 hover:border-brand-300"
+                      }`}
+                    >
+                      {s.time}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -216,7 +279,7 @@ export function ScheduleWizard() {
         <Button
           fullWidth
           size="lg"
-          disabled={!selectedDate || !selectedTime}
+          disabled={!selectedSlot}
           onClick={() => setStep("complaint")}
         >
           Continuar →

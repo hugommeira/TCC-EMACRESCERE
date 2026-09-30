@@ -6,7 +6,76 @@ import type {
   CancelConsultationInput,
 } from "@/lib/validations/consultation";
 import type { ConsultationFull, ConsultationWithParties, PaginationParams, PaginatedResponse } from "@/types";
-import type { ConsultationStatus } from "@prisma/client";
+import type { ConsultationStatus, Prisma } from "@prisma/client";
+import {
+  MIN_LEAD_MINUTES,
+  UNPAID_HOLD_MINUTES,
+  isOfferedSlot,
+  normalizeWeekHours,
+  slotsForDate,
+  toInstant,
+} from "@/lib/scheduling";
+
+// ─── Ocupação de horário ──────────────────────────────────────────────────────
+
+/**
+ * Consultas que ocupam o horário do médico:
+ * - pagas, ou já chamadas/em andamento/concluídas;
+ * - com Pix/boleto gerado e ainda dentro do vencimento (o paciente está pagando);
+ * - criadas há menos de UNPAID_HOLD_MINUTES, sem cobrança ainda.
+ * Consulta abandonada antes de gerar a cobrança libera o horário depois disso.
+ */
+export function occupyingWhere(doctorId: string, now = new Date()): Prisma.ConsultationWhereInput {
+  const holdStart = new Date(now.getTime() - UNPAID_HOLD_MINUTES * 60_000);
+  return {
+    doctorId,
+    status: { notIn: ["CANCELLED", "NO_SHOW"] },
+    OR: [
+      { status: { in: ["WAITING", "IN_PROGRESS", "COMPLETED"] } },
+      { payment: { status: { in: ["RECEIVED", "CONFIRMED"] } } },
+      { payment: { status: "PENDING", expiresAt: { gt: now } } },
+      { createdAt: { gte: holdStart } },
+    ],
+  };
+}
+
+export interface DaySlot {
+  time:      string; // "HH:MM", horário de São Paulo
+  startsAt:  string; // ISO UTC — é isso que o cliente devolve ao agendar
+  available: boolean;
+}
+
+/** Horários de um médico num dia, marcando os já ocupados e os que já passaram. */
+export async function getDoctorDaySlots(doctorId: string, date: string): Promise<DaySlot[]> {
+  const doctor = await prisma.doctorProfile.findUnique({
+    where:  { userId: doctorId },
+    select: { availableHours: true, available: true, approvalStatus: true },
+  });
+  if (!doctor || !doctor.available || doctor.approvalStatus !== "APPROVED") {
+    throw new NotFoundError("Médico");
+  }
+
+  const times = slotsForDate(normalizeWeekHours(doctor.availableHours), date);
+  if (times.length === 0) return [];
+
+  const dayStart = toInstant(date, "00:00");
+  const dayEnd   = new Date(dayStart.getTime() + 24 * 60 * 60_000);
+  const taken = await prisma.consultation.findMany({
+    where:  { ...occupyingWhere(doctorId), scheduledAt: { gte: dayStart, lt: dayEnd } },
+    select: { scheduledAt: true },
+  });
+  const takenAt = new Set(taken.map((c) => c.scheduledAt?.getTime()));
+  const earliest = Date.now() + MIN_LEAD_MINUTES * 60_000;
+
+  return times.map((time) => {
+    const at = toInstant(date, time);
+    return {
+      time,
+      startsAt:  at.toISOString(),
+      available: at.getTime() >= earliest && !takenAt.has(at.getTime()),
+    };
+  });
+}
 
 // ─── Schedule ─────────────────────────────────────────────────────────────────
 
@@ -21,17 +90,39 @@ export async function scheduleConsultation(
 
   if (!doctor) throw new NotFoundError("Médico");
   if (!doctor.available) throw new ConflictError("Médico indisponível no momento");
+  // Médico pendente/reprovado não aparece na lista, mas a API aceitava o id.
+  if (doctor.approvalStatus !== "APPROVED") throw new ConflictError("Médico indisponível no momento");
+
+  // O horário precisa ser um dos que o médico oferece na agenda dele. Antes o
+  // site oferecia 8h–18h todo dia, inclusive fim de semana, ignorando a agenda
+  // configurada em "Meu perfil".
+  if (!isOfferedSlot(normalizeWeekHours(doctor.availableHours), input.scheduledAt)) {
+    throw new ConflictError("Esse horário não está na agenda do médico");
+  }
+  if (input.scheduledAt.getTime() < Date.now() + MIN_LEAD_MINUTES * 60_000) {
+    throw new ConflictError(`Agende com pelo menos ${MIN_LEAD_MINUTES} minutos de antecedência`);
+  }
 
   // Verificar conflito de horário
   const conflict = await prisma.consultation.findFirst({
-    where: {
-      doctorId:    input.doctorId,
-      scheduledAt: input.scheduledAt,
-      status: { notIn: ["CANCELLED", "NO_SHOW"] },
-    },
+    where: { ...occupyingWhere(input.doctorId), scheduledAt: input.scheduledAt },
   });
 
   if (conflict) throw new ConflictError("Horário já ocupado para este médico");
+
+  // Mesmo paciente, mesmo horário, outro médico: não dá pra estar em duas.
+  const clash = await prisma.consultation.findFirst({
+    where: {
+      patientId,
+      scheduledAt: input.scheduledAt,
+      status: { notIn: ["CANCELLED", "NO_SHOW"] },
+      OR: [
+        { payment: { status: { in: ["RECEIVED", "CONFIRMED"] } } },
+        { createdAt: { gte: new Date(Date.now() - UNPAID_HOLD_MINUTES * 60_000) } },
+      ],
+    },
+  });
+  if (clash) throw new ConflictError("Você já tem uma consulta marcada nesse horário");
 
   const consultation = await prisma.consultation.create({
     data: {
@@ -176,7 +267,10 @@ export async function updateConsultationStatus(
   status: ConsultationStatus,
   actorId: string,
 ): Promise<ConsultationWithParties> {
-  const consultation = await prisma.consultation.findUnique({ where: { id } });
+  const consultation = await prisma.consultation.findUnique({
+    where:   { id },
+    include: { payment: { select: { status: true } } },
+  });
   if (!consultation) throw new NotFoundError("Consulta");
 
   // Só o médico da consulta muda o status por aqui (o paciente cancela via
@@ -189,6 +283,20 @@ export async function updateConsultationStatus(
     throw new ConflictError(
       `Consulta ${STATUS_LABEL[consultation.status]} não pode passar para ${STATUS_LABEL[status]}`,
     );
+  }
+
+  // Regras do agendamento (consulta com data marcada).
+  if (consultation.scheduledAt) {
+    const paid = consultation.payment?.status === "RECEIVED" || consultation.payment?.status === "CONFIRMED";
+    // Antes o médico conseguia chamar/iniciar uma consulta que o paciente
+    // nunca pagou (ou que abandonou na tela de pagamento).
+    if ((status === "WAITING" || status === "IN_PROGRESS") && !paid) {
+      throw new ConflictError("O pagamento desta consulta ainda não foi confirmado");
+    }
+    // "Não compareceu" só faz sentido depois do horário marcado.
+    if (status === "NO_SHOW" && consultation.scheduledAt.getTime() > Date.now()) {
+      throw new ConflictError("Só dá pra marcar falta depois do horário da consulta");
+    }
   }
 
   const now = new Date();

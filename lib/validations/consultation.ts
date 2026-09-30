@@ -3,7 +3,10 @@ import { PaymentMethod } from "@prisma/client";
 
 export const scheduleConsultationSchema = z.object({
   doctorId:      z.string().cuid("ID de médico inválido"),
-  scheduledAt:   z.coerce.date().min(new Date(), "Data deve ser futura"),
+  // .min(new Date()) avaliava o "agora" uma vez só, no carregamento do módulo:
+  // num servidor de pé há dias, datas já passadas eram aceitas. O refine
+  // compara com o relógio a cada requisição.
+  scheduledAt:   z.coerce.date().refine((d) => d.getTime() > Date.now(), "Data deve ser futura"),
   chiefComplaint: z
     .string()
     .min(10, "Descreva o motivo da consulta (mínimo 10 caracteres)")
