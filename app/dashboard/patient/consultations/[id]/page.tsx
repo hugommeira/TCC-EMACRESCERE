@@ -85,9 +85,12 @@ export default async function ConsultationDetailPage({ params }: Props) {
               </div>
             )}
 
+            {/* Antes ia pra página de chat avulsa (sem vídeo, e quebrada). A
+                página da consulta acompanha o status e abre a sala sozinha
+                quando o médico inicia. */}
             {isActive && consultation.roomToken && (
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <Link href={`/dashboard/patient/consultations/${consultation.id}/chat`}>
+                <Link href={`/dashboard/patient/queue/${consultation.id}`}>
                   <Button fullWidth>
                     🟢 Entrar na sala de consulta
                   </Button>

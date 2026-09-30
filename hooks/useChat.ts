@@ -20,7 +20,7 @@ interface UseChatReturn {
 }
 
 export function useChat({
-  consultationId,
+  // consultationId fica na interface por compatibilidade; as rotas usam o roomToken.
   roomToken,
   currentUserId,
 }: UseChatOptions): UseChatReturn {
@@ -29,15 +29,31 @@ export function useChat({
   const [isConnected, setConnected]  = useState(false);
   const [error,       setError]      = useState<string | null>(null);
 
+  // As rotas /api/chat/[roomToken]/* são indexadas pelo roomToken da sala. Antes
+  // este hook mandava o id da consulta: toda chamada dava 404 e a tela quebrava
+  // ao ler `json.data.length` (undefined).
   const loadHistory = useCallback(async () => {
+    if (!roomToken) return;
     try {
-      const res  = await fetch(`/api/chat/${consultationId}/messages`);
-      const json = await res.json() as { data: ChatMessage[] };
-      setMessages(json.data);
+      const res  = await fetch(`/api/chat/${roomToken}/messages`, { cache: "no-store" });
+      const json = await res.json() as { data?: ChatMessage[]; message?: string };
+      if (!res.ok) { setError(json.message ?? "Falha ao carregar histórico"); return; }
+      setMessages(json.data ?? []);
     } catch {
       setError("Falha ao carregar histórico");
     }
-  }, [consultationId]);
+  }, [roomToken]);
+
+  // O SSE via pg LISTEN/NOTIFY não entrega de forma confiável em produção
+  // (Neon serverless + Vercel) — a sala da consulta já usa polling pelo mesmo
+  // motivo. Aqui também: recarrega o histórico a cada 5s.
+  useEffect(() => {
+    if (!roomToken) return;
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") void loadHistory();
+    }, 5000);
+    return () => clearInterval(t);
+  }, [roomToken, loadHistory]);
 
   const handleSSEMessage = useCallback(
     (event: SSEEventType, data: unknown) => {
@@ -80,7 +96,7 @@ export function useChat({
       setError(null);
 
       try {
-        const res = await fetch(`/api/chat/${consultationId}/messages`, {
+        const res = await fetch(`/api/chat/${roomToken}/messages`, {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({ content }),
@@ -90,13 +106,15 @@ export function useChat({
           const err = await res.json() as { message: string };
           throw new Error(err.message);
         }
+        // Sem depender do SSE pra mensagem aparecer pra quem enviou.
+        await loadHistory();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Falha ao enviar mensagem");
       } finally {
         setIsSending(false);
       }
     },
-    [consultationId, isSending],
+    [roomToken, isSending, loadHistory],
   );
 
   // Marcar como lido ao receber novas mensagens
@@ -108,9 +126,9 @@ export function useChat({
     );
 
     if (unread.length > 0) {
-      void fetch(`/api/chat/${consultationId}/read`, { method: "POST" });
+      void fetch(`/api/chat/${roomToken}/read`, { method: "POST" });
     }
-  }, [messages, consultationId, currentUserId]);
+  }, [messages, roomToken, currentUserId]);
 
   return {
     messages,

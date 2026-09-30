@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth }           from "@/lib/auth";
 import { getConsultationById } from "@/services/api/consultation";
 import { ChatWindow }     from "@/components/chat/ChatWindow";
-import { PrescriptionForm } from "@/components/prescription/PrescriptionForm";
+import Link               from "next/link";
 import { Card, CardTitle } from "@/components/ui/Card";
 
 export const metadata: Metadata = { title: "Sala de consulta" };
@@ -60,9 +60,16 @@ export default async function DoctorChatPage({ params }: Props) {
           <Card padding="sm">
             <CardTitle>Prescrição</CardTitle>
             <p className="mt-1 mb-3 text-xs text-gray-500">
-              Crie a prescrição durante ou ao finalizar a consulta.
+              A prescrição é feita no painel da sala da consulta.
             </p>
-            <PrescriptionForm consultationId={consultation.id} />
+            {/* O PrescriptionForm enviava pra /api/prescription, rota inexistente. */}
+            {consultation.status === "IN_PROGRESS" || consultation.status === "COMPLETED" ? (
+              <Link href={`/consulta/${consultation.id}`} className="text-sm font-medium text-brand-700 hover:underline">
+                Abrir a sala para prescrever →
+              </Link>
+            ) : (
+              <p className="text-xs text-gray-400">Disponível depois que a consulta começar.</p>
+            )}
           </Card>
         )}
 

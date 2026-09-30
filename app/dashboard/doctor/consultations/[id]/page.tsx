@@ -10,7 +10,6 @@ import { Card, CardTitle } from "@/components/ui/Card";
 import { Avatar }         from "@/components/ui/Avatar";
 import { Button }         from "@/components/ui/Button";
 import { PrescriptionView }  from "@/components/prescription/PrescriptionView";
-import { PrescriptionForm }  from "@/components/prescription/PrescriptionForm";
 import { ConsultationActions } from "@/components/doctor/ConsultationActions";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 
@@ -30,7 +29,6 @@ export default async function DoctorConsultationDetailPage({ params }: Props) {
   }
 
   const prescription = await getPrescriptionByConsultation(params.id, session.user.id).catch(() => null);
-  const isActive     = ["IN_PROGRESS", "WAITING"].includes(consultation.status);
   const patient      = consultation.patient;
 
   return (
@@ -97,12 +95,21 @@ export default async function DoctorConsultationDetailPage({ params }: Props) {
               </div>
             )}
 
-            {isActive && consultation.roomToken && (
+            {/* Antes levava pra /consultations/[id]/chat, uma página só de
+                chat (sem vídeo, prontuário nem receita) — e quebrada. A sala de
+                verdade é /consulta/[id], que só abre com a consulta em andamento:
+                com o paciente chamado, o médico precisa clicar "Iniciar consulta". */}
+            {consultation.status === "IN_PROGRESS" && (
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <Link href={`/dashboard/doctor/consultations/${consultation.id}/chat`}>
+                <Link href={`/consulta/${consultation.id}`}>
                   <Button fullWidth>🟢 Entrar na sala</Button>
                 </Link>
               </div>
+            )}
+            {consultation.status === "WAITING" && (
+              <p className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-500">
+                Paciente chamado. Clique em <strong>Iniciar consulta</strong> para abrir a sala.
+              </p>
             )}
           </Card>
 
@@ -120,8 +127,13 @@ export default async function DoctorConsultationDetailPage({ params }: Props) {
                 <p className="mb-4 text-sm text-gray-500">
                   Nenhuma prescrição emitida para esta consulta.
                 </p>
+                {/* O PrescriptionForm antigo enviava pra /api/prescription, rota
+                    que não existe (404). A receita é feita no painel da sala,
+                    que usa a API real e emite com o certificado do médico. */}
                 {(consultation.status === "IN_PROGRESS" || consultation.status === "COMPLETED") && (
-                  <PrescriptionForm consultationId={consultation.id} />
+                  <Link href={`/consulta/${consultation.id}`}>
+                    <Button fullWidth variant="outline">Abrir a sala para prescrever</Button>
+                  </Link>
                 )}
               </>
             )}
