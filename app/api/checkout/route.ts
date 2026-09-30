@@ -8,7 +8,9 @@ import { z } from "zod";
 const checkoutSchema = z.object({
   consultationId: z.string().cuid(),
   method:         z.enum(["CREDIT_CARD", "PIX", "BOLETO"]),
-  amount:         z.number().positive(),
+  // Aceito por compatibilidade, mas IGNORADO: o valor é calculado no servidor
+  // (services/api/payment.ts). Antes o que viesse aqui era o que se cobrava.
+  amount:         z.number().positive().optional(),
   creditCard: z
     .object({
       holderName:  z.string(),
@@ -18,7 +20,9 @@ const checkoutSchema = z.object({
       ccv:         z.string().regex(/^\d{3,4}$/),
       holderInfo: z.object({
         name:          z.string(),
-        email:         z.string().email(),
+        // O formulário do site manda "" (não pede o e-mail do titular) e a
+        // validação reprovava todo pagamento com cartão. Vazio -> e-mail da conta.
+        email:         z.string().email().or(z.literal("")),
         cpfCnpj:       z.string(),
         postalCode:    z.string(),
         addressNumber: z.string(),
@@ -45,8 +49,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // `amount` fica de fora de propósito: quem decide o valor é o servidor.
+    const { consultationId, method, creditCard } = parsed.data;
     const payment = await initiatePayment({
-      ...parsed.data,
+      consultationId,
+      method,
+      ...(creditCard ? { creditCard } : {}),
       patientId: session.user.id,
     });
 

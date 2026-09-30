@@ -19,7 +19,11 @@ export interface InitiatePaymentInput {
   consultationId: string;
   patientId:      string;
   method:         PaymentMethod;
-  amount:         number;
+  /**
+   * Ignorado desde que o valor passou a ser calculado no servidor (ver
+   * consultationPrice). Continua no tipo só pra não quebrar quem ainda manda.
+   */
+  amount?:        number;
   creditCard?: {
     holderName:    string;
     number:        string;
@@ -37,18 +41,74 @@ export interface InitiatePaymentInput {
   };
 }
 
+/**
+ * Valor da consulta decidido no servidor. Antes o /api/checkout cobrava o
+ * `amount` que vinha no corpo da requisição — qualquer paciente podia mandar
+ * `amount: 1` pelo DevTools e pagar R$ 1. Agendamento: honorário do médico.
+ * Fila on-demand (sem médico definido): taxa fixa da plataforma.
+ */
+async function consultationPrice(doctorId: string | null): Promise<number> {
+  if (doctorId) {
+    const doctor = await prisma.doctorProfile.findUnique({
+      where:  { userId: doctorId },
+      select: { consultationFee: true },
+    });
+    const fee = Number(doctor?.consultationFee ?? 0);
+    if (fee > 0) return fee;
+  }
+  const { CONSULTATION_FEE_REAIS } = await import("./queue");
+  return CONSULTATION_FEE_REAIS;
+}
+
 export async function initiatePayment(
   input: InitiatePaymentInput,
 ): Promise<Payment> {
   const consultation = await prisma.consultation.findUnique({
     where:   { id: input.consultationId },
-    include: { patient: true },
+    include: { patient: true, payment: true },
   });
 
   if (!consultation) throw new NotFoundError("Consulta");
   if (consultation.patientId !== input.patientId) {
     throw new PaymentError("Consulta não pertence a este paciente");
   }
+  if (consultation.status !== "SCHEDULED") {
+    throw new PaymentError("Esta consulta não está aguardando pagamento");
+  }
+
+  // Payment.consultationId é único: uma segunda tentativa (voltar e clicar de
+  // novo, trocar de aba) estourava o índice do banco com erro ilegível.
+  if (consultation.payment) {
+    const s = consultation.payment.status;
+    if (s === "RECEIVED" || s === "CONFIRMED") {
+      throw new PaymentError("Esta consulta já está paga");
+    }
+    if (s === "PENDING") return consultation.payment; // reaproveita a cobrança aberta
+    if (s === "REFUNDED") throw new PaymentError("O pagamento desta consulta foi estornado");
+    // Vencida (OVERDUE) ou cancelada: libera pra gerar uma cobrança nova.
+    await prisma.payment.delete({ where: { id: consultation.payment.id } });
+  }
+
+  // Agendamento: a reserva de uma consulta não paga expira (UNPAID_HOLD_MINUTES).
+  // Quem volta pra pagar depois disso pode encontrar o horário já tomado — sem
+  // esta checagem, dois pacientes pagariam pelo mesmo horário do mesmo médico.
+  if (consultation.scheduledAt && consultation.doctorId) {
+    if (consultation.scheduledAt.getTime() <= Date.now()) {
+      throw new PaymentError("O horário desta consulta já passou — agende um novo");
+    }
+    const { occupyingWhere } = await import("./consultation");
+    const taken = await prisma.consultation.findFirst({
+      where: {
+        ...occupyingWhere(consultation.doctorId),
+        scheduledAt: consultation.scheduledAt,
+        id:          { not: consultation.id },
+      },
+      select: { id: true },
+    });
+    if (taken) throw new PaymentError("Esse horário foi ocupado por outro paciente — agende um novo");
+  }
+
+  const amount = await consultationPrice(consultation.doctorId);
 
   // ─── MODO DE TESTE ──────────────────────────────────────────────────────────
   // Pula ASAAS e cria payment PENDING; usuário confirma via /api/dev/simulate-payment
@@ -60,7 +120,7 @@ export async function initiatePayment(
         asaasPaymentId: mockId,
         method:         input.method,
         status:         "PENDING",
-        amount:         input.amount,
+        amount,
         pixQrCode:      MOCK_PIX_QR_BASE64,
         pixCopyPaste:   `00020101021226MOCK${mockId}5204000053039865802BR5910MOCK6009Sao Paulo62070503***6304ABCD`,
         ...(input.method === "BOLETO" ? { boletoUrl: "https://example.com/boleto-mock" } : {}),
@@ -91,7 +151,7 @@ export async function initiatePayment(
   const charge = await createAsaasCharge({
     customer:          asaasCustomerId,
     billingType:       mapPaymentMethod(input.method),
-    value:             input.amount,
+    value:             amount,
     dueDate:           dueDate.toISOString().split("T")[0]!,
     description:       `Consulta médica #${input.consultationId.slice(-8)}`,
     externalReference: input.consultationId,
@@ -106,7 +166,8 @@ export async function initiatePayment(
           },
           creditCardHolderInfo: {
             name:          input.creditCard.holderInfo.name,
-            email:         input.creditCard.holderInfo.email,
+            // O formulário do site não pede e-mail do titular; usa o da conta.
+            email:         input.creditCard.holderInfo.email || consultation.patient.email,
             cpfCnpj:       input.creditCard.holderInfo.cpfCnpj,
             postalCode:    input.creditCard.holderInfo.postalCode,
             addressNumber: input.creditCard.holderInfo.addressNumber,
@@ -124,19 +185,28 @@ export async function initiatePayment(
     }
   }
 
-  return prisma.payment.create({
+  const created = await prisma.payment.create({
     data: {
       consultationId: input.consultationId,
       asaasPaymentId: charge.id,
       method:         input.method,
-      status:         "PENDING",
-      amount:         input.amount,
+      // Cartão costuma voltar aprovado na hora; Pix e boleto chegam PENDING e
+      // são confirmados depois pelo webhook.
+      status:         mapAsaasStatus(charge.status),
+      amount,
       pixQrCode:      pixData.qrCode,
       pixCopyPaste:   pixData.copyPaste,
       boletoUrl:      charge.bankSlipUrl ?? null,
       expiresAt:      new Date(dueDate),
     },
   });
+
+  // Já nasceu paga (cartão aprovado na hora): o webhook que chegar depois vai
+  // ver wasPaid = true e não faria nada, então aplica o efeito aqui.
+  if (created.status === "RECEIVED" || created.status === "CONFIRMED") {
+    await afterFirstConfirmation(input.consultationId);
+  }
+  return created;
 }
 
 // ─── Sync payment status from Asaas ──────────────────────────────────────────
@@ -179,11 +249,29 @@ export async function processAsaasWebhook(payload: {
     },
   });
 
-  // Pagamento confirmado pela 1ª vez -> mover consulta para a fila
-  if (!wasPaid && nowPaid) {
-    const { moveConsultationToQueue } = await import("./queue");
-    await moveConsultationToQueue(payment.consultationId);
-  }
+  // Pagamento confirmado pela 1ª vez -> só consulta on-demand vai pra fila.
+  if (!wasPaid && nowPaid) await afterFirstConfirmation(payment.consultationId);
+}
+
+/**
+ * O que acontece quando o pagamento de uma consulta confirma pela 1ª vez.
+ *
+ * Antes toda consulta paga ia pra fila (status WAITING), inclusive a agendada:
+ * quem pagava hoje uma consulta da semana que vem recebia na hora "O médico está
+ * te chamando", e o médico via "Iniciar consulta" dias antes. Agendada paga
+ * continua SCHEDULED — quem a leva pra WAITING é o médico, ao chamar o paciente
+ * no horário.
+ */
+async function afterFirstConfirmation(consultationId: string): Promise<void> {
+  const c = await prisma.consultation.findUnique({
+    where:  { id: consultationId },
+    select: { scheduledAt: true, status: true },
+  });
+  if (!c || c.status !== "SCHEDULED") return;
+  if (c.scheduledAt) return; // agendamento: fica como está
+
+  const { moveConsultationToQueue } = await import("./queue");
+  await moveConsultationToQueue(consultationId);
 }
 
 // ─── Refund ───────────────────────────────────────────────────────────────────
