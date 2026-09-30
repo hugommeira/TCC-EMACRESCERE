@@ -20,8 +20,10 @@ const FAQS = [
     a: "Caso o médico decida prescrever, você recebe a receita pelo Portal Oficial do CFM e pode adquirir o medicamento em qualquer farmácia autorizada, conforme as regras da ANVISA.",
   },
   {
-    q: "Como me cadastro como médico ou farmácia?",
-    a: "Acesse a área profissional e envie seus documentos (CRM ou alvará). Nossa equipe analisa o cadastro e libera o acesso à plataforma após a aprovação.",
+    q: "Sou médico. Como me cadastro?",
+    // A "área profissional" citada aqui não existia; agora é /auth/register/medico.
+    // Farmácia não tem cadastro próprio (o perfil administrativo faz esse papel).
+    a: "Médicos se cadastram pela área profissional (link \"É médico?\" na tela de cadastro), informando o CRM. Verificamos a situação do registro e a equipe aprova o credenciamento antes de liberar os atendimentos.",
   },
   {
     q: "Posso cancelar a consulta? Recebo o dinheiro de volta?",

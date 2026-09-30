@@ -4,15 +4,21 @@ import { useState }       from "react";
 import { useRouter }      from "next/navigation";
 import Link               from "next/link";
 import { Alert }          from "@/components/ui";
-import { registerSchema } from "@/lib/validations/auth";
+import { registerSchema, registerDoctorSchema } from "@/lib/validations/auth";
 import type { RegisterInput } from "@/lib/validations/auth";
 
-type FieldErrors = Partial<Record<keyof RegisterInput, string>>;
+// Campos do médico ficam no mesmo estado; no cadastro de paciente são
+// ignorados (o schema do paciente descarta chaves que não conhece).
+type Values = RegisterInput & { crm: string; crmState: string; specialty: string };
+type FieldErrors = Partial<Record<keyof Values, string>>;
 
-const INITIAL: RegisterInput = {
+const INITIAL: Values = {
   name: "", email: "", cpf: "", phone: "",
   password: "", confirmPassword: "", acceptedTerms: false,
+  crm: "", crmState: "", specialty: "",
 };
+
+const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
 
 function onlyDigits(value: string, max = 11) {
   return value.replace(/\D/g, "").slice(0, max);
@@ -44,17 +50,24 @@ function passwordStrength(pwd: string) {
   return score; // 0..4
 }
 
-export function RegisterForm() {
+/**
+ * Cadastro de paciente ou de médico. O site não tinha cadastro de médico — a
+ * API aceitava (role DOCTOR, CRM verificado de forma simulada, conta PENDING até
+ * o admin aprovar), mas não havia tela: o FAQ mandava "acessar a área
+ * profissional", que não existia.
+ */
+export function RegisterForm({ variant = "patient" }: { variant?: "patient" | "doctor" }) {
   const router = useRouter();
+  const isDoctor = variant === "doctor";
 
-  const [values,   setValues]   = useState<RegisterInput>(INITIAL);
+  const [values,   setValues]   = useState<Values>(INITIAL);
   const [errors,   setErrors]   = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [loading,  setLoading]  = useState(false);
   const [success,  setSuccess]  = useState(false);
   const [showPwd,  setShowPwd]  = useState(false);
 
-  function setField<K extends keyof RegisterInput>(name: K, value: RegisterInput[K]) {
+  function setField<K extends keyof Values>(name: K, value: Values[K]) {
     setValues((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -70,20 +83,24 @@ export function RegisterForm() {
       setField("cpf", onlyDigits(value, 11));
     } else if (name === "phone") {
       setField("phone", onlyDigits(value, 11));
+    } else if (name === "crm") {
+      setField("crm", onlyDigits(value, 7));
     } else {
-      setField(name as keyof RegisterInput, value as RegisterInput[keyof RegisterInput]);
+      setField(name as keyof Values, value as Values[keyof Values]);
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const parsed = registerSchema.safeParse(values);
+    const parsed = isDoctor
+      ? registerDoctorSchema.safeParse({ ...values, role: "DOCTOR" })
+      : registerSchema.safeParse(values);
     if (!parsed.success) {
-      const fe = parsed.error.flatten().fieldErrors;
+      const fe = parsed.error.flatten().fieldErrors as Record<string, string[] | undefined>;
       const next: FieldErrors = {};
       for (const [key, val] of Object.entries(fe)) {
-        if (val?.[0]) next[key as keyof RegisterInput] = val[0];
+        if (val?.[0]) next[key as keyof Values] = val[0];
       }
       setErrors(next);
       return;
@@ -107,7 +124,7 @@ export function RegisterForm() {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/auth/login?registered=1"), 1500);
+      setTimeout(() => router.push("/auth/login?registered=1"), isDoctor ? 3500 : 1500);
     } catch {
       setApiError("Erro de conexão. Tente novamente.");
     } finally {
@@ -116,7 +133,12 @@ export function RegisterForm() {
   }
 
   if (success) {
-    return (
+    return isDoctor ? (
+      <Alert variant="success" title="Cadastro enviado!">
+        Seu CRM foi recebido e o credenciamento será analisado pela equipe. Você já pode
+        entrar e completar o perfil; os atendimentos são liberados após a aprovação.
+      </Alert>
+    ) : (
       <Alert variant="success" title="Conta criada com sucesso!">
         Estamos te redirecionando para o login…
       </Alert>
@@ -180,6 +202,52 @@ export function RegisterForm() {
           hint="Opcional"
         />
       </div>
+
+      {isDoctor && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
+            <Field
+              label="CRM"
+              name="crm"
+              inputMode="numeric"
+              placeholder="123456"
+              value={values.crm}
+              onChange={handleChange}
+              {...(errors.crm ? { error: errors.crm } : {})}
+              hint="Só os números. A situação do registro é verificada no cadastro."
+              required
+            />
+            <div>
+              <label htmlFor="crmState" className={`block text-sm font-medium ${errors.crmState ? "text-red-600" : "text-slate-800"}`}>
+                UF<span className="ml-0.5 text-red-500" aria-hidden>*</span>
+              </label>
+              <select
+                id="crmState"
+                name="crmState"
+                value={values.crmState}
+                onChange={(e) => setField("crmState", e.target.value)}
+                aria-invalid={Boolean(errors.crmState)}
+                className={`mt-1.5 w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-4 ${
+                  errors.crmState ? "border-red-400 ring-2 ring-red-100" : "border-slate-300 focus:border-brand-500 focus:ring-brand-500/15"
+                }`}
+              >
+                <option value="">—</option>
+                {UFS.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
+              </select>
+              {errors.crmState && <p className="mt-1.5 text-xs font-medium text-red-600">{errors.crmState}</p>}
+            </div>
+          </div>
+          <Field
+            label="Especialidade"
+            name="specialty"
+            placeholder="Endocrinologia"
+            value={values.specialty}
+            onChange={handleChange}
+            {...(errors.specialty ? { error: errors.specialty } : {})}
+            required
+          />
+        </>
+      )}
 
       <div>
         <Field
@@ -299,7 +367,7 @@ export function RegisterForm() {
           </>
         ) : (
           <>
-            Criar minha conta
+            {isDoctor ? "Enviar cadastro" : "Criar minha conta"}
             <svg viewBox="0 0 24 24" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M5 12h14M13 5l7 7-7 7" />
             </svg>

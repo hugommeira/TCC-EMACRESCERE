@@ -119,6 +119,13 @@ export default function RegisterPage() {
             <div className="mt-8">
               <RegisterForm />
             </div>
+
+            <p className="mt-6 text-center text-sm text-slate-500">
+              É médico?{" "}
+              <Link href="/auth/register/medico" className="font-semibold text-brand-700 hover:underline">
+                Cadastre-se na área profissional
+              </Link>
+            </p>
           </div>
         </div>
       </div>
