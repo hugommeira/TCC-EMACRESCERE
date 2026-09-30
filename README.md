@@ -1,13 +1,8 @@
-| Paciente | mariana.castro@email.com | 4 consultas pagas (88,2 → 83,8 kg), receita emitida |
-| Paciente | rafael.osantos@email.com | 3 consultas pagas (104,5 → 101,0 kg), receita emitida |
-| Paciente | patricia.nunes@email.com | 5 consultas pagas (79,0 → 75,2 kg), receita emitida |
-| Paciente | lucasmp@email.com | 3 consultas pagas (96,3 → 93,7 kg) |
-| Paciente | ju.ribeiro@email.com | 4 consultas pagas (91,5 → 87,6 kg), receita emitida |
-| Paciente | andre.gomes.b@email.com | 4 consultas pagas (112,0 → 106,1 kg), receita emitida |
-| Paciente | camila.freitas@email.com | 3 consultas pagas (74,8 → 73,0 kg), receita de controle especial |
-# TeleMed – Plataforma de Telemedicina
+# Emacrescere – Plataforma de Telessaúde
 
-Sistema completo de telemedicina com arquitetura modular, pronto para produção.
+Plataforma de telessaúde para acompanhamento médico do emagrecimento, com
+atendimento por consulta agendada. TCC da Escola Técnica Pandiá Calógeras
+(Técnico de Informática, Equipe 6).
 
 Design: [Figma do projeto](https://www.figma.com/design/4qVl5xVi3V3eREAm4xELvN/MOUNJARO?node-id=0-1&t=S2NCdtkXR6XwtxAf-1)
 
@@ -170,6 +165,13 @@ Senha de todos: `Demo@12345`.
 | Paciente | diego.ferreira@demo.emacrescere.app | concluída + faltou |
 | Paciente | elaine.rocha@demo.emacrescere.app | receita em rascunho |
 | Paciente | felipe.andrade@demo.emacrescere.app | consulta amanhã |
+| Paciente | mariana.castro@email.com | 4 consultas pagas (88,2 → 83,8 kg), receita emitida |
+| Paciente | rafael.osantos@email.com | 3 consultas pagas (104,5 → 101,0 kg), receita emitida |
+| Paciente | patricia.nunes@email.com | 5 consultas pagas (79,0 → 75,2 kg), receita emitida |
+| Paciente | lucasmp@email.com | 3 consultas pagas (96,3 → 93,7 kg) |
+| Paciente | ju.ribeiro@email.com | 4 consultas pagas (91,5 → 87,6 kg), receita emitida |
+| Paciente | andre.gomes.b@email.com | 4 consultas pagas (112,0 → 106,1 kg), receita emitida |
+| Paciente | camila.freitas@email.com | 3 consultas pagas (74,8 → 73,0 kg), receita de controle especial |
 | Médica | fernanda.costa@demo.emacrescere.app | credenciada, com certificado |
 | Médico | ricardo.alves@demo.emacrescere.app | credenciado, com certificado |
 | Médico | marcos.pereira@demo.emacrescere.app | aguardando aprovação (CRM ativo) |
