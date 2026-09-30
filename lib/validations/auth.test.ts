@@ -16,6 +16,17 @@ describe("registerSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("aceita telefone em branco (o campo é opcional)", () => {
+    // O formulário manda "" quando o telefone fica vazio; antes isso reprovava.
+    const result = registerSchema.safeParse({ ...VALID_INPUT, phone: "" });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.phone).toBeUndefined();
+  });
+
+  it("continua recusando telefone preenchido errado", () => {
+    expect(registerSchema.safeParse({ ...VALID_INPUT, phone: "123" }).success).toBe(false);
+  });
+
   it("rejeita quando acceptedTerms é false", () => {
     const result = registerSchema.safeParse({ ...VALID_INPUT, acceptedTerms: false });
     expect(result.success).toBe(false);

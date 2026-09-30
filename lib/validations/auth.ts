@@ -61,10 +61,12 @@ const registerBaseSchema = z
       .string({ required_error: "CPF obrigatório" })
       .regex(/^\d{11}$/, "CPF inválido (somente números, 11 dígitos)")
       .refine(validateCpf, "CPF inválido"),
-    phone: z
-      .string()
-      .regex(/^\d{10,11}$/, "Telefone inválido")
-      .optional(),
+    // O campo é opcional, mas o formulário manda "" quando fica em branco — e
+    // "" reprovava na regex: ninguém conseguia se cadastrar sem telefone.
+    phone: z.preprocess(
+      (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.string().regex(/^\d{10,11}$/, "Telefone inválido").optional(),
+    ),
     password: z
       .string({ required_error: "Senha obrigatória" })
       .min(8, "Mínimo 8 caracteres")
