@@ -13,6 +13,7 @@ interface CertInfo {
   validTo:      string | Date | null;
   active:       boolean;
   createdAt:    string | Date;
+  fileAvailable?: boolean;
 }
 
 const PT_BR = new Intl.DateTimeFormat("pt-BR", {
@@ -70,6 +71,32 @@ export function CertificateManager() {
     }
   }
 
+  const [generating, setGenerating] = useState(false);
+
+  // Certificado autoassinado de teste — pra demonstrar a receita assinada sem
+  // um A1 ICP-Brasil real.
+  async function generateTest() {
+    const ok = await confirmDialog({
+      title:        "Gerar certificado de teste?",
+      message:      "Será criado um certificado autoassinado, só para demonstração. As receitas saem assinadas digitalmente, mas SEM validade jurídica.",
+      confirmLabel: "Gerar certificado de teste",
+      tone:         "warning",
+    });
+    if (!ok) return;
+    setGenerating(true);
+    setError(null);
+    try {
+      const r = await fetch("/api/doctor/certificate/test", { method: "POST" });
+      const data = await r.json();
+      if (!r.ok) { setError(data.message ?? "Falha ao gerar certificado"); return; }
+      await load();
+    } catch {
+      setError("Erro de conexão");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function remove() {
     const ok = await confirmDialog({
       title:        "Remover certificado A1?",
@@ -86,8 +113,17 @@ export function CertificateManager() {
     return <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />;
   }
 
+  const missingFile = cert?.fileAvailable === false;
+
   return (
     <div className="space-y-6">
+      {missingFile && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <strong>O arquivo deste certificado não está no servidor.</strong> Envie o .pfx de novo ou gere
+          um certificado de teste abaixo — sem isso não é possível emitir receitas.
+        </div>
+      )}
+
       {cert && (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5">
           <div className="flex items-start justify-between gap-4">
@@ -228,6 +264,23 @@ export function CertificateManager() {
           nunca terá acesso à sua chave privada em texto claro.
         </div>
       </form>
+
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-5">
+        <h2 className="font-display text-base font-semibold text-slate-900">Não tem certificado A1?</h2>
+        <p className="mt-1 text-xs text-slate-600">
+          Para demonstração, gere um <strong>certificado de teste</strong> autoassinado. A receita sai
+          assinada digitalmente e validável no site, mas <strong>sem validade jurídica</strong> — o
+          emissor não é uma Autoridade Certificadora da ICP-Brasil.
+        </p>
+        <button
+          type="button"
+          onClick={() => void generateTest()}
+          disabled={generating}
+          className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+        >
+          {generating ? (<><Spinner /> Gerando...</>) : "Gerar certificado de teste"}
+        </button>
+      </div>
     </div>
   );
 }

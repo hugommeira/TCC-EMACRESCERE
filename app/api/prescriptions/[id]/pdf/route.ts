@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { toApiError, ForbiddenError, NotFoundError, ConflictError } from "@/lib/errors";
+import { getObjectBuffer }   from "@/lib/s3";
+import { regeneratePrescriptionPdf } from "@/services/api/prescription";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +35,10 @@ export async function GET(
       select: { signedPdfKey: true, patientId: true, doctorId: true, status: true },
     });
     if (!p) throw new NotFoundError("Receita");
-    if (p.status !== "ISSUED" || !p.signedPdfKey) {
+    // Só o status decide. As receitas da demo estão ISSUED mas sem
+    // signedPdfKey (o seed não gera arquivo) e eram recusadas como "ainda não
+    // emitida" — o PDF é gerado logo abaixo.
+    if (p.status !== "ISSUED") {
       throw new ConflictError("Receita ainda não emitida");
     }
 
@@ -44,37 +49,19 @@ export async function GET(
       session.user.role === "SUPER_ADMIN";
     if (!allowed) throw new ForbiddenError();
 
-    // Stream do S3 → cliente
-    const { S3Client, GetObjectCommand } = await import("@aws-sdk/client-s3");
-    const s3 = new S3Client({
-      endpoint:       process.env["S3_ENDPOINT"]!,
-      region:         process.env["S3_REGION"]!,
-      forcePathStyle: true,
-      credentials: {
-        accessKeyId:     process.env["S3_ACCESS_KEY"]!,
-        secretAccessKey: process.env["S3_SECRET_KEY"]!,
-      },
-    });
-
-    const r = await s3.send(new GetObjectCommand({
-      Bucket: process.env["S3_BUCKET"]!,
-      Key:    p.signedPdfKey,
-    }));
-
-    if (!r.Body) throw new NotFoundError("Arquivo do PDF não encontrado");
-
-    const chunks: Buffer[] = [];
-    for await (const chunk of r.Body as AsyncIterable<Buffer>) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
+    // Antes lia direto do S3, que nunca foi configurado: nenhuma receita abria.
+    // Agora passa pela camada de storage (S3 ou banco) e, se o arquivo não
+    // existir — caso de todas as receitas da demo —, o PDF é gerado de novo a
+    // partir dos dados gravados.
+    const stored = p.signedPdfKey ? await getObjectBuffer(p.signedPdfKey) : null;
+    const buffer = stored?.body ?? await regeneratePrescriptionPdf(id);
 
     const fileName = `receita-${id.slice(-8)}.pdf`;
     const disposition = download
       ? `attachment; filename="${fileName}"`
       : `inline; filename="${fileName}"`;
 
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type":        "application/pdf",
         "Content-Length":      String(buffer.length),
