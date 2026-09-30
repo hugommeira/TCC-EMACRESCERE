@@ -4,7 +4,7 @@ Levantamento do estado atual dos itens 8, 9 e 10 da revisão crítica.
 **Nada aqui foi implementado** — é diagnóstico e proposta, para revisão antes
 de mexer no backend.
 
-Data do levantamento: 12/09/2026 · commit base: `6b7c8ff`
+Data do levantamento: 12/09/2026 (código da época: `1c4a107` + ajustes locais que não foram enviados). Revalidar os números de linha antes de citar na monografia.
 
 ---
 
