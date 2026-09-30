@@ -6,11 +6,16 @@ import { Logo }             from "@/components/landing/Logo";
 
 export const metadata: Metadata = { title: "Criar conta de paciente" };
 
+// Nenhum item promete o que a plataforma não controla: especialidade do
+// médico, receita (é decisão clínica), medicamento, entrega ou prazo, e
+// atendimento 24h. Antes a lista trazia "Caneta entregue em casa em até
+// 48h", o que contradiz o aviso legal de que a plataforma não vende nem
+// dispensa medicamento.
 const PERKS = [
-  "Consulta com endocrinologista certificado",
-  "Receita digital válida em todo o Brasil",
-  "Caneta entregue em casa em até 48h",
-  "Acompanhamento médico pelo app, 24h",
+  "Consulta com médico de CRM ativo e verificado",
+  "Agendamento no dia e horário que você escolher",
+  "Receita digital válida em todo o Brasil, quando indicada pelo médico",
+  "Histórico de consultas e receitas sempre à mão",
 ];
 
 export default function RegisterPage() {

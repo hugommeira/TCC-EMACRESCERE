@@ -15,12 +15,12 @@ const REASONS = [
   {
     title: "Quer um processo digital e prático",
     description:
-      "Tudo pelo app: consulta, receita pelo Portal CFM, entrega em casa e acompanhamento 24h.",
+      "Tudo online: agendamento, consulta por vídeo, receita digital quando indicada e seu histórico sempre à mão.",
   },
   {
     title: "Busca segurança e profissionais sérios",
     description:
-      "Médicos com CRM ativo, prescrição CFM 2.314/2022 e farmácias auditadas em todo Brasil.",
+      "Médicos com CRM ativo, prescrição conforme a Resolução CFM 2.314/2022 e medicamento, se prescrito, comprado em farmácia autorizada.",
   },
 ];
 
@@ -58,7 +58,7 @@ export function ForWhom() {
                     Acompanhamento médico
                   </p>
                   <p className="text-xs text-slate-600">
-                    Resultado seguro e duradouro
+                    Plano individualizado para você
                   </p>
                 </div>
               </div>
@@ -75,7 +75,7 @@ export function ForWhom() {
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-slate-600">
             Cadastre-se como paciente e tenha acesso a uma jornada completa,
-            do diagnóstico à entrega.
+            do agendamento ao acompanhamento.
           </p>
 
           <ul className="mt-10 space-y-5">

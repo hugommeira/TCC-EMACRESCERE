@@ -25,7 +25,7 @@ export function CtaFinal() {
               <span className="block sm:inline">jornada de emagrecimento?</span>
             </h2>
             <p className="mt-5 text-base leading-relaxed text-white/90 sm:text-lg">
-              Consulta online, prescrição digital e entrega em casa.<br className="hidden sm:block" />
+              Consulta online agendada e prescrição digital quando indicada.<br className="hidden sm:block" />
               Tudo com acompanhamento médico e segurança.
             </p>
 

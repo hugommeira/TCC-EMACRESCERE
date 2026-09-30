@@ -16,9 +16,12 @@ const HIGHLIGHTS = [
     title: "Receita digital válida",
     desc:  "Prescrições com assinatura certificada conforme CFM 2.314/2022.",
   },
+  // Antes: "Entrega segura em 48h — caneta de emagrecimento entregue em casa".
+  // A plataforma não vende nem entrega medicamento (ver aviso legal do
+  // rodapé), então não pode prometer entrega, prazo nem o próprio remédio.
   {
-    title: "Entrega segura em 48h",
-    desc:  "Caneta de emagrecimento entregue em casa, com rastreamento.",
+    title: "Consulta agendada",
+    desc:  "Escolha o médico e o horário que funcionam para você.",
   },
 ];
 
@@ -52,7 +55,7 @@ export default function LoginPage() {
               Sua jornada de emagrecimento começa aqui.
             </h1>
             <p className="mt-4 text-base leading-relaxed text-white/80">
-              Plataforma médica para tratamento seguro com a caneta de emagrecimento.
+              Plataforma de telessaúde para acompanhamento médico do emagrecimento.
             </p>
 
             <ul className="mt-10 space-y-4">

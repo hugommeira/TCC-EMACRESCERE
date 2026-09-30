@@ -16,7 +16,7 @@ const STEPS = [
     n: "02",
     title: "Consulte um médico",
     description:
-      "Conectamos você a um especialista que avalia e emite a prescrição pelo Portal Oficial do CFM.",
+      "Agende com um especialista, que avalia seu caso e, se indicado, emite a prescrição pelo Portal Oficial do CFM.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
         <circle cx="12" cy="8" r="4" />
@@ -61,8 +61,8 @@ export function HowItWorks() {
             Simples, rápido e 100% online
           </h2>
           <p className="mt-4 text-base text-slate-600 sm:text-lg">
-            Em apenas 4 passos você tem a caneta de emagrecimento com prescrição
-            médica em mãos.
+            Do cadastro ao acompanhamento, em 4 passos. A conduta — incluindo
+            se haverá ou não medicamento — é sempre decisão do seu médico.
           </p>
           <p className="mt-2 text-sm text-slate-500 sm:hidden">
             Arraste para ver os 4 passos.

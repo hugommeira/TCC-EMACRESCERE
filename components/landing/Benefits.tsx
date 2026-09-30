@@ -23,9 +23,9 @@ const BENEFITS = [
     ),
   },
   {
-    title: "Rede de farmácias autorizadas",
+    title: "Farmácias autorizadas",
     description:
-      "Caso o médico prescreva, você dispensa em farmácias parceiras autorizadas — sempre com receita válida.",
+      "Caso o médico prescreva, você compra em qualquer farmácia autorizada — sempre com receita válida.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2V9z" />
@@ -36,7 +36,7 @@ const BENEFITS = [
   {
     title: "Acompanhamento pelo app",
     description:
-      "Monitore progresso, renove prescrições e fale com seu médico 24h.",
+      "Acompanhe seu progresso, suas consultas e receitas, e converse com seu médico pelo chat da consulta.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
         <rect x="5" y="2" width="14" height="20" rx="2.5" />

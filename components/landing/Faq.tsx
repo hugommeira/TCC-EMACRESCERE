@@ -21,11 +21,13 @@ const FAQS = [
   },
   {
     q: "Como me cadastro como médico ou farmácia?",
-    a: "Acesse a área profissional e envie seus documentos (CRM ou alvará). Nossa equipe valida em até 2 dias úteis e libera o acesso à plataforma.",
+    a: "Acesse a área profissional e envie seus documentos (CRM ou alvará). Nossa equipe analisa o cadastro e libera o acesso à plataforma após a aprovação.",
   },
   {
     q: "Os dados de saúde ficam protegidos?",
-    a: "Totalmente. Seguimos LGPD, com criptografia de ponta a ponta, prontuário eletrônico auditado e acesso restrito apenas ao médico responsável.",
+    // A resposta anterior prometia "criptografia de ponta a ponta", o que não
+    // corresponde à implementação. Esta lista só afirma o que o código faz.
+    a: "Seguimos a LGPD. Todo o tráfego é cifrado por HTTPS, as senhas são guardadas como hash bcrypt (nunca em texto), o prontuário só é acessível ao próprio paciente e ao médico responsável por aquela consulta, e o CPF nunca é devolvido nas respostas da API. Ações sensíveis ficam registradas em log de auditoria com autor, data e origem.",
   },
 ];
 

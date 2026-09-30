@@ -19,7 +19,7 @@ export function DownloadApp() {
               Leve o acompanhamento no bolso
             </h2>
             <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
-              Consulta on-demand, chat com o médico, receitas e evolução de peso —
+              Consultas agendadas, chat com o médico, receitas e evolução de peso —
               tudo no app Emacrescere. Aponte a câmera do celular para o QR code
               ou toque no botão para baixar.
             </p>
