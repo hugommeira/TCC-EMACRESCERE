@@ -330,7 +330,19 @@ async function settleCancellationPayment(
   cancelledBy: "PATIENT" | "DOCTOR",
 ): Promise<"REFUNDED" | "NO_REFUND" | "NOT_PAID"> {
   const paid = c.payment?.status === "RECEIVED" || c.payment?.status === "CONFIRMED";
-  if (!c.payment || !paid) return "NOT_PAID";
+  if (!c.payment) return "NOT_PAID";
+  if (!paid) {
+    // Cobrança ainda aberta (QR do Pix, boleto): cancela no gateway pra ela
+    // não poder mais ser paga. Se o gateway falhar, o cancelamento segue — o
+    // webhook estorna sozinho um pagamento que chegue pra consulta cancelada.
+    if (c.payment.status === "PENDING") {
+      const { voidPendingPayment } = await import("./payment");
+      await voidPendingPayment(c.payment.id).catch((err) =>
+        console.error("[cancel] não consegui cancelar a cobrança em aberto:", err),
+      );
+    }
+    return "NOT_PAID";
+  }
 
   const refundable =
     cancelledBy === "DOCTOR" ||

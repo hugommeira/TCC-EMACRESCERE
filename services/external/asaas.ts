@@ -97,6 +97,11 @@ export async function getAsaasCharge(id: string): Promise<AsaasCharge> {
   return asaasRequest<AsaasCharge>(`/payments/${id}`);
 }
 
+/** Cancela (remove) uma cobrança ainda não paga. */
+export async function deleteAsaasCharge(id: string): Promise<void> {
+  await asaasRequest<{ deleted: boolean }>(`/payments/${id}`, { method: "DELETE" });
+}
+
 export async function refundAsaasCharge(id: string): Promise<AsaasCharge> {
   return asaasRequest<AsaasCharge>(`/payments/${id}/refund`, {
     method: "POST",

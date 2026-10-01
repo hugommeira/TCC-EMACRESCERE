@@ -6,6 +6,7 @@ import {
   getAsaasCharge,
   getPixQrCode,
   refundAsaasCharge,
+  deleteAsaasCharge,
 } from "@/services/external/asaas";
 import type { Payment, PaymentMethod } from "@prisma/client";
 
@@ -265,13 +266,38 @@ export async function processAsaasWebhook(payload: {
 async function afterFirstConfirmation(consultationId: string): Promise<void> {
   const c = await prisma.consultation.findUnique({
     where:  { id: consultationId },
-    select: { scheduledAt: true, status: true },
+    select: { scheduledAt: true, status: true, payment: { select: { id: true } } },
   });
-  if (!c || c.status !== "SCHEDULED") return;
+  if (!c) return;
+
+  // Rede de segurança: pagamento confirmado de uma consulta já cancelada (ex.:
+  // o paciente pagou um QR antigo). Devolve o dinheiro em vez de ficar com ele.
+  if (c.status === "CANCELLED" && c.payment) {
+    await refundPayment(c.payment.id).catch((err) =>
+      console.error("[webhook] estorno automático de consulta cancelada falhou:", err),
+    );
+    return;
+  }
+  if (c.status !== "SCHEDULED") return;
   if (c.scheduledAt) return; // agendamento: fica como está
 
   const { moveConsultationToQueue } = await import("./queue");
   await moveConsultationToQueue(consultationId);
+}
+
+// ─── Cancelar cobrança em aberto ─────────────────────────────────────────────
+
+/**
+ * Consulta cancelada antes de pagar: a cobrança (QR do Pix, boleto) continuava
+ * aberta no Asaas. Se o paciente pagasse depois, o dinheiro entrava pra uma
+ * consulta que não existia mais. Agora a cobrança é cancelada no gateway.
+ */
+export async function voidPendingPayment(paymentId: string): Promise<void> {
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (!payment || payment.status !== "PENDING") return;
+  const simulated = !payment.asaasPaymentId || /^(demo_|mock_)/.test(payment.asaasPaymentId);
+  if (!simulated) await deleteAsaasCharge(payment.asaasPaymentId!);
+  await prisma.payment.update({ where: { id: paymentId }, data: { status: "CANCELLED" } });
 }
 
 // ─── Refund ───────────────────────────────────────────────────────────────────
