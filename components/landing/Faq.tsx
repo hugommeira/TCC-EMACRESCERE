@@ -9,7 +9,10 @@ const FAQS = [
   },
   {
     q: "Como funciona a prescrição?",
-    a: "A Emacrescere não emite receitas. Após a consulta, o médico utiliza o Portal Oficial do CFM (prescricaoeletronica.cfm.org.br) para emitir a prescrição com assinatura digital certificada — válida em todo Brasil conforme a Resolução CFM 2.314/2022.",
+    // Antes dizia que a plataforma não emitia receitas (o médico usaria o
+    // Portal do CFM). A receita é emitida aqui, assinada com o certificado
+    // digital do médico (services/api/prescription.ts, lib/sign-pdf.ts).
+    a: "Se o médico indicar um tratamento com medicamento, ele emite a receita aqui mesmo, assinada com o certificado digital dele, conforme a Resolução CFM 2.314/2022. A receita fica no seu painel, com a data de validade.",
   },
   {
     q: "A plataforma indica ou vende medicamentos?",
@@ -17,7 +20,7 @@ const FAQS = [
   },
   {
     q: "Como adquiro o medicamento se for prescrito?",
-    a: "Caso o médico decida prescrever, você recebe a receita pelo Portal Oficial do CFM e pode adquirir o medicamento em qualquer farmácia autorizada, conforme as regras da ANVISA.",
+    a: "Caso o médico prescreva, você baixa a receita no seu painel e pode comprar o medicamento em qualquer farmácia autorizada, conforme as regras da ANVISA.",
   },
   {
     q: "Sou médico. Como me cadastro?",

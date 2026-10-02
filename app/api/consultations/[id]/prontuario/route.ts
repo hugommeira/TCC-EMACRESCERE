@@ -61,11 +61,14 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       },
     });
 
+    // O canal da consulta também é ouvido pelo paciente: as notas internas
+    // ficam fora do evento (o médico já as tem na tela que editou).
+    const shared = { ...updated, notes: undefined }; // undefined some no JSON
     await publish({
       channel: `consultation:${id}`,
       type:    "prontuario.updated",
       data:    {
-        ...updated,
+        ...shared,
         updatedAt: updated.updatedAt.toISOString(),
         updatedBy: updated.doctor?.name ?? null,
       },

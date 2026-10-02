@@ -61,12 +61,14 @@ export function ProntuarioPanel({
   useSse(`/api/realtime/consultation/${consultationId}`, {
     "prontuario.updated": (payload) => {
       const p = payload as Prontuario & { updatedAt?: string; updatedBy?: string | null };
-      setData({
+      // O evento não traz as notas internas (o paciente ouve o mesmo canal):
+      // mantém as que já estão na tela.
+      setData((prev) => ({
         chiefComplaint: p.chiefComplaint,
         diagnosis:      p.diagnosis,
         conduct:        p.conduct,
-        notes:          p.notes,
-      });
+        notes:          p.notes !== undefined ? p.notes : prev.notes,
+      }));
       if (p.updatedAt) setSavedAt(new Date(p.updatedAt));
       if (p.updatedBy !== undefined) setUpdatedBy(p.updatedBy);
       setStatus("saved");

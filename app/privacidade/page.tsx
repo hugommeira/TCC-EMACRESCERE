@@ -31,7 +31,7 @@ export default function PrivacidadePage() {
       <ul>
         <li>Histórico clínico, peso, altura, IMC e comorbidades</li>
         <li>Anamnese, exames e prontuário médico digital</li>
-        <li>Prescrições emitidas pelo médico no Portal CFM</li>
+        <li>Prescrições emitidas e assinadas digitalmente pelo médico na plataforma</li>
       </ul>
       <h3>Dados técnicos</h3>
       <ul>

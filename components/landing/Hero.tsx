@@ -52,8 +52,8 @@ function MobileHero() {
 
         <p className="mt-4 text-base leading-relaxed text-slate-600">
           Conectamos você a médicos especialistas em obesidade e doenças
-          metabólicas. A conduta — incluindo eventual prescrição — é decidida
-          pelo seu médico no Portal Oficial do CFM.
+          metabólicas, por vídeo e com hora marcada. Se o médico indicar, a
+          receita sai assinada digitalmente por ele.
         </p>
 
         <div className="mt-7 flex flex-col gap-3">
@@ -75,8 +75,8 @@ function MobileHero() {
         </div>
 
         <dl className="mt-8 grid grid-cols-3 divide-x divide-slate-200 rounded-2xl border border-slate-200 bg-white py-3.5 shadow-sm">
-          <StatCompact value="+2mil" label="Pacientes" />
-          <StatCompact value="100%"  label="CRM ativo" />
+          <StatCompact value="24 h"  label="Cancela grátis" />
+          <StatCompact value="CRM"   label="Verificado" />
           <StatCompact value="LGPD"  label="Protegido" />
         </dl>
 
@@ -131,8 +131,8 @@ function DesktopHero() {
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
             Conectamos você a médicos especialistas em obesidade e doenças
-            metabólicas. A conduta — incluindo eventual prescrição — é
-            decidida pelo seu médico no Portal Oficial do CFM.
+            metabólicas, por vídeo e com hora marcada. Se o médico indicar, a
+            receita sai assinada digitalmente por ele.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
@@ -154,8 +154,8 @@ function DesktopHero() {
           </div>
 
           <dl className="mt-12 grid max-w-lg grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3">
-            <Stat value="+2mil" label="Pacientes acompanhados" />
-            <Stat value="100%"  label="Médicos com CRM ativo" />
+            <Stat value="24 h"  label="Pra cancelar sem custo" />
+            <Stat value="CRM"   label="Verificado de cada médico" />
             <Stat value="LGPD"  label="Dados protegidos" />
           </dl>
 
@@ -224,7 +224,7 @@ function HeroVisual() {
 
         <ul className="space-y-2.5">
           <Activity color="bg-brand-500" title="Dr. Carlos Lima" subtitle="Consulta iniciada · 10:01" />
-          <Activity color="bg-teal-500"  title="Prescrição emitida" subtitle="Portal Oficial CFM" />
+          <Activity color="bg-teal-500"  title="Prescrição emitida" subtitle="Assinada digitalmente" />
           <Activity color="bg-emerald-500" title="Acompanhamento ativo" subtitle="Suporte pelo app" />
         </ul>
 

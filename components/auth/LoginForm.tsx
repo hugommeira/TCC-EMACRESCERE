@@ -5,6 +5,7 @@ import { signIn }         from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link               from "next/link";
 import type { Route }     from "next";
+import { safeCallbackUrl } from "@/lib/redirect";
 import { Alert }          from "@/components/ui";
 import { loginSchema }    from "@/lib/validations/auth";
 import type { LoginInput } from "@/lib/validations/auth";
@@ -12,7 +13,9 @@ import type { LoginInput } from "@/lib/validations/auth";
 export function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl  = searchParams.get("callbackUrl") ?? "/";
+  // Só caminho interno: "?callbackUrl=https://outro-site" levaria o usuário
+  // recém-logado pra fora (open redirect).
+  const callbackUrl  = safeCallbackUrl(searchParams.get("callbackUrl"));
   const justRegistered = searchParams.get("registered") === "1";
 
   const [values,   setValues]   = useState<LoginInput>({ email: "", password: "" });

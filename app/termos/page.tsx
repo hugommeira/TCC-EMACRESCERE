@@ -42,8 +42,8 @@ export default function TermosPage() {
         As consultas obedecem à Resolução CFM 2.314/2022 e demais normas do
         Conselho Federal de Medicina. O médico é o único responsável pela conduta
         clínica, indicações, diagnósticos e prescrições. Quando houver
-        prescrição, ela será emitida pelo médico no Portal Oficial do CFM
-        (prescricaoeletronica.cfm.org.br) e disponibilizada a você.
+        prescrição, ela será emitida pelo médico na própria plataforma, assinada
+        com o certificado digital dele, e disponibilizada a você no seu painel.
       </p>
 
       <h2>5. Aquisição de medicamentos</h2>

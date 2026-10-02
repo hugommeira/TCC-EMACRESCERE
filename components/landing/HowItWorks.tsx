@@ -16,7 +16,7 @@ const STEPS = [
     n: "02",
     title: "Consulte um médico",
     description:
-      "Agende com um especialista, que avalia seu caso e, se indicado, emite a prescrição pelo Portal Oficial do CFM.",
+      "Agende com um especialista, que avalia seu caso e, se indicado, emite a receita na plataforma, assinada digitalmente.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
         <circle cx="12" cy="8" r="4" />

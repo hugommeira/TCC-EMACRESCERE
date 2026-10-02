@@ -165,6 +165,9 @@ export async function getConsultationById(
 
   if (!isParticipant) throw new ForbiddenError();
 
+  // "Notas internas" são só do médico (ProntuarioPanel, /summary). Antes a
+  // linha inteira ia pro paciente pelo GET /api/consultations/[id].
+  if (consultation.doctorId !== requesterId) return { ...consultation, notes: null };
   return consultation;
 }
 
@@ -202,7 +205,8 @@ export async function listPatientConsultations(
     prisma.consultation.count({ where }),
   ]);
 
-  return { data, total, page, limit, pages: Math.ceil(total / limit) };
+  // Lista do paciente: sem as notas internas do médico.
+  return { data: data.map((c) => ({ ...c, notes: null })), total, page, limit, pages: Math.ceil(total / limit) };
 }
 
 // ─── List by doctor ───────────────────────────────────────────────────────────

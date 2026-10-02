@@ -12,20 +12,13 @@ const COLUMNS = [
       { label: "Já tenho conta", href: "/auth/login" },
     ],
   },
-  {
-    title: "Empresa",
-    links: [
-      { label: "Sobre nós", href: "#" },
-      { label: "Blog",      href: "#" },
-      { label: "Carreiras", href: "#" },
-    ],
-  },
+  // "Empresa" (Sobre nós, Blog, Carreiras) e "Central de ajuda" apontavam
+  // para "#": páginas que não existem. Saíram; Contato vai pro e-mail real.
   {
     title: "Suporte",
     links: [
-      { label: "Central de ajuda", href: "#" },
-      { label: "Contato",          href: "#" },
-      { label: "Privacidade",      href: "#" },
+      { label: "Dúvidas frequentes", href: "#faq" },
+      { label: "Contato",            href: "mailto:contato@emacrescere.com.br" },
     ],
   },
   {
@@ -46,7 +39,7 @@ export function Footer() {
         <div className="md:hidden">
           <Logo variant="light" />
           <p className="mt-4 text-sm leading-relaxed text-ink-200/80">
-            Conectando pacientes, médicos e farmácias para emagrecimento seguro.
+            Conectando pacientes a médicos especialistas para um emagrecimento seguro.
           </p>
 
           {/* Native <details>: no JS, keeps this a Server Component, and stops
@@ -86,8 +79,8 @@ export function Footer() {
           <div className="md:col-span-4">
             <Logo variant="light" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-200/80">
-              Conectando pacientes, médicos e farmácias para emagrecimento
-              seguro.
+              Conectando pacientes a médicos especialistas para um
+              emagrecimento seguro.
             </p>
           </div>
 
@@ -117,8 +110,8 @@ export function Footer() {
             uma plataforma de telessaúde e não comercializa, indica nem dispensa
             medicamentos. Toda decisão clínica e qualquer eventual prescrição são
             de responsabilidade exclusiva do médico, em consulta individualizada.
-            Os depoimentos representam experiências individuais e não garantem
-            resultados clínicos. Em caso de dúvidas sobre seu tratamento,
+            As histórias da página são ilustrativas, com personagens fictícios, e
+            não representam resultados clínicos. Em caso de dúvidas sobre seu tratamento,
             consulte sempre seu médico. Esta plataforma respeita as normativas
             da ANVISA, da Resolução CFM 2.314/2022 e da Lei Geral de Proteção de
             Dados (LGPD).

@@ -90,7 +90,9 @@ export default async function ConsultaPage({
         chiefComplaint: c.chiefComplaint,
         diagnosis:      c.diagnosis,
         conduct:        c.conduct,
-        notes:          c.notes,
+        // Notas internas só pro médico: props de componente cliente vão no
+        // payload da página, então esconder o campo na tela não bastava.
+        notes:          isDoctor ? c.notes : null,
       }}
       doctorInfo={
         c.doctor
