@@ -68,6 +68,8 @@ export const AuditAction = {
   FOLLOW_UP_CREATED:       "followup.created",
   FOLLOW_UP_RESPONDED:     "followup.responded",
   ATTACHMENT_UPLOADED:     "attachment.uploaded",
+  WEIGHT_RECORDED:         "weight.recorded",
+  WEIGHT_DELETED:          "weight.deleted",
   RATE_LIMIT_HIT:          "security.rate_limit",
   WEBHOOK_AUTH_FAILED:     "security.webhook_auth_failed",
 } as const;

@@ -73,6 +73,7 @@ export default async function ConsultaPage({
       consultationId={c.id}
       isDoctor={isDoctor}
       myUserId={session.user.id}
+      patientId={c.patient.id}
       patientName={c.patient.name}
       patientAge={calcAge(c.patient.patientProfile?.birthDate)}
       patientGender={c.patient.patientProfile?.gender ?? null}

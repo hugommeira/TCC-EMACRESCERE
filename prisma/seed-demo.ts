@@ -67,6 +67,8 @@ interface PatientSpec {
   email?: string;
   /** Altura e anotações do perfil (peso inicial/IMC). */
   heightCm?: number; notes?: string;
+  /** Histórico de pesagens, quando o paciente tem acompanhamento (ver RealPatient). */
+  weights?: number[]; startWeeksAgo?: number;
   birthDate: Date; gender: string; bloodType: string; allergies: string[]; medications: string[];
 }
 
@@ -670,8 +672,43 @@ async function main() {
         allergies:   p.allergies,
         medications: p.medications,
         notes:       p.notes ?? null,
+        // Altura estruturada: é ela que destrava o cálculo de IMC em
+        // lib/bmi.ts. Antes só existia escrita dentro de `notes`.
+        heightCm:    p.heightCm ?? null,
+        goalWeightKg: p.weights?.length
+          ? Math.round((p.weights[p.weights.length - 1]! - 5) * 10) / 10
+          : null,
       },
     });
+
+    // Atualiza também quem já existia de um seed anterior, senão os pacientes
+    // de demonstração ficam sem altura e o gráfico de IMC nasce vazio.
+    if (p.heightCm) {
+      await prisma.patientProfile.update({
+        where: { userId: user.id },
+        data:  { heightCm: p.heightCm },
+      }).catch(() => {});
+    }
+
+    // Histórico de pesagens — uma por consulta, com a data da consulta.
+    if (p.weights?.length) {
+      const existentes = await prisma.weightRecord.count({ where: { patientId: user.id } });
+      if (existentes === 0) {
+        for (let i = 0; i < p.weights.length; i++) {
+          const w = p.weights[i]!;
+          const weeksAgo = (p.startWeeksAgo ?? 10) - i * 3;
+          await prisma.weightRecord.create({
+            data: {
+              patientId:  user.id,
+              weightKg:   w,
+              measuredAt: daysFromNow(-7 * weeksAgo, 9),
+              source:     "DOCTOR",
+              note:       i === 0 ? "Primeira aferição" : null,
+            },
+          });
+        }
+      }
+    }
   }
   console.log(`👤 pacientes: +${newPatients}`);
 
