@@ -2,6 +2,7 @@
   "framework": "nextjs",
   "buildCommand": "prisma generate && prisma db push --skip-generate && (tsx prisma/seed-demo.ts || echo seed-demo falhou, seguindo) && next build",
   "installCommand": "npm install",
+  "ignoreCommand": "[ \"$VERCEL_ENV\" != production ]",
   "regions": ["gru1"],
   "headers": [
     {
