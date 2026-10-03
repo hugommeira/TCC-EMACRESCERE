@@ -75,7 +75,7 @@ export function ForDoctors() {
             <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/20 to-transparent lg:via-transparent" />
             {/* Selo 3D dentro de um cartão de vidro, como os outros selos
                 flutuantes do site (solto sobre a foto, parecia um adesivo). */}
-            <div className="absolute bottom-5 right-5 flex items-center gap-3 rounded-2xl bg-ink-950/55 py-2 pl-2 pr-5 shadow-2xl shadow-black/40 ring-1 ring-white/15 backdrop-blur-md lg:bottom-8 lg:right-8">
+            <div className="absolute bottom-5 right-5 flex items-center gap-3 rounded-2xl bg-ink-950/75 py-2 pl-2 pr-5 shadow-2xl shadow-black/40 ring-1 ring-white/15 backdrop-blur-md lg:bottom-8 lg:right-8">
               <Scene3D
                 scene="seal"
                 poster="seal-signature"
