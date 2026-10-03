@@ -10,7 +10,16 @@ import { Alert }          from "@/components/ui";
 import { loginSchema }    from "@/lib/validations/auth";
 import type { LoginInput } from "@/lib/validations/auth";
 
-export function LoginForm() {
+// Erros que o Auth.js devolve em ?error= depois do login com Facebook.
+const OAUTH_ERRORS: Record<string, string> = {
+  FacebookSemEmail:     "O Facebook não compartilhou o seu e-mail, e ele é necessário para a conta. Tente de novo permitindo o e-mail, ou entre com e-mail e senha.",
+  AccessDenied:         "O login com Facebook foi cancelado ou não foi autorizado.",
+  OAuthAccountNotLinked:"Este e-mail já tem conta. Entre com e-mail e senha.",
+  OAuthCallbackError:   "O Facebook não concluiu o login. Tente de novo.",
+  Configuration:        "O login com Facebook está indisponível no momento. Entre com e-mail e senha.",
+};
+
+export function LoginForm({ facebookEnabled = false }: { facebookEnabled?: boolean }) {
   const router       = useRouter();
   const searchParams = useSearchParams();
   // Só caminho interno: "?callbackUrl=https://outro-site" levaria o usuário
@@ -20,7 +29,10 @@ export function LoginForm() {
 
   const [values,   setValues]   = useState<LoginInput>({ email: "", password: "" });
   const [errors,   setErrors]   = useState<Partial<LoginInput>>({});
-  const [apiError, setApiError] = useState<string | null>(null);
+  const oauthError = searchParams.get("error");
+  const [apiError, setApiError] = useState<string | null>(
+    oauthError ? (OAUTH_ERRORS[oauthError] ?? "Não foi possível entrar. Tente de novo.") : null,
+  );
   const [loading,  setLoading]  = useState(false);
   const [showPwd,  setShowPwd]  = useState(false);
   const [fbLoading, setFbLoading] = useState(false);
@@ -196,6 +208,9 @@ export function LoginForm() {
         )}
       </button>
 
+      {/* Só com o Facebook configurado (FACEBOOK_CLIENT_ID/SECRET): antes o
+          botão aparecia sempre e dava erro ao clicar. */}
+      {facebookEnabled && (<>
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-slate-200" />
         <span className="text-xs text-slate-400">ou</span>
@@ -213,6 +228,7 @@ export function LoginForm() {
         </svg>
         {fbLoading ? "Conectando..." : "Continuar com Facebook"}
       </button>
+      </>)}
 
       <p className="text-center text-sm text-slate-600">
         Não tem conta?{" "}

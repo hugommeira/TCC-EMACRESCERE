@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Facebook from "next-auth/providers/facebook";
+import { facebookProfileToUser } from "@/lib/facebook-profile";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
@@ -117,6 +118,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             clientId:     process.env["FACEBOOK_CLIENT_ID"],
             clientSecret: process.env["FACEBOOK_CLIENT_SECRET"],
             allowDangerousEmailAccountLinking: true,
+            // Grava a foto em avatarUrl: o padrão manda "image", coluna que a
+            // tabela users não tem, e o 1º login de quem não tinha conta falhava.
+            profile: facebookProfileToUser,
           }),
         ]
       : []),
@@ -160,6 +164,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // novos (ainda não persistidos) `active` vem undefined — permite.
       const active = (user as { active?: boolean }).active;
       if (account?.provider === "facebook" && active === false) return false;
+      // E-mail é obrigatório na conta. Quem recusa a permissão de e-mail no
+      // Facebook (ou tem conta só por telefone) volta pro login com o motivo.
+      if (account?.provider === "facebook" && !user.email) return "/auth/login?error=FacebookSemEmail";
       return true;
     },
 

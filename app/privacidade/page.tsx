@@ -88,7 +88,30 @@ export default function PrivacidadePage() {
         ao cumprimento das finalidades descritas acima e da legislação vigente.
       </p>
 
-      <h2>8. Cookies</h2>
+      {/* Seção exigida pela Meta para o login com Facebook (URL de instruções
+          de exclusão de dados: /privacidade#exclusao-de-dados). */}
+      <h2 id="exclusao-de-dados">8. Login com Facebook e exclusão de dados</h2>
+      <p>
+        Se você entrar com o Facebook, recebemos dele apenas o seu nome, o seu
+        e-mail e a foto do perfil, usados para criar e identificar a sua conta.
+        Não publicamos nada no seu Facebook e não acessamos amigos nem
+        publicações.
+      </p>
+      <p>
+        Para tirar o acesso do Emacrescere à sua conta do Facebook: no Facebook,
+        abra Configurações e privacidade, depois Configurações, depois Apps e
+        sites, e remova o Emacrescere.
+      </p>
+      <p>
+        Para pedir a exclusão dos seus dados, escreva para{" "}
+        <a href="mailto:dpo@emacrescere.com.br?subject=Exclus%C3%A3o%20de%20dados">dpo@emacrescere.com.br</a>{" "}
+        com o assunto “Exclusão de dados”, a partir do e-mail da sua conta.
+        Excluímos a conta, o e-mail, a foto e os dados de cadastro, dentro dos
+        prazos da LGPD. O prontuário e os registros das consultas são mantidos
+        pelo prazo legal descrito na seção anterior.
+      </p>
+
+      <h2>9. Cookies</h2>
       <p>
         Usamos cookies estritamente necessários para o funcionamento da
         plataforma (sessão, segurança) e cookies analíticos anonimizados para
@@ -96,13 +119,13 @@ export default function PrivacidadePage() {
         seu navegador.
       </p>
 
-      <h2>9. Encarregado de Dados (DPO)</h2>
+      <h2>10. Encarregado de Dados (DPO)</h2>
       <p>
         Em conformidade com o art. 41 da LGPD, nosso DPO pode ser contatado por{" "}
         <a href="mailto:dpo@emacrescere.com.br">dpo@emacrescere.com.br</a>.
       </p>
 
-      <h2>10. Atualizações</h2>
+      <h2>11. Atualizações</h2>
       <p>
         Esta política pode ser atualizada. Mudanças relevantes serão comunicadas
         com antecedência pelo e-mail cadastrado.
