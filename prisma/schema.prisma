@@ -131,6 +131,8 @@ model User {
   consultationsAsPatient Consultation[] @relation("PatientConsultations")
   consultationsAsDoctor  Consultation[] @relation("DoctorConsultations")
   messages          Message[]
+  weightRecords     WeightRecord[] @relation("PatientWeightRecords")
+  weightRecorded    WeightRecord[] @relation("WeightRecordedBy")
 
   @@map("users")
 }
@@ -192,6 +194,12 @@ model PatientProfile {
   allergies   String[]
   medications String[]
   notes       String?
+
+  // Acompanhamento de peso. A altura fica aqui (muda pouco) e o IMC NÃO é
+  // gravado: é calculado a partir dela em lib/bmi.ts, para que corrigir a
+  // altura corrija todo o histórico de uma vez.
+  heightCm     Int?
+  goalWeightKg Decimal? @db.Decimal(5, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -509,6 +517,40 @@ model FollowUp {
 // ─────────────────────────────────────────────────────────────────────────────
 // AUDIT LOG
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACOMPANHAMENTO DE PESO
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum WeightSource {
+  PATIENT // o próprio paciente registrou (site ou app)
+  DOCTOR  // aferido/registrado pelo médico durante a consulta
+}
+
+/// Uma pesagem. O IMC não é coluna: vem de weightKg + PatientProfile.heightCm
+/// (lib/bmi.ts), para não guardar o mesmo dado em dois lugares.
+model WeightRecord {
+  id         String       @id @default(cuid())
+  patientId  String
+  weightKg   Decimal      @db.Decimal(5, 2)
+  measuredAt DateTime
+  note       String?
+  source     WeightSource @default(PATIENT)
+
+  // Quem registrou, quando não foi o próprio paciente, e em qual consulta.
+  recordedById   String?
+  consultationId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient    User  @relation("PatientWeightRecords", fields: [patientId],    references: [id], onDelete: Cascade)
+  recordedBy User? @relation("WeightRecordedBy",     fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([patientId, measuredAt])
+  @@index([consultationId])
+  @@map("weight_records")
+}
 
 model AuditLog {
   id         String  @id @default(cuid())
