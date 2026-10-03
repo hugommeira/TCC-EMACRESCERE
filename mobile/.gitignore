@@ -49,3 +49,7 @@ app.*.map.json
 
 # Saída de build do Gradle (o /build/ acima só cobre a raiz)
 android/build/
+
+# Saídas avulsas de sessões do Claude (apresentação, patches, imagens):
+# ficam só no disco de quem gerou
+Claude outputs/
