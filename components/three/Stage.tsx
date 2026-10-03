@@ -183,7 +183,7 @@ function SealScene({ onReady }: { onReady: () => void }) {
     const t = state.clock.elapsedTime;
     const p = readPointer(state);
     // balança de frente (um giro completo deixaria o selo de perfil, fino)
-    g.rotation.y = Math.sin(t * 0.6) * 0.6 + p.x * 0.2;
+    g.rotation.y = Math.sin(t * 0.5) * 0.35 + p.x * 0.12; // calmo: é um selo pequeno
     g.rotation.x += (0.14 - p.y * 0.12 - g.rotation.x) * 0.06;
     g.position.y = Math.sin(t * 1.0) * 0.04;
     if (check) {
