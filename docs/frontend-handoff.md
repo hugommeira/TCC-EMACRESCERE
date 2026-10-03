@@ -80,6 +80,10 @@ npx vitest run
 
 ## 3D e Blender (próxima frente visual)
 
+> **Briefing completo dos assets 3D em [`docs/3d/`](./3d/BRIEFING.md)**
+> (especificação de cada peça, exportação, orçamento de peso, andamento e o
+> prompt pronto para o Claude local). O que está abaixo é o resumo.
+
 Skills de Blender de [arjun988/blender-skills](https://github.com/arjun988/blender-skills)
 (MIT, só Markdown) em `.claude/skills/`. Do pacote original (94 skills) ficaram
 só as 15 úteis para os assets 3D do site, mais a pasta `references/`
