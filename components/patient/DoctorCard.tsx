@@ -29,7 +29,7 @@ export function DoctorCard({ doctor, onSelect, selected }: DoctorCardProps) {
               <p className="font-semibold text-gray-900">{doctorTitle(doctor.name)}</p>
               <p className="text-sm text-gray-500">{profile.specialty}</p>
               {profile.subSpecialty && (
-                <p className="text-xs text-gray-400">{profile.subSpecialty}</p>
+                <p className="text-xs text-gray-600">{profile.subSpecialty}</p>
               )}
             </div>
             <Badge variant={profile.available ? "green" : "gray"} dot>

@@ -14,7 +14,7 @@ export function LegalLayout({ title, subtitle, updated, children }: LegalLayoutP
       <Header />
       <section className="bg-gradient-to-b from-brand-50 to-white pb-16 pt-32">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
             Documento legal
           </p>
           <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">

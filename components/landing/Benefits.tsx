@@ -60,13 +60,17 @@ const BENEFITS = [
     ),
   },
   {
-    title: "Orientação nutricional",
+    // Antes: "Orientação nutricional — guias e suporte sobre alimentação". Não
+    // existe esse recurso no sistema; o benefício real aqui é o reembolso.
+    title: "Reembolso ao cancelar",
     description:
-      "Guias e suporte sobre alimentação saudável — não substitui consulta com nutricionista.",
+      "Cancelando com 24 h ou mais de antecedência, o valor volta integralmente pela mesma forma de pagamento.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
-        <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z" />
-        <path d="M9 9c1 1 2 1.5 3 1.5S14 10 15 9" />
+        <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+        <path d="M21 3v5h-5" />
+        <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+        <path d="M3 21v-5h5" />
       </svg>
     ),
   },
@@ -77,14 +81,14 @@ export function Benefits() {
     <section id="beneficios" className="bg-white py-24 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
             Por que Emacrescere
           </p>
           <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
             Segurança e praticidade em cada etapa
           </h2>
           <p className="mt-4 text-lg text-slate-600">
-            Plataforma de telessaúde com médicos certificados pelo CFM e
+            Plataforma de telessaúde com médicos de CRM conferido pela equipe e
             tecnologia em conformidade com a LGPD.
           </p>
         </div>

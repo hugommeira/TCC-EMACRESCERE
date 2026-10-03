@@ -190,7 +190,7 @@ export function ScheduleWizard() {
               placeholder="Ex: Dor de cabeça persistente há 3 dias, tonturas ao levantar..."
               className="input resize-none"
             />
-            <p className="mt-1 text-xs text-gray-400 text-right">
+            <p className="mt-1 text-xs text-gray-600 text-right">
               {chiefComplaint.length}/500
             </p>
           </div>
@@ -242,7 +242,7 @@ export function ScheduleWizard() {
             <div>
               <label className="label">Horário</label>
               {slotsLoading ? (
-                <p className="text-sm text-gray-400">Carregando horários…</p>
+                <p className="text-sm text-gray-600">Carregando horários…</p>
               ) : slots.length === 0 ? (
                 // Dia fora da agenda do médico (ex.: fim de semana).
                 <p className="rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500">
@@ -315,7 +315,7 @@ export function ScheduleWizard() {
           {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : doctors.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center text-gray-400">
+        <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center text-gray-600">
           <p className="text-lg">🔍</p>
           <p className="mt-2 text-sm">Nenhum médico encontrado</p>
         </div>
@@ -359,7 +359,7 @@ function StepHeader({
       <div className="flex items-center gap-3">
         <h2 className="text-lg font-semibold text-gray-900">{label}</h2>
         {total > 0 && (
-          <span className="text-xs text-gray-400">Passo {step + 1} de {total}</span>
+          <span className="text-xs text-gray-600">Passo {step + 1} de {total}</span>
         )}
       </div>
       {/* Progress bar */}

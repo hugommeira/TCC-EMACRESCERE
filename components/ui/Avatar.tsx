@@ -33,9 +33,10 @@ function getInitials(name: string): string {
 // Cores determinísticas por nome
 function getColor(name: string): string {
   const colors = [
-    "bg-blue-500",   "bg-green-500",  "bg-purple-500",
-    "bg-orange-500", "bg-pink-500",   "bg-teal-500",
-    "bg-indigo-500", "bg-rose-500",
+    // -700: iniciais brancas sobre -500 davam 2,3 a 3,7:1 (AA pede 4,5:1)
+    "bg-blue-700",   "bg-green-700",  "bg-purple-700",
+    "bg-orange-700", "bg-pink-700",   "bg-teal-700",
+    "bg-indigo-700", "bg-rose-700",
   ];
   const index = name.charCodeAt(0) % colors.length;
   return colors[index] ?? "bg-gray-500";

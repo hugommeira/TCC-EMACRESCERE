@@ -46,7 +46,7 @@ export function Faq() {
   return (
     <section id="faq" className="border-y border-brand-100 bg-brand-50 py-24 sm:py-28">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
           Perguntas frequentes
         </p>
         <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">

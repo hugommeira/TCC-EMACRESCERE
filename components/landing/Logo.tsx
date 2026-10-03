@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
-  const color = variant === "dark" ? "text-brand-600" : "text-brand-300";
+  const color = variant === "dark" ? "text-brand-700" : "text-brand-300";
   return (
     <Link
       href="/"

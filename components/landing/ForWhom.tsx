@@ -68,7 +68,7 @@ export function ForWhom() {
         </div>
 
         <div className="mt-12 lg:col-span-7 lg:mt-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
             Para quem
           </p>
           <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">

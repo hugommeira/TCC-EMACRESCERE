@@ -56,7 +56,7 @@ export function HowItWorks() {
     <section id="como-funciona" className="border-y border-ink-100 bg-ink-50 py-16 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
             Como funciona
           </p>
           <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
@@ -66,14 +66,14 @@ export function HowItWorks() {
             Do cadastro ao acompanhamento, em 4 passos. A conduta — incluindo
             se haverá ou não medicamento — é sempre decisão do seu médico.
           </p>
-          <p className="mt-2 text-sm text-slate-500 sm:hidden">
+          <p className="mt-2 text-sm text-slate-600 sm:hidden">
             Arraste para ver os 4 passos.
           </p>
         </div>
 
         {/* Phone: horizontal snap rail (scanning 4 stacked cards costs a lot of
             scrolling). Tablet and up: the original grid. */}
-        <ol className="-mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:mt-14 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+        <ol tabIndex={0} aria-label="Passos, role para o lado" className="-mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:mt-14 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
           {STEPS.map((step, i) => (
             <Reveal
               as="li"
@@ -88,10 +88,9 @@ export function HowItWorks() {
               />
               <span
                 aria-hidden
-                className="absolute right-4 top-3 font-display text-6xl font-semibold leading-none text-slate-100 transition-colors duration-300 group-hover:text-brand-100"
-              >
-                {step.n}
-              </span>
+                data-n={step.n}
+                className="absolute right-4 top-3 font-display text-6xl font-semibold leading-none text-slate-100 transition-colors duration-300 before:content-[attr(data-n)] group-hover:text-brand-100"
+              />
 
               <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand-50 to-teal-50 text-brand-700 ring-1 ring-brand-100 transition-colors duration-300 group-hover:from-brand-500 group-hover:to-teal-500 group-hover:text-white group-hover:ring-transparent">
                 {step.icon}
