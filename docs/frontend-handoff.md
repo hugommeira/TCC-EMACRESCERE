@@ -82,14 +82,16 @@ npx vitest run
 
 Skills de Blender de [arjun988/blender-skills](https://github.com/arjun988/blender-skills)
 (MIT, só Markdown) em `.claude/skills/`. Do pacote original (94 skills) ficaram
-só as 14 úteis para os assets 3D do site, mais a pasta `references/`
+só as 15 úteis para os assets 3D do site, mais a pasta `references/`
 (compartilhada): `blender-director`, `blender-modeler`, `hard-surface`,
 `materials`, `texture-workflow`, `uv-workflow`, `lighting`, `rendering`,
-`lookdev`, `camera-cinematography`, `compositing`, `asset-optimization`,
-`export-pipeline` e `qa-review`. O resto (terror, estilos de jogo, gêneros,
-personagens, animação, exportação para Unity/Unreal/Godot) saiu; para
-recuperar alguma, copie-a de `arjun988/blender-skills/.claude/skills/`.
-Se precisar animar um objeto (ex.: girar o logo), traga a `animation`.
+`lookdev`, `camera-cinematography`, `compositing`, `animation` (girar o
+logo, mover o celular), `asset-optimization`, `export-pipeline` e
+`qa-review`. O resto (terror, estilos de jogo, gêneros, personagens,
+exportação para Unity/Unreal/Godot) saiu; para recuperar alguma, copie-a de
+`arjun988/blender-skills/.claude/skills/`. As skills `stylized-style` e
+`realistic-style` também saíram (dois trechos de `materials` e `references/`
+foram ajustados para não apontar para elas).
 
 Elas mandam o Claude operar o Blender por MCP, então só rendem no PC com o
 Blender aberto. O `.mcp.json` do repositório de origem **não** foi copiado de
