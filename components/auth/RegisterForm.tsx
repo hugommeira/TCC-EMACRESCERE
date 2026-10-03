@@ -264,7 +264,7 @@ export function RegisterForm({ variant = "patient" }: { variant?: "patient" | "d
             <button
               type="button"
               onClick={() => setShowPwd((v) => !v)}
-              className="cursor-pointer rounded-md p-1 text-slate-400 hover:text-slate-700"
+              className="cursor-pointer rounded-md p-1 text-slate-500 hover:text-slate-800"
               aria-label={showPwd ? "Esconder senha" : "Mostrar senha"}
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
