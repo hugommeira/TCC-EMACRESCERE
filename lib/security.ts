@@ -127,5 +127,7 @@ export const RL = {
   attachment:   { limit: 30,  windowSec: 60 * 10 },   // 30/10min
   prescriptionValidate: { limit: 20, windowSec: 60 }, // 20/min por IP (rota pública, farmácias)
   prontuario:   { limit: 120, windowSec: 60 },        // alto: auto-save
+  weight:       { limit: 20,  windowSec: 60 },        // registro de peso
+  weightUpdate: { limit: 30,  windowSec: 60 * 10 },   // altura/meta no perfil
   generic:      { limit: 100, windowSec: 60 },
 } as const;

@@ -10,12 +10,14 @@ import { ChatPanel } from "./ChatPanel";
 import { ProntuarioPanel } from "./ProntuarioPanel";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { PrescriptionPanel } from "./PrescriptionPanel";
+import { WeightPanel } from "@/components/weight";
 import { DOCTOR_WORK_HREF } from "@/lib/constants";
 
 interface Props {
   consultationId:   string;
   isDoctor:         boolean;
   myUserId:         string;
+  patientId:        string;
   patientName:      string;
   doctorName:       string | null;
   patientAge:       string | null;
@@ -42,7 +44,7 @@ interface Props {
   } | null;
 }
 
-type TabKey = "chat" | "prontuario" | "receituario" | "anexos";
+type TabKey = "chat" | "prontuario" | "peso" | "receituario" | "anexos";
 
 export function ConsultationRoom(p: Props) {
   const router = useRouter();
@@ -245,7 +247,9 @@ export function ConsultationRoom(p: Props) {
             </div>
           )}
         </div>
-        <aside className="flex flex-1 flex-col border-l border-slate-200 bg-white">
+        {/* min-w-0: sem ele o painel cresce até a largura do conteúdo (a aba
+            Peso tem gráfico e tabela) e empurra abas e cartões pra fora da tela */}
+        <aside className="flex min-w-0 flex-1 flex-col overflow-hidden border-l border-slate-200 bg-white">
           <Tabs tab={tab} setTab={setTab} isDoctor={p.isDoctor} />
           <TabContent p={p} tab={tab} status={status} />
         </aside>
@@ -265,6 +269,7 @@ function Tabs({
       <Tab active={tab === "prontuario"}  onClick={() => setTab("prontuario")}>
         {isDoctor ? "Prontuário" : "Atendimento"}
       </Tab>
+      <Tab active={tab === "peso"}        onClick={() => setTab("peso")}>Peso</Tab>
       <Tab active={tab === "receituario"} onClick={() => setTab("receituario")}>Receita</Tab>
       <Tab active={tab === "anexos"}      onClick={() => setTab("anexos")}>Anexos</Tab>
     </nav>
@@ -315,6 +320,16 @@ function TabContent({
           allergies={p.allergies}
           doctorName={p.doctorName}
         />
+      )}
+      {tab === "peso" && (
+        <div className="h-full overflow-y-auto p-4">
+          <WeightPanel
+            patientId={p.patientId}
+            {...(p.isDoctor ? { patientName: p.patientName } : {})}
+            mode={p.isDoctor ? "doctor" : "patient"}
+            consultationId={p.consultationId}
+          />
+        </div>
       )}
       {tab === "receituario" && (
         <PrescriptionPanel
