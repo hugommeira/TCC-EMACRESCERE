@@ -19,7 +19,7 @@ export const AUTH_PHOTOS = {
   login:          "/photos/login.jpg",
   // pexels.com/photo/5495142 — Anastasia Shuraeva
   register:       "/photos/register.jpg",
-  // pexels.com/photo/7579831 — cottonbro studio
+  // pexels.com/photo/7195379 — Karola G (kaboompics)
   registerDoctor: "/photos/registerDoctor.jpg",
   // pexels.com/photo/27176011 — Helena Lopes
   password:       "/photos/password.jpg",
