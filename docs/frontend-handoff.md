@@ -1,0 +1,79 @@
+# Front-end — guia de continuação
+
+Para quem (pessoa ou Claude Code local) for continuar a evolução do front-end
+a partir da branch `claude/vigilant-thompson-mjo9k9`. O diagnóstico completo
+está em [`frontend-diagnostico.md`](./frontend-diagnostico.md).
+
+## Como trazer para a sua máquina
+
+```bash
+git fetch origin
+git checkout claude/vigilant-thompson-mjo9k9
+npm install
+npx prisma generate   # o schema de peso/IMC exige client novo
+npm run dev
+```
+
+A branch já contém a `main` atual (registro de peso/IMC e as correções de
+build). Para publicar: abrir um pull request desta branch para a `main`.
+
+**Nunca rode `prisma db push --accept-data-loss`.** Se o build reclamar de
+perda de dados, é sinal de que uma branch com schema mais antigo está sendo
+comparada com o banco; o certo é atualizar a branch com a `main`.
+
+## O que já foi feito
+
+| Frente | Arquivos principais |
+|---|---|
+| Landing (evolução do site atual) | `components/landing/*`, `app/page.tsx` |
+| Motion e fotos | `components/landing/motion/Reveal.tsx`, `components/landing/Photo.tsx`, `components/landing/photos.ts` |
+| Autenticação | `components/auth/AuthShell.tsx`, `app/auth/**/page.tsx` |
+| Início do paciente | `app/dashboard/patient/page.tsx`, `components/patient/NextConsultation.tsx`, `components/patient/WeightSnapshot.tsx` |
+| Bases | `app/globals.css` (reduced motion, `.reveal`), `tailwind.config.ts` (escala `ink`, keyframes) |
+| Build | `package.json` (prévia não roda `db push`), `vercel.json` |
+
+## Regras que o projeto segue (mantenha)
+
+- A plataforma **não vende, indica nem dispensa medicamentos**; toda conduta
+  é do médico. Nenhum texto pode prometer resultado, receita ou entrega.
+- Paciente e médico são **experiências diferentes**: o médico usa o tom escuro
+  (`ink-950`) nas telas próprias (ex.: `AuthShell variant="doctor"`).
+- Identidade: degradê `brand-500 → teal-500` nos botões principais, Fraunces
+  nos títulos, Inter no texto, fundo `brand-50` com manchas desfocadas.
+- Animações só por CSS (`animate-rise`, `animate-draw`, `animate-float`,
+  `<Reveal>`). Tudo respeita `prefers-reduced-motion` (regra global em
+  `globals.css`). Uma orquestração por tela; o resto só reage ao usuário.
+- Texto secundário em fundo branco: no mínimo `slate-500` / `ink-500`
+  (contraste AA). `slate-400`/`ink-400` só para ícones decorativos.
+- Fotos remotas sempre pelo `<Photo>` (tem fallback) e registradas em
+  `photos.ts`; domínios novos precisam entrar no CSP e em
+  `images.remotePatterns` (`next.config.mjs`).
+- Textos de segurança só afirmam o que o código faz (ex.: link de senha vale
+  15 min e é de uso único: `services/api/user.ts`).
+
+## Próximas frentes sugeridas (nesta ordem)
+
+1. **Área do médico** (`app/dashboard/doctor/page.tsx`): destacar a fila/
+   próximas consultas e pendências (certificado A1, perfil incompleto), no tom
+   da área profissional. Reaproveitar o padrão de `NextConsultation`.
+2. **Demais telas do paciente** (consultas, receitas, perfil): mesmo padrão de
+   cartões `rounded-3xl` + `ring-slate-200` do novo início.
+3. **Layout dos dashboards** (`components/layout/*`): sidebar e topbar ainda
+   em `gray-*`; alinhar à paleta `slate`/`ink` e ao degradê da marca.
+4. **Tokens semânticos** e um `buttonVariants()` compartilhado para `<Link>`,
+   eliminando as classes longas repetidas de botão.
+5. Dívida técnica: os 60 erros de TypeScript pré-existentes escondidos por
+   `ignoreBuildErrors` (ver diagnóstico).
+
+A branch `redesign-frontend` (prévia de design system do Hugo, não juntada)
+tem ideias aproveitadas no início do paciente; ela parte de uma versão antiga
+da `main` e depende de `lucide-react` e de tokens novos, então convém portar
+ideias, não fazer merge direto.
+
+## Como validar antes de enviar
+
+```bash
+npx tsc --noEmit | grep -c "error TS"   # não pode passar de 60
+npx next lint --dir components --dir app
+npx vitest run
+```

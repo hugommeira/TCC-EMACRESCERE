@@ -1,171 +1,205 @@
-import type { Metadata }  from "next";
-import { auth }           from "@/lib/auth";
-import { redirect }       from "next/navigation";
+import type { Metadata, Route } from "next";
+import Link               from "next/link";
+import { requireRole }    from "@/lib/auth";
 import { prisma }         from "@/lib/prisma";
-import {
-  DashboardShell,
-  PageHeader,
-  StatCard,
-  SectionCard,
-  EmptyState,
-} from "@/components/layout/DashboardShell";
-import { ConsultationCard } from "@/components/patient/ConsultationCard";
-import { formatCurrency }   from "@/lib/utils";
+import { DashboardShell, EmptyState } from "@/components/layout/DashboardShell";
+import { ConsultationCard }  from "@/components/patient/ConsultationCard";
+import { NextConsultation }  from "@/components/patient/NextConsultation";
+import { WeightSnapshot }    from "@/components/patient/WeightSnapshot";
+import { getWeightHistory }  from "@/services/api/weight";
+import { greetingFor, doctorTitle, formatDate } from "@/lib/utils";
 import { QUEUE_ENABLED, PATIENT_NEW_CONSULTATION_HREF } from "@/lib/constants";
-import Link                 from "next/link";
 
 export const metadata: Metadata = { title: "Meu painel" };
+export const dynamic  = "force-dynamic";
 
-const ICONS = {
-  calendar: (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M16 3v4M8 3v4M3 11h18" />
-    </svg>
-  ),
-  hourglass: (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 2h12M6 22h12M6 2v6l6 4-6 4v6M18 2v6l-6 4 6 4v6" />
-    </svg>
-  ),
-  check: (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
-      <path d="M9 12l2 2 4-4" />
-    </svg>
-  ),
-  wallet: (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3" />
-      <path d="M16 12h5v4h-5a2 2 0 0 1 0-4z" />
-    </svg>
-  ),
-  stethoscope: (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 3v6a4 4 0 0 0 8 0V3M9 13v3a4 4 0 0 0 8 0v-3M17 13a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
-    </svg>
-  ),
-};
+// Ordem de importância de uma consulta ativa: a que está acontecendo, depois
+// a fila, depois a agendada mais próxima.
+const ACTIVE_RANK = { IN_PROGRESS: 0, WAITING: 1, SCHEDULED: 2 } as const;
 
 export default async function PatientDashboardPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/auth/login");
+  const session = await requireRole("PATIENT");
+  const userId  = session.user.id;
 
-  const [total, upcoming, completed, revenueAgg, nextConsultations] =
-    await prisma.$transaction([
-      prisma.consultation.count({ where: { patientId: session.user.id } }),
-      prisma.consultation.count({
-        where: { patientId: session.user.id, status: { in: ["SCHEDULED", "WAITING"] } },
-      }),
-      prisma.consultation.count({
-        where: { patientId: session.user.id, status: "COMPLETED" },
-      }),
-      prisma.payment.aggregate({
-        where:  { consultation: { patientId: session.user.id }, status: "RECEIVED" },
-        _sum:   { amount: true },
-      }),
-      prisma.consultation.findMany({
-        where:   { patientId: session.user.id, status: { in: ["SCHEDULED", "WAITING", "IN_PROGRESS"] } },
-        include: { patient: true, doctor: true, payment: true },
-        orderBy: { scheduledAt: "asc" },
-        take:    3,
-      }),
-    ]);
+  const [active, completed, lastPrescription, weight] = await Promise.all([
+    prisma.consultation.findMany({
+      where:   { patientId: userId, status: { in: ["SCHEDULED", "WAITING", "IN_PROGRESS"] } },
+      include: {
+        patient: true,
+        payment: true,
+        doctor:  { include: { doctorProfile: { select: { specialty: true } } } },
+      },
+      orderBy: { scheduledAt: "asc" },
+      take:    6,
+    }),
+    prisma.consultation.count({ where: { patientId: userId, status: "COMPLETED" } }),
+    prisma.prescription.findFirst({
+      where:   { patientId: userId, status: "ISSUED" },
+      orderBy: { issuedAt: "desc" },
+      select:  {
+        issuedAt: true, expiresAt: true,
+        _count:   { select: { items: true } },
+        consultation: { select: { doctor: { select: { name: true } } } },
+      },
+    }),
+    // O painel não pode cair se o histórico de peso falhar.
+    getWeightHistory(userId, userId, "PATIENT", "180d").catch(() => null),
+  ]);
+
+  const sorted = [...active].sort((a, b) => ACTIVE_RANK[a.status as keyof typeof ACTIVE_RANK] - ACTIVE_RANK[b.status as keyof typeof ACTIVE_RANK]);
+  const next   = sorted[0] ?? null;
+  const others = sorted.slice(1, 4);
 
   const firstName = session.user.name.split(" ")[0] ?? session.user.name;
 
   return (
     <DashboardShell>
-      <PageHeader
-        badge={`Olá, ${firstName}`}
-        title="Sua jornada de emagrecimento"
-        description="Acompanhe consultas, prescrições e seu progresso."
-        action={
-          <Link
-            href={PATIENT_NEW_CONSULTATION_HREF}
-            className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-500/25 transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/40"
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              {QUEUE_ENABLED ? (
-                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-              ) : (
-                <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
-              )}
-            </svg>
-            {QUEUE_ENABLED ? "Atendimento agora" : "Agendar consulta"}
-          </Link>
-        }
-      />
+      {/* Saudação */}
+      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="animate-rise">
+          <p className="text-sm font-medium text-brand-700">{greetingFor()}, {firstName}</p>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            Seu acompanhamento
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {completed > 0
+              ? `${completed} ${completed === 1 ? "consulta concluída" : "consultas concluídas"} até aqui.`
+              : "Consultas, peso e receitas num lugar só."}
+          </p>
+        </div>
+        <Link
+          href={PATIENT_NEW_CONSULTATION_HREF}
+          className="inline-flex min-h-[44px] animate-rise items-center justify-center gap-2 self-start rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 text-sm font-semibold text-white shadow-md shadow-brand-500/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-500/40 sm:self-auto"
+          style={{ animationDelay: "100ms" }}
+        >
+          {QUEUE_ENABLED ? "Atendimento agora" : "Agendar consulta"}
+        </Link>
+      </header>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total"      value={String(total)}     tone="brand"  icon={ICONS.calendar} />
-        <StatCard label="Próximas"   value={String(upcoming)}  tone="amber"  icon={ICONS.hourglass} />
-        <StatCard label="Concluídas" value={String(completed)} tone="teal"   icon={ICONS.check} />
-        <StatCard label="Investido"  value={formatCurrency(Number(revenueAgg._sum.amount ?? 0))} tone="indigo" icon={ICONS.wallet} />
+      {/* Destaques */}
+      <div className="grid gap-5 lg:grid-cols-5">
+        <div className="animate-rise lg:col-span-3" style={{ animationDelay: "150ms" }}>
+          <NextConsultation
+            c={next && {
+              id:            next.id,
+              status:        next.status,
+              scheduledAt:   next.scheduledAt,
+              paymentStatus: next.payment?.status ?? null,
+              doctor:        next.doctor
+                ? {
+                    name:      next.doctor.name,
+                    avatarUrl: next.doctor.avatarUrl,
+                    specialty: next.doctor.doctorProfile?.specialty ?? null,
+                  }
+                : null,
+            }}
+          />
+        </div>
+        <div className="animate-rise lg:col-span-2" style={{ animationDelay: "250ms" }}>
+          {weight ? (
+            <WeightSnapshot summary={weight.summary} points={weight.points} />
+          ) : (
+            <EmptyState
+              icon={<span aria-hidden>—</span>}
+              title="Peso indisponível agora"
+              description="Não conseguimos carregar seu histórico de peso. Tente de novo em instantes."
+            />
+          )}
+        </div>
       </div>
 
-      {/* Upcoming */}
-      <div className="mt-10">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-xl font-semibold text-slate-900">
-              Próximas consultas
-            </h2>
-            <p className="text-sm text-slate-500">
-              Suas consultas agendadas em ordem cronológica
-            </p>
+      {/* Receita e atalhos */}
+      <div className="mt-5 grid gap-5 lg:grid-cols-5">
+        <section
+          aria-labelledby="ultima-receita"
+          className="animate-rise rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-7 lg:col-span-3"
+          style={{ animationDelay: "350ms" }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <h2 id="ultima-receita" className="text-sm font-semibold text-brand-700">Última receita</h2>
+            <Link href="/dashboard/patient/prescriptions" className="text-sm font-medium text-brand-700 hover:underline">
+              Ver receitas
+            </Link>
           </div>
-          <Link
-            href="/dashboard/patient/consultations"
-            className="text-sm font-medium text-brand-700 hover:underline"
-          >
-            Ver todas →
-          </Link>
-        </div>
+          {lastPrescription ? (
+            <div className="mt-4 flex items-start gap-4">
+              <span aria-hidden className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-gradient-to-br from-brand-50 to-teal-50 text-brand-700 ring-1 ring-brand-100">
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 2v6h6M9 13h6M9 17h4" />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-900">
+                  {lastPrescription._count.items} {lastPrescription._count.items === 1 ? "item" : "itens"}
+                  {lastPrescription.consultation.doctor && <> · {doctorTitle(lastPrescription.consultation.doctor.name)}</>}
+                </p>
+                <p className="mt-0.5 text-sm text-slate-500">
+                  {lastPrescription.issuedAt && <>Emitida em {formatDate(lastPrescription.issuedAt)}</>}
+                  {lastPrescription.expiresAt && <> · válida até {formatDate(lastPrescription.expiresAt)}</>}
+                </p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Assinada digitalmente pelo médico. Use-a em qualquer farmácia autorizada.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm leading-relaxed text-slate-500">
+              Se o médico indicar um tratamento com medicamento, a receita assinada aparece aqui.
+            </p>
+          )}
+        </section>
 
-        {nextConsultations.length === 0 ? (
-          <EmptyState
-            icon={ICONS.stethoscope}
-            title="Nenhuma consulta agendada"
-            description="Quando você marcar uma consulta, ela aparece aqui com todos os detalhes."
-            action={
-              <Link
-                href={PATIENT_NEW_CONSULTATION_HREF}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
-              >
-                {QUEUE_ENABLED ? "Solicitar atendimento" : "Agendar consulta"}
-              </Link>
-            }
-          />
-        ) : (
+        <nav
+          aria-label="Atalhos"
+          className="animate-rise grid grid-cols-2 gap-3 lg:col-span-2"
+          style={{ animationDelay: "450ms" }}
+        >
+          {([
+            { href: "/dashboard/patient/consultations", label: "Minhas consultas", d: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" },
+            { href: "/dashboard/patient/peso",          label: "Registrar peso",   d: "M3 3v18h18M7 14l4-4 3 3 5-6" },
+            { href: "/dashboard/patient/prescriptions", label: "Receitas",         d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6" },
+            { href: "/dashboard/patient/profile",       label: "Meu perfil",       d: "M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
+          ] satisfies { href: Route; label: string; d: string }[]).map((a) => (
+            <Link
+              key={a.href}
+              href={a.href}
+              className="group flex flex-col justify-between gap-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-200"
+            >
+              <span aria-hidden className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700 transition-colors group-hover:bg-gradient-to-br group-hover:from-brand-500 group-hover:to-teal-500 group-hover:text-white">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                  <path d={a.d} />
+                </svg>
+              </span>
+              <span className="text-sm font-semibold text-slate-900">{a.label}</span>
+            </Link>
+          ))}
+        </nav>
+      </div>
+
+      {/* Outras consultas ativas */}
+      {others.length > 0 && (
+        <section aria-labelledby="outras-consultas" className="mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 id="outras-consultas" className="font-display text-xl font-semibold text-slate-900">
+              Outras consultas marcadas
+            </h2>
+            <Link href="/dashboard/patient/consultations" className="text-sm font-medium text-brand-700 hover:underline">
+              Ver todas
+            </Link>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {nextConsultations.map((c) => (
+            {others.map((c) => (
               <ConsultationCard key={c.id} consultation={c} role="patient" />
             ))}
           </div>
-        )}
-      </div>
+        </section>
+      )}
 
-      {/* Tip card */}
-      <SectionCard
-        className="mt-10 overflow-hidden bg-gradient-to-br from-brand-50 via-white to-teal-50/50"
-        title="Dica do dia"
-        description="Pequenas mudanças trazem grandes resultados"
-      >
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            { t: "Hidratação", d: "Beba 2L de água por dia para potencializar o metabolismo." },
-            { t: "Movimento",  d: "30 minutos de caminhada ajudam na sensibilidade à insulina." },
-            { t: "Sono",       d: "Dormir 7-8h regula hormônios da fome (grelina e leptina)." },
-          ].map((tip) => (
-            <div key={tip.t} className="rounded-xl bg-white/70 p-4 ring-1 ring-slate-200">
-              <p className="font-semibold text-slate-900">{tip.t}</p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{tip.d}</p>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
+      <p className="mt-10 text-xs leading-relaxed text-slate-500">
+        A Emacrescere não vende, indica nem dispensa medicamentos. Qualquer
+        conduta clínica é decisão do médico responsável, em consulta.
+      </p>
     </DashboardShell>
   );
 }
