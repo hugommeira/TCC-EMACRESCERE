@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Photo } from "./Photo";
 import { PHOTOS } from "./photos";
 import { Reveal } from "./motion/Reveal";
+import { Scene3D } from "@/components/three/Scene3D";
 
 // A área profissional é outra experiência (fila, prontuário, prescrição),
 // não o painel do paciente com outra cor. Aqui ela ganha a sua vitrine.
@@ -72,6 +73,13 @@ export function ForDoctors() {
               className="absolute inset-0"
             />
             <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/20 to-transparent lg:via-transparent" />
+            {/* Selo 3D: receitas com assinatura digital */}
+            <Scene3D
+              scene="seal"
+              poster="seal-signature"
+              alt="Selo de assinatura digital"
+              className="absolute bottom-4 right-4 h-28 w-28 drop-shadow-2xl sm:h-36 sm:w-36 lg:bottom-8 lg:right-8 lg:h-44 lg:w-44"
+            />
           </Reveal>
         </div>
       </div>

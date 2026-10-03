@@ -108,6 +108,34 @@ você mesmo:
    ativar. Na barra lateral (N), aba BlenderMCP, clicar em "Connect".
 3. No terminal do projeto: `claude mcp add blender -- uvx blender-mcp`.
 
+### 3D no site (feito)
+
+Os 3 primeiros assets (logo, celular, selo) já estão ligados:
+
+| Onde | Componente | Asset |
+|---|---|---|
+| Painel escuro das telas de login/cadastro/senha | `components/auth/AuthShell.tsx` | `logo-heart` (decorativo, canto superior) |
+| Hero da landing, desktop | `components/landing/Hero.tsx` (`HeroVisual`) | `phone-app` com as 5 telas trocando |
+| "Para médicos" | `components/landing/ForDoctors.tsx` | `seal-signature` sobre a foto |
+
+- **`components/three/Scene3D.tsx`**: moldura de qualquer asset. Mostra o
+  poster (`public/3d/posters/*.webp`) e só baixa o three.js (chunk separado)
+  quando a moldura chega perto da tela; pausa fora dela. Fica só no poster
+  com tela < 1024 px, movimento reduzido, economia de dados, sem WebGL ou
+  se o modelo falhar.
+- **`components/three/Stage.tsx`**: as cenas (`logo`, `phone`, `seal`), luz
+  montada na hora (sem CDN) e o movimento (balanço + mouse; as telas do
+  celular trocam a cada 3,2 s; o check do selo pulsa a cada 4,5 s).
+- **Telas do celular:** `public/3d/screens/tela-1..5.webp` (1040×2160):
+  Agendar, Pagamento, Videochamada, Receita, Peso. Dados fictícios.
+- **Segurança (`next.config.mjs`):** `'wasm-unsafe-eval'` em `script-src`
+  (decodificador meshopt é WASM) e `blob:` em `connect-src` (texturas
+  embutidas no `.glb`). **`middleware.ts`** libera a extensão `.glb` (antes
+  os modelos caíam no redirect de login).
+- **Para adicionar um asset:** `.glb` em `public/3d/`, poster em
+  `public/3d/posters/`, nova cena em `Stage.tsx` e `<Scene3D scene=… />`.
+  Uma cena ao vivo por tela.
+
 ### Plano de 3D sem pesar no site
 
 - **Orçamento:** no máximo **1 cena WebGL ao vivo** por tela; o resto é
@@ -125,7 +153,6 @@ você mesmo:
   cápsulas, canetas ou frascos (a plataforma não vende nem indica remédio);
   corpo humano realista; logo do Android (marca registrada).
 - **Cuidados de código:** Next 14 + React 18 → `@react-three/fiber` v8.
-  O CSP (`next.config.mjs`) bloqueia scripts externos: hospedar os arquivos
-  do decodificador Draco em `public/` (nada de CDN) e liberar `blob:` em
-  `worker-src` se for preciso. Respeitar `prefers-reduced-motion`, ter
+  O CSP (`next.config.mjs`) bloqueia scripts externos: os modelos usam
+  meshopt (sem Draco, nada de CDN); o CSP já libera o que ele precisa. Respeitar `prefers-reduced-motion`, ter
   imagem de reserva sem WebGL e pausar a cena fora da tela.

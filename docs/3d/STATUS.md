@@ -54,10 +54,22 @@ tamanho: __ KB · __ triângulos
 notas para o código: (ex.: pivô no centro, frente = +Z no glTF)
 ```
 
+## Integração no site (agente da nuvem, 03/10/2026)
+
+- ✅ `logo-heart` no painel das telas de login (`AuthShell`), `phone-app` no
+  hero da landing (desktop) e `seal-signature` em "Para médicos".
+- ✅ Telas definitivas do celular em `public/3d/screens/tela-1..5.webp`
+  (1040×2160): 1 Agendar · 2 Pagamento · 3 Videochamada · 4 Receita · 5 Peso.
+  O site troca a tela por código (`MAT_Screen.emissiveMap`); a textura
+  provisória embutida no `.glb` só aparece até as telas carregarem.
+- Testado em build de produção com o CSP real (WebGL por software): sem erros.
+
 ## Pendências e dúvidas
 
 - Totais: soma dos `.glb` = 118,7 KB (limite 700 KB); tudo em `public/3d/` = 287 KB (limite 1,5 MB).
-- Refazer o poster do `phone-app` quando as telas definitivas (1040×2160) chegarem em `public/3d/screens/`.
+- **Próximo pedido ao Blender:** refazer o poster do `phone-app` (normal e @1x)
+  com a tela `public/3d/screens/tela-1.webp` (Agendar), que já chegou. O
+  poster é o que aparece enquanto o 3D carrega e em telas sem WebGL.
 
 ## Entregas prontas
 

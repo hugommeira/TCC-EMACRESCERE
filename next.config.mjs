@@ -16,12 +16,14 @@ const livekitRegional = livekitWss.includes("livekit.cloud")
 const csp = [
   "default-src 'self'",
   // Scripts: Next inline + chunks self. Em dev, eval é necessário pro HMR.
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  // 'wasm-unsafe-eval': o decodificador meshopt dos modelos 3D (public/3d) é WASM.
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://images.pexels.com https://images.unsplash.com https://plus.unsplash.com https://usc1.contabostorage.com",
-  // WebSocket LiveKit + APIs same-origin + LiveKit HTTP
-  `connect-src 'self' ${livekitWss} ${livekitHttp} ${livekitRegional} https://usc1.contabostorage.com`.replace(/\s+/g, " ").trim(),
+  // WebSocket LiveKit + APIs same-origin + LiveKit HTTP; blob: para as
+  // texturas embutidas nos .glb (o GLTFLoader as lê por fetch de blob:)
+  `connect-src 'self' blob: ${livekitWss} ${livekitHttp} ${livekitRegional} https://usc1.contabostorage.com`.replace(/\s+/g, " ").trim(),
   // LiveKit usa media; permitir blob (vídeo local)
   "media-src 'self' blob:",
   "frame-ancestors 'none'",

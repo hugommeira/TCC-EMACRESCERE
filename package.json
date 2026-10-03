@@ -24,6 +24,8 @@
     "@livekit/components-react": "^2.9.20",
     "@livekit/components-styles": "^1.2.0",
     "@prisma/client": "^5.14.0",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
     "@signpdf/placeholder-pdf-lib": "^3.3.0",
     "@signpdf/signer-p12": "^3.3.0",
     "@signpdf/signpdf": "^3.3.0",
@@ -39,6 +41,7 @@
     "pg": "^8.20.0",
     "react": "^18",
     "react-dom": "^18",
+    "three": "^0.169.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -46,6 +49,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/three": "^0.169.0",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "autoprefixer": "^10.5.0",
     "dotenv-cli": "^11.0.0",

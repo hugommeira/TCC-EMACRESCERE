@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Photo } from "./Photo";
 import { PHOTOS } from "./photos";
+import { Scene3D } from "@/components/three/Scene3D";
 
 // Atraso de cada peça da sequência de entrada (ms).
 const d = (ms: number) => ({ animationDelay: `${ms}ms` });
@@ -208,25 +209,22 @@ function HeroVisual() {
         className="absolute -left-6 top-12 h-72 w-72 rounded-full bg-gradient-to-br from-brand-400/30 to-teal-400/20 blur-2xl"
       />
 
-      {/* Foto */}
+      {/* Celular 3D: as telas do app trocam sozinhas (components/three) */}
       <div
-        className="relative animate-scale-in overflow-hidden rounded-[2rem] shadow-2xl shadow-slate-900/15 ring-1 ring-slate-900/5"
+        className="relative animate-scale-in overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-50 via-white to-teal-50 shadow-2xl shadow-slate-900/10 ring-1 ring-slate-900/5"
         style={d(150)}
       >
-        <Photo
-          src={PHOTOS.activity}
-          alt="Mulher caminhando na praia"
-          priority
-          // este bloco some abaixo de lg: celulares não baixam a foto
-          sizes="(max-width: 1023px) 1px, 40vw"
-          className="relative aspect-[4/5] w-full"
+        <div aria-hidden className="absolute inset-x-10 bottom-10 h-10 rounded-full bg-slate-900/10 blur-2xl" />
+        <Scene3D
+          scene="phone"
+          poster="phone-app"
+          alt="Celular mostrando as telas do app Emacrescere: agendamento, pagamento, videochamada, receita e peso"
+          className="aspect-[4/5] w-full"
         />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-slate-900/35 via-transparent" />
-
       </div>
 
       {/* Cartão "ao vivo" */}
-      <div className="absolute -bottom-10 -left-8 w-[17rem] animate-rise" style={d(700)}>
+      <div className="absolute -bottom-12 -left-20 w-[16rem] animate-rise" style={d(700)}>
         <div className="rotate-[-3deg] rounded-2xl bg-white/95 p-4 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-200 backdrop-blur">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-700">
@@ -267,9 +265,9 @@ function HeroVisual() {
       </div>
 
       {/* Selo de verificação */}
-      <div className="absolute -right-4 top-8 animate-rise" style={d(1300)}>
+      <div className="absolute -left-10 top-10 animate-rise" style={d(1300)}>
         <div className="animate-float">
-          <div className="rotate-[6deg] rounded-2xl bg-white p-3 shadow-xl shadow-slate-900/10 ring-1 ring-slate-200">
+          <div className="rotate-[-5deg] rounded-2xl bg-white p-3 shadow-xl shadow-slate-900/10 ring-1 ring-slate-200">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-50 text-brand-600">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>

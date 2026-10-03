@@ -3,6 +3,7 @@ import type { Route } from "next";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/landing/Logo";
 import { Photo } from "@/components/landing/Photo";
+import { Scene3D } from "@/components/three/Scene3D";
 
 // Layout único das telas de autenticação: painel de marca à esquerda (só no
 // desktop) e formulário à direita. Antes cada página repetia o painel inteiro.
@@ -74,6 +75,13 @@ export function AuthShell({
         <Photo src={photo} alt="" priority sizes="50vw" className="absolute inset-0 opacity-50" />
         <div aria-hidden className={`absolute inset-0 bg-gradient-to-br ${tone.overlay}`} />
         <div aria-hidden className={`absolute -bottom-24 -right-24 h-96 w-96 animate-float rounded-full blur-3xl ${tone.glow}`} />
+        {/* Logo 3D: decorativo, a marca escrita já está no topo do painel */}
+        <Scene3D
+          scene="logo"
+          poster="logo-heart"
+          alt=""
+          className="absolute right-8 top-8 h-44 w-44 xl:right-12 xl:top-10 xl:h-56 xl:w-56"
+        />
 
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <Logo variant="light" />

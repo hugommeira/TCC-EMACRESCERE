@@ -69,6 +69,6 @@ export const config = {
     // A extensão no fim cobre qualquer arquivo de /public. Antes cada asset era
     // listado pelo nome, então um arquivo novo caía no redirect de login (307).
     // Rotas de API não têm extensão, então continuam protegidas.
-    "/((?!_next/static|_next/image|public/|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|css|js|map|txt|xml|json|webmanifest)$).*)",
+    "/((?!_next/static|_next/image|public/|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|css|js|map|txt|xml|json|webmanifest|glb)$).*)",
   ],
 };
