@@ -11,19 +11,19 @@ const ITEMS = [
     title: "Médicos com CRM verificado",
     description: "Especialistas em obesidade e doenças metabólicas, aprovados pela equipe depois de conferido o CRM.",
     photo: PHOTOS.doctor,
-    alt: "Médica sorrindo no consultório",
+    alt: "Médica sorrindo, de jaleco e estetoscópio",
   },
   {
     title: "Consulta por vídeo",
     description: "Entre na fila on-demand ou marque um horário. O médico chama você na sala da consulta.",
     photo: PHOTOS.videoCall,
-    alt: "Médico atendendo com um tablet nas mãos",
+    alt: "Médica em videochamada pelo notebook",
   },
   {
     title: "Receita com assinatura digital",
     description: "Se o médico indicar, a receita sai na plataforma, assinada com o certificado ICP-Brasil dele.",
     photo: PHOTOS.tablet,
-    alt: "Profissional de saúde usando um tablet",
+    alt: "Médico e paciente olhando um tablet juntos",
   },
   {
     title: "Exames e evolução",
@@ -35,13 +35,13 @@ const ITEMS = [
     title: "Orientação nutricional",
     description: "Guias sobre alimentação saudável. Não substituem a consulta com nutricionista.",
     photo: PHOTOS.food,
-    alt: "Prato com vegetais frescos",
+    alt: "Tigelas com salada e legumes frescos",
   },
   {
     title: "Rotina e movimento",
     description: "O acompanhamento olha para o seu dia a dia, não só para a balança.",
     photo: PHOTOS.activity,
-    alt: "Pessoa se exercitando ao ar livre",
+    alt: "Mulher caminhando na praia",
   },
 ];
 

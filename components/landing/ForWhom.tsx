@@ -19,7 +19,7 @@ const AUDIENCES = [
     ],
     cta: { label: "Criar conta de paciente", href: "/auth/register" },
     photo: PHOTOS.activity,
-    alt: "Pessoa praticando atividade física com bem-estar",
+    alt: "Mulher caminhando na praia",
     tone: "light",
   },
   {
@@ -34,7 +34,7 @@ const AUDIENCES = [
     ],
     cta: { label: "Cadastrar como médico", href: "/auth/register/medico" },
     photo: PHOTOS.doctorDesk,
-    alt: "Médico no consultório",
+    alt: "Médico em consulta online pelo notebook",
     tone: "dark",
   },
 ] as const;

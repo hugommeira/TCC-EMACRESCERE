@@ -19,7 +19,7 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://usc1.contabostorage.com",
+  "img-src 'self' data: blob: https://images.pexels.com https://images.unsplash.com https://plus.unsplash.com https://usc1.contabostorage.com",
   // WebSocket LiveKit + APIs same-origin + LiveKit HTTP
   `connect-src 'self' ${livekitWss} ${livekitHttp} ${livekitRegional} https://usc1.contabostorage.com`.replace(/\s+/g, " ").trim(),
   // LiveKit usa media; permitir blob (vídeo local)
@@ -58,6 +58,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "**.neon.tech" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "images.pexels.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
       { protocol: "https", hostname: "usc1.contabostorage.com" },
     ],
