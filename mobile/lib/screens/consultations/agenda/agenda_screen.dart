@@ -23,12 +23,14 @@ const _weekdayAbbrev = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 /// (Hugo pediu o mês completo, não só a semana). Só exibe o que já existe — consultas
 /// confirmadas (GET /api/consultations). Sem lembrete de medicação/
 /// documentos porque essas funcionalidades não existem ainda (TODO(api)
-/// se/quando existirem). O botão principal leva pra fila on-demand, não
-/// pra um seletor de horário fixo (nosso modelo não é agendamento).
+/// se/quando existirem). Quem decide pra onde vai o botão principal é a tela
+/// que monta a agenda (o shell do médico ou do paciente), via
+/// [primaryActionLabel] e [onPrimaryAction] — nesta entrega, as consultas
+/// marcadas.
 class AgendaScreen extends StatefulWidget {
   const AgendaScreen({
     super.key,
-    this.primaryActionLabel = 'VER FILA DE ATENDIMENTO',
+    this.primaryActionLabel = 'VER MINHAS CONSULTAS',
     this.onPrimaryAction,
   });
 

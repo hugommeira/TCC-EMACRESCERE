@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../constants.dart';
 import '../../models/consultation.dart';
 import '../../services/auth_service.dart';
 import '../../services/consultation_service.dart';
@@ -74,7 +75,10 @@ class _ConsultationsScreenState extends State<ConsultationsScreen> with TabVisib
     );
   }
 
+  /// Com a fila desligada, "Nova consulta" é marcar horário — não entrar numa
+  /// fila que o backend não atende.
   Future<void> _openNewConsultation() async {
+    if (!kQueueEnabled) return _openSchedule();
     final entered = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => const EnterQueueScreen()),
     );
@@ -104,28 +108,32 @@ class _ConsultationsScreenState extends State<ConsultationsScreen> with TabVisib
         onRefresh: _reload,
         overlapCard: _NewConsultationCard(onTap: _openNewConsultation),
         children: [
-          Card(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-              onTap: _openSchedule,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today_outlined,
-                        size: 18, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text('Agendar com um médico específico',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                    ),
-                    const Icon(Icons.chevron_right, color: AppColors.gray400),
-                  ],
+          // Com a fila desligada este atalho é redundante: o cartão de cima já
+          // leva pro agendamento.
+          if (kQueueEnabled) ...[
+            Card(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+                onTap: _openSchedule,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined,
+                          size: 18, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text('Agendar com um médico específico',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                      const Icon(Icons.chevron_right, color: AppColors.gray400),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
           FutureBuilder<List<Consultation>>(
             future: _future,
             builder: (context, snapshot) {
@@ -220,7 +228,9 @@ class _NewConsultationCard extends StatelessWidget {
                     Text('Nova consulta', style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 2),
                     Text(
-                      'Fale com um médico agora ou agende um horário',
+                      kQueueEnabled
+                          ? 'Fale com um médico agora ou agende um horário'
+                          : 'Escolha o médico e o horário',
                       style: Theme.of(context).textTheme.bodySmall,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

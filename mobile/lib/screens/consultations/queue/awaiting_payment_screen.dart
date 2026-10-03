@@ -6,18 +6,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../models/consultation.dart';
 import '../../../models/payment.dart';
 import '../../../services/consultation_service.dart';
-import '../../../services/queue_service.dart';
 import '../../../theme/app_theme.dart';
-import 'queue_waiting_screen.dart';
 
-/// Pagamento da consulta on-demand: QR Pix / copia-e-cola / boleto vindos
-/// do backend (Asaas). Faz polling de GET /api/queue/position até o
-/// pagamento ser confirmado (status WAITING) e então abre a fila.
+/// Cobrança gerada: QR Pix / copia-e-cola / boleto vindos do backend
+/// (Asaas), e espera pela confirmação.
 ///
-/// Espelha components/queue/AwaitingPayment.tsx do site, inclusive o
-/// botão "Simular pagamento" — que só funciona se o servidor estiver com
+/// Faz polling de GET /api/consultations/:id olhando o `payment.status`.
+/// Antes olhava GET /api/queue/position esperando o status WAITING — isso
+/// só acontecia no fluxo da fila: consulta AGENDADA e paga continua
+/// SCHEDULED, então a tela nunca percebia a confirmação e o paciente
+/// ficava preso em "Aguardando". O site documenta o mesmo tropeço em
+/// components/patient/ScheduledConsultationWatcher.tsx.
+///
+/// Devolve `true` quando o pagamento é confirmado.
+///
+/// O botão "Simular pagamento" só funciona se o servidor estiver com
 /// PAYMENT_MOCK=true; aqui ele aparece só em build de debug.
 class AwaitingPaymentScreen extends StatefulWidget {
   const AwaitingPaymentScreen({
@@ -53,18 +59,30 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
 
   Future<void> _checkStatus() async {
     try {
-      final pos = await QueueService.getPosition(widget.consultationId);
+      final c = await ConsultationService.getConsultationDetail(widget.consultationId);
       if (!mounted) return;
-      if (pos.isWaiting || pos.isInProgress) {
+
+      // O que importa é a cobrança: a consulta agendada continua SCHEDULED
+      // mesmo depois de paga.
+      if (c.payment?.isPaid ?? false) {
         _poll?.cancel();
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => QueueWaitingScreen(consultationId: widget.consultationId),
-          ),
-        );
-      } else if (pos.isOver) {
+        Navigator.of(context).pop(true);
+        return;
+      }
+
+      // O médico já iniciou (fluxo antigo da fila, ou pagamento confirmado
+      // por outro caminho).
+      if (c.status == ConsultationStatus.inProgress) {
         _poll?.cancel();
-        setState(() => _notice = 'Esta consulta foi encerrada (${pos.status}).');
+        Navigator.of(context).pop(true);
+        return;
+      }
+
+      if (c.status == ConsultationStatus.cancelled ||
+          c.status == ConsultationStatus.completed ||
+          c.status == ConsultationStatus.noShow) {
+        _poll?.cancel();
+        setState(() => _notice = 'Esta consulta foi encerrada (${c.status.label}).');
       }
     } catch (_) {
       // Falha momentânea de rede: o próximo tick tenta de novo.
@@ -93,9 +111,9 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
       _notice = null;
     });
     try {
-      await QueueService.simulatePayment(widget.consultationId);
+      await ConsultationService.simulatePayment(widget.consultationId);
       await _checkStatus();
-    } on QueueFailure catch (e) {
+    } on ConsultationFailure catch (e) {
       if (mounted) setState(() => _notice = e.message);
     } finally {
       if (mounted) setState(() => _simulating = false);
@@ -126,7 +144,7 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
     setState(() => _cancelling = true);
     try {
       await ConsultationService.cancelConsultation(widget.consultationId);
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop(false);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -151,7 +169,7 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
             Text('Confirme seu pagamento', style: textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              'Assim que o pagamento for confirmado você entra na fila automaticamente.',
+              'Assim que o pagamento for confirmado a consulta fica garantida e o médico pode iniciar o atendimento.',
               style: textTheme.bodySmall,
             ),
             const SizedBox(height: 20),
@@ -164,7 +182,7 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(child: Text('Consulta on-demand', style: textTheme.bodyMedium)),
+                        Expanded(child: Text('Consulta', style: textTheme.bodyMedium)),
                         const SizedBox(width: 8),
                         Text(amount, style: textTheme.titleMedium),
                       ],

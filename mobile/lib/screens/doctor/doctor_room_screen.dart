@@ -7,6 +7,7 @@ import '../../services/consultation_service.dart';
 import '../../services/doctor_service.dart';
 import '../../theme/app_theme.dart';
 import '../consultations/chat/chat_screen.dart';
+import 'patient_weight_sheet.dart';
 import 'prontuario_sheet.dart';
 
 /// Sala de atendimento do MÉDICO: dados do paciente + queixa, chat pelo
@@ -159,6 +160,17 @@ class _DoctorRoomScreenState extends State<DoctorRoomScreen> {
               ],
             ),
             actions: [
+              if (c != null && c.patient != null)
+                IconButton(
+                  tooltip: 'Evolução de peso',
+                  onPressed: () => PatientWeightSheet.show(
+                    context,
+                    patientId: c.patient!.id,
+                    patientName: c.patient!.name,
+                    consultationId: c.id,
+                  ),
+                  icon: const Icon(Icons.monitor_weight_outlined),
+                ),
               if (c != null)
                 IconButton(
                   tooltip: 'Receita (no site)',

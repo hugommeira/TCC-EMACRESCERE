@@ -154,9 +154,9 @@ class DoctorService {
       await dio.patch(
         '/api/consultations/$consultationId/prontuario',
         data: {
-          if (diagnosis != null) 'diagnosis': diagnosis,
-          if (conduct != null) 'conduct': conduct,
-          if (notes != null) 'notes': notes,
+          'diagnosis': ?diagnosis,
+          'conduct': ?conduct,
+          'notes': ?notes,
         },
       );
     } on DioException catch (e) {

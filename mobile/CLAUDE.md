@@ -21,23 +21,52 @@ também é o backend de tudo.
 - Prescrição digital: assinatura ICP-Brasil (gerada pelo backend/médico; o
   app do paciente apenas visualiza/baixa a prescrição)
 
+## Escopo: a fila on-demand está ESCONDIDA
+`lib/constants.dart` tem `kQueueEnabled = false`, espelhando `QUEUE_ENABLED`
+em `lib/constants.ts` no site. Nesta entrega o atendimento é só por
+agendamento; a fila virou trabalho futuro (TCC, seção 5.5.1).
+
+Nada foi apagado — `screens/consultations/queue/*`,
+`screens/doctor/doctor_queue_screen.dart`, `services/queue_service.dart` e os
+campos do modelo continuam aqui, e `test/queue_screens_test.dart` continua
+rodando. A chave só esconde os pontos de entrada: a aba "Fila" do médico sai
+da NavigationBar, "Nova consulta" do paciente abre o agendamento, e os textos
+que falavam de fila mudam. Pra reativar, troque para true nos dois lados — as
+duas pontas precisam concordar, senão o app oferece uma fila que o backend
+esconde.
+
+A chave é `final` e não `const` de propósito: constante de compilação faria o
+analisador marcar como `dead_code` justamente o código que queremos preservar.
+
 ## Escopo do app (paciente) — estado em 2026-09-11
 - Cadastro/login — feito (NextAuth Credentials via API)
 - Escolha/compra de plano de acompanhamento (Asaas) — não existe no
   backend (só cobrança por consulta); compra fica no site
-- Entrar na fila de atendimento — feito (POST /api/queue/enter com Pix/
-  boleto, tela de pagamento, espera na fila com heartbeat, sala com chat).
-  Cartão de crédito ainda não (exige dados completos do cartão no request).
-  Backend recusa (409) se já houver consulta SCHEDULED/WAITING/IN_PROGRESS.
+- Entrar na fila de atendimento — ESCONDIDO (`kQueueEnabled`). O código
+  continua: POST /api/queue/enter com Pix/boleto, tela de pagamento, espera
+  com heartbeat, sala com chat.
+- Agendar com médico específico — feito, com pagamento desde 03/10/2026.
+  Os horários vêm de GET /api/doctors/:id/slots (a agenda que o médico
+  configurou), não mais de uma lista fixa no app, e o `startsAt` devolvido
+  pelo servidor é o que volta no POST /api/consultations — não a hora montada
+  no celular. 409 = outro paciente pegou o horário: volta pra agenda
+  recarregada. Depois de marcar, POST /api/checkout gera a cobrança (Pix ou
+  boleto; o valor é decidido pelo servidor, o app não manda `amount`).
+  Cartão de crédito não (exige número, validade, CCV e endereço do titular,
+  que o app não coleta) — há botão pra pagar no site.
   "Simular pagamento" só funciona com PAYMENT_MOCK=true no servidor —
   em produção hoje está DESLIGADO (o /api/dev/simulate-payment responde 404).
-- Agendar com médico específico — feito (POST /api/consultations), mas o
-  backend não cobra nesse fluxo (só na fila)
 - Chat com o médico — feito (polling 5s; backend tem SSE se quiser trocar)
 - Videochamada com o médico (LiveKit) — NÃO feito; sala mostra banner
 - Visualizar/baixar prescrições digitais — feito (PDF só nativo)
 - Histórico de atendimentos — feito
-- Acompanhamento de peso/IMC — feito, mas só local (sem endpoint)
+- Acompanhamento de peso/IMC — feito e NO SERVIDOR desde 03/10/2026.
+  GET/POST /api/weight, DELETE /api/weight/[id] e PATCH /api/patient/metrics
+  (altura e meta). O IMC vem calculado do backend (lib/bmi.ts do site), a
+  partir do peso e da altura do perfil — o app NÃO recalcula, pra não
+  divergir do site. O gráfico tem filtro de período (30d, 3m, 6m, 1a, tudo)
+  e alterna entre peso e IMC. O SharedPreferences saiu: quem tinha dados só
+  no aparelho começa do zero.
 
 ## Interface do MÉDICO (2026-09-11) — lib/screens/doctor/
 - Cadastro: RegisterScreen com seletor Paciente/Médico; médico informa
@@ -50,10 +79,16 @@ também é o backend de tudo.
 - Aprovação/reprovação: admin no site em /dashboard/admin/doctors
   (POST /api/admin/doctors/[id]/approval). Médico não aprovado recebe 403
   em /api/queue/list e /api/queue/claim e não aparece pra agendamento.
-- DoctorShell: Fila (GET /api/queue/list, polling 8s; Atender = POST
-  /api/queue/claim), Consultas (GET /api/consultations, que pra DOCTOR
-  devolve as dele), Agenda (AgendaScreen, a tela reservada pro médico) e
-  Perfil (GET/PATCH /api/doctor/profile, switch "disponível").
+- DoctorShell: Consultas (GET /api/consultations, que pra DOCTOR devolve as
+  dele), Agenda (AgendaScreen, a tela reservada pro médico) e Perfil
+  (GET/PATCH /api/doctor/profile, switch "disponível"). A aba Fila (GET
+  /api/queue/list, polling 8s; Atender = POST /api/queue/claim) só aparece
+  com `kQueueEnabled`. O índice da NavigationBar é a posição na lista de abas
+  visíveis, NÃO `DoctorTab.index` — o enum continua contando a fila.
+- DoctorRoomScreen: botão de balança na AppBar abre a evolução de peso do
+  paciente (PatientWeightSheet) e deixa registrar o peso aferido, já
+  vinculado à consulta. O backend recusa (403) se o médico não atende esse
+  paciente.
 - DoctorRoomScreen: chat pelo roomToken + prontuário (PATCH
   /api/consultations/[id]/prontuario) + Encerrar (POST .../end). Receita
   continua só no site (precisa do certificado ICP-Brasil).

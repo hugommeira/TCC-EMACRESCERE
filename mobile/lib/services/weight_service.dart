@@ -1,80 +1,117 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 
 import '../models/weight_entry.dart';
+import 'api_client.dart';
 
-/// Persistência local temporária dos registros de peso, altura e meta.
+/// Erro de negócio das rotas de peso, com mensagem legível.
+class WeightFailure implements Exception {
+  const WeightFailure(this.message, {this.statusCode});
+
+  final String message;
+  final int? statusCode;
+
+  @override
+  String toString() => message;
+}
+
+WeightFailure _toFailure(DioException e, {required String fallback}) {
+  final data = e.response?.data;
+  final message = data is Map<String, dynamic> ? data['message'] as String? : null;
+  return WeightFailure(message ?? fallback, statusCode: e.response?.statusCode);
+}
+
+/// Acompanhamento de peso e IMC.
 ///
-/// TODO(api): substituir por chamadas ao backend quando existir um
-/// endpoint de acompanhamento de peso — hoje o Next.js não tem nenhum
-/// model/rota pra isso (só existe FollowUp, que é sobre mensagens
-/// pós-consulta, não métricas). Ver CLAUDE.md.
+/// Contratos conferidos lendo o backend:
+///   GET   /api/weight[?patientId=&range=]  -> { data: { summary, points[] } }
+///   POST  /api/weight                      -> { data: ponto }
+///   PATCH /api/patient/metrics             -> { data: { heightCm, goalWeightKg } }
+///
+/// O IMC vem calculado do servidor (lib/bmi.ts), a partir do peso e da
+/// altura do perfil — o app não recalcula, pra não divergir do site.
 class WeightService {
   WeightService._();
 
-  static const _entriesKey = 'weight_entries';
-  static const _heightKey = 'height_cm';
-  static const _goalKey = 'weight_goal_kg';
-
-  static Future<List<WeightEntry>> getEntries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_entriesKey);
-    if (raw == null || raw.isEmpty) return [];
-
-    final list = jsonDecode(raw) as List;
-    final entries = list
-        .map((e) => WeightEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
-    entries.sort((a, b) => a.date.compareTo(b.date));
-    return entries;
+  /// Histórico completo. O filtro de período é aplicado na tela, para
+  /// trocar de faixa não custar uma requisição.
+  ///
+  /// [patientId] só é usado pelo médico, olhando o paciente dele.
+  static Future<WeightHistory> getHistory({String? patientId}) async {
+    final dio = await ApiClient.instance;
+    try {
+      final response = await dio.get(
+        '/api/weight',
+        queryParameters: {'patientId': ?patientId},
+      );
+      final data = response.data['data'] as Map<String, dynamic>;
+      final points = (data['points'] as List)
+          .map((e) => WeightEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+      return WeightHistory(
+        summary: WeightSummary.fromJson(data['summary'] as Map<String, dynamic>),
+        entries: points,
+      );
+    } on DioException catch (e) {
+      throw _toFailure(e, fallback: 'Não foi possível carregar o acompanhamento.');
+    }
   }
 
-  static Future<void> addEntry(WeightEntry entry) async {
-    final entries = await getEntries();
-    entries.add(entry);
-    await _saveEntries(entries);
+  static Future<WeightEntry> addEntry({
+    required double weightKg,
+    DateTime? measuredAt,
+    String? note,
+    String? patientId,
+    String? consultationId,
+  }) async {
+    final dio = await ApiClient.instance;
+    try {
+      final response = await dio.post('/api/weight', data: {
+        'weightKg': weightKg,
+        // O servidor lê ISO sem fuso como UTC — convenção do projeto.
+        'measuredAt': (measuredAt ?? DateTime.now()).toUtc().toIso8601String(),
+        if (note != null && note.isNotEmpty) 'note': note,
+        'patientId': ?patientId,
+        'consultationId': ?consultationId,
+      });
+      return WeightEntry.fromJson(response.data['data'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw _toFailure(e, fallback: 'Não foi possível registrar o peso.');
+    }
   }
 
-  static Future<void> _saveEntries(List<WeightEntry> entries) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = jsonEncode(entries.map((e) => e.toJson()).toList());
-    await prefs.setString(_entriesKey, raw);
+  static Future<void> deleteEntry(String id) async {
+    final dio = await ApiClient.instance;
+    try {
+      await dio.delete('/api/weight/$id');
+    } on DioException catch (e) {
+      throw _toFailure(e, fallback: 'Não foi possível apagar o registro.');
+    }
   }
 
-  /// Dados de EXEMPLO pra demonstração (trabalho de escola): 10 semanas de
-  /// evolução, altura e meta. Só é oferecido quando não há nenhum registro,
-  /// e o usuário precisa pedir explicitamente (botão na aba Peso).
-  static Future<void> loadDemoData() async {
-    final today = DateTime.now();
-    final start = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 63));
-    const weights = [84.6, 83.9, 83.1, 82.8, 81.9, 81.2, 80.4, 80.0, 79.3, 78.6];
-    final entries = <WeightEntry>[
-      for (var i = 0; i < weights.length; i++)
-        WeightEntry(date: start.add(Duration(days: 7 * i)), weightKg: weights[i]),
-    ];
-    await _saveEntries(entries);
-    await setHeightCm(168);
-    await setGoalKg(72);
-  }
-
-  static Future<double?> getHeightCm() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_heightKey);
-  }
-
-  static Future<void> setHeightCm(double heightCm) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_heightKey, heightCm);
-  }
-
-  static Future<double?> getGoalKg() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_goalKey);
-  }
-
-  static Future<void> setGoalKg(double goalKg) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_goalKey, goalKg);
+  /// Altura e meta ficam no perfil do paciente — é a altura que destrava o
+  /// cálculo do IMC em todo o histórico.
+  /// Manda só o que mudou. Para APAGAR a meta é preciso enviar null
+  /// explicitamente — por isso [clearGoalWeight]: em Dart não dá para
+  /// distinguir "não mexer" de "apagar" só pelo parâmetro nulo, e antes
+  /// limpar o campo na tela simplesmente não fazia nada.
+  static Future<WeightSummary> updateMetrics({
+    double? heightCm,
+    double? goalWeightKg,
+    bool clearGoalWeight = false,
+  }) async {
+    final dio = await ApiClient.instance;
+    final data = <String, dynamic>{};
+    if (heightCm != null) data['heightCm'] = heightCm.round();
+    if (clearGoalWeight) {
+      data['goalWeightKg'] = null;
+    } else if (goalWeightKg != null) {
+      data['goalWeightKg'] = goalWeightKg;
+    }
+    try {
+      final response = await dio.patch('/api/patient/metrics', data: data);
+      return WeightSummary.fromJson(response.data['data'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw _toFailure(e, fallback: 'Não foi possível salvar.');
+    }
   }
 }

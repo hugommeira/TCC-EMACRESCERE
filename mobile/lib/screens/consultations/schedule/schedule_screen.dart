@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '../../../models/day_slot.dart';
 import '../../../models/doctor.dart';
 import '../../../services/consultation_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/formatters.dart';
+import '../payment/consultation_payment_screen.dart';
 
 enum _Step { doctor, datetime, complaint }
 
-const _paymentMethods = {
-  'PIX': 'Pix',
-  'BOLETO': 'Boleto',
-  'CREDIT_CARD': 'Cartão de crédito',
-};
-
-/// Agendamento com médico e horário específicos (POST /api/consultations) —
-/// espelha o ScheduleWizard do site, que nunca tinha sido trazido pro app
-/// (o app só tinha o modelo on-demand, ver queue_screen.dart).
+/// Agendamento com médico e horário específicos — espelha o ScheduleWizard
+/// do site.
+///
+/// Duas correções em relação à versão anterior:
+///   - os horários vinham de uma lista fixa de 08:00 às 17:00, inventada no
+///     app; agora vêm de GET /api/doctors/:id/slots, com os ocupados e os
+///     que já passaram desabilitados;
+///   - o agendamento terminava sem cobrança, e o médico não conseguia
+///     iniciar a consulta (o backend exige pagamento confirmado). Agora,
+///     criada a consulta, a tela leva ao pagamento.
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
 
@@ -32,15 +35,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Doctor? _selectedDoctor;
   DateTime? _selectedDate;
-  String? _selectedTime;
+  DaySlot? _selectedSlot;
+
+  List<DaySlot> _slots = [];
+  bool _slotsLoading = false;
+  String? _slotsError;
 
   final _complaintController = TextEditingController();
-  String _paymentMethod = 'PIX';
 
   bool _submitting = false;
   String? _error;
-
-  static final _timeSlots = List.generate(10, (i) => '${(8 + i).toString().padLeft(2, '0')}:00');
 
   @override
   void initState() {
@@ -67,33 +71,61 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   void _selectDoctor(Doctor doctor) {
     setState(() {
       _selectedDoctor = doctor;
+      _selectedDate = null;
+      _selectedSlot = null;
+      _slots = [];
+      _slotsError = null;
       _step = _Step.datetime;
     });
   }
 
+  Future<void> _loadSlots(String doctorId, DateTime date) async {
+    setState(() {
+      _slotsLoading = true;
+      _slotsError = null;
+      _slots = [];
+      _selectedSlot = null;
+    });
+    try {
+      final slots = await ConsultationService.getDoctorSlots(doctorId, date);
+      if (!mounted) return;
+      setState(() {
+        _slots = slots;
+        _slotsLoading = false;
+      });
+    } on ConsultationFailure catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _slotsLoading = false;
+        _slotsError = e.message;
+      });
+    }
+  }
+
   Future<void> _pickDate() async {
-    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    // Hoje entra: os horários que já passaram vêm marcados como
+    // indisponíveis pelo servidor, então não há risco de agendar no passado.
+    final agora = DateTime.now();
+    final hoje = DateTime(agora.year, agora.month, agora.day);
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(tomorrow.year, tomorrow.month, tomorrow.day),
-      firstDate: DateTime(tomorrow.year, tomorrow.month, tomorrow.day),
-      lastDate: tomorrow.add(const Duration(days: 90)),
+      initialDate: _selectedDate ?? hoje,
+      firstDate: hoje,
+      lastDate: hoje.add(const Duration(days: 90)),
     );
     if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-        _selectedTime = null;
-      });
+      setState(() { _selectedDate = picked; });
+      final doctor = _selectedDoctor;
+      if (doctor != null) await _loadSlots(doctor.id, picked);
     }
   }
 
   Future<void> _submit() async {
     final doctor = _selectedDoctor;
-    final date = _selectedDate;
-    final time = _selectedTime;
-    if (doctor == null || date == null || time == null) return;
+    final slot = _selectedSlot;
+    if (doctor == null || slot == null) return;
     if (_complaintController.text.trim().length < 10) {
-      setState(() => _error = 'Descreva o motivo da consulta (mínimo 10 caracteres).');
+      setState(() { _error = 'Descreva o motivo da consulta (mínimo 10 caracteres).'; });
       return;
     }
 
@@ -102,23 +134,47 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _error = null;
     });
 
-    final hour = int.parse(time.split(':')[0]);
-    final scheduledAt = DateTime(date.year, date.month, date.day, hour);
-
     try {
-      await ConsultationService.scheduleConsultation(
+      final consulta = await ConsultationService.scheduleConsultation(
         doctorId: doctor.id,
-        scheduledAt: scheduledAt,
+        // O instante vem do servidor (slot.startsAt), não montado no celular.
+        scheduledAt: slot.startsAt,
         chiefComplaint: _complaintController.text.trim(),
-        paymentMethod: _paymentMethod,
+      );
+      if (!mounted) return;
+
+      // O resultado não importa aqui: a consulta já existe, e a lista precisa
+      // recarregar tanto se o paciente pagou quanto se escolheu "pagar depois".
+      await ConsultationPaymentScreen.show(
+        context,
+        consultationId: consulta.id,
+        doctorName: doctorTitle(doctor.name),
+        scheduledAt: slot.startsAt.toLocal(),
+        amount: doctor.consultationFee,
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (e) {
+    } on ConsultationFailure catch (e) {
       if (!mounted) return;
+      // Alguém pegou o horário nesse meio-tempo: volta pra agenda atualizada.
+      if (e.isSlotTaken) {
+        final date = _selectedDate;
+        setState(() {
+          _submitting = false;
+          _step = _Step.datetime;
+          _error = null;
+        });
+        if (date != null) await _loadSlots(doctor.id, date);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message)),
+          );
+        }
+        return;
+      }
       setState(() {
         _submitting = false;
-        _error = 'Não foi possível agendar: $e';
+        _error = e.message;
       });
     }
   }
@@ -229,25 +285,55 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             const SizedBox(height: 20),
             Text('Horário', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final time in _timeSlots)
-                  ChoiceChip(
-                    label: Text(time),
-                    selected: _selectedTime == time,
-                    onSelected: (_) => setState(() => _selectedTime = time),
+            if (_slotsLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_slotsError != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_slotsError!, style: const TextStyle(color: AppColors.danger600)),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: () => _loadSlots(doctor.id, _selectedDate!),
+                    child: const Text('Tentar de novo'),
                   ),
-              ],
-            ),
+                ],
+              )
+            else if (_slots.isEmpty)
+              const Text(
+                'Este médico não atende nesse dia. Escolha outra data.',
+                style: TextStyle(color: AppColors.gray600),
+              )
+            else if (!_slots.any((s) => s.available))
+              const Text(
+                'Todos os horários deste dia já foram preenchidos. Escolha outra data.',
+                style: TextStyle(color: AppColors.gray600),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final slot in _slots)
+                    ChoiceChip(
+                      label: Text(slot.time),
+                      selected: _selectedSlot?.time == slot.time,
+                      onSelected: slot.available
+                          ? (_) => setState(() { _selectedSlot = slot; })
+                          : null,
+                    ),
+                ],
+              ),
           ],
           const Spacer(),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: (_selectedDate != null && _selectedTime != null)
-                  ? () => setState(() => _step = _Step.complaint)
+              onPressed: _selectedSlot != null
+                  ? () => setState(() { _step = _Step.complaint; })
                   : null,
               child: const Text('Continuar'),
             ),
@@ -263,7 +349,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Passo 3 de 3 · Motivo e pagamento',
+          Text('Passo 3 de 3 · Motivo da consulta',
               style: Theme.of(context).textTheme.labelMedium),
           const SizedBox(height: 16),
           if (_error != null) ...[
@@ -289,23 +375,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Text('Forma de pagamento', style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 8),
-          RadioGroup<String>(
-            groupValue: _paymentMethod,
-            onChanged: (value) => setState(() => _paymentMethod = value!),
-            child: Column(
-              children: [
-                for (final entry in _paymentMethods.entries)
-                  RadioListTile<String>(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(entry.value),
-                    value: entry.key,
-                  ),
-              ],
+          if (_selectedSlot != null)
+            Text(
+              'Horário escolhido: ${_selectedSlot!.time} de '
+              '${_selectedDate!.day.toString().padLeft(2, '0')}/'
+              '${_selectedDate!.month.toString().padLeft(2, '0')}',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -316,8 +393,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Confirmar agendamento'),
+                  : const Text('Continuar para o pagamento'),
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'O horário fica reservado para você; a consulta só é confirmada '
+            'depois do pagamento.',
+            style: Theme.of(context).textTheme.bodySmall,
+            textAlign: TextAlign.center,
           ),
         ],
       ),
