@@ -247,7 +247,9 @@ export function ConsultationRoom(p: Props) {
             </div>
           )}
         </div>
-        <aside className="flex flex-1 flex-col border-l border-slate-200 bg-white">
+        {/* min-w-0: sem ele o painel cresce até a largura do conteúdo (a aba
+            Peso tem gráfico e tabela) e empurra abas e cartões pra fora da tela */}
+        <aside className="flex min-w-0 flex-1 flex-col overflow-hidden border-l border-slate-200 bg-white">
           <Tabs tab={tab} setTab={setTab} isDoctor={p.isDoctor} />
           <TabContent p={p} tab={tab} status={status} />
         </aside>
