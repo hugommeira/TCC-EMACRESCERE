@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --skip-generate && (tsx prisma/seed-demo.ts || echo seed-demo falhou, seguindo) && next build",
+    "build": "prisma generate && if [ \"$VERCEL_ENV\" = \"preview\" ]; then echo 'Preview: pulando db push e seed (nao altera o banco)'; else prisma db push --skip-generate && (tsx prisma/seed-demo.ts || echo seed-demo falhou, seguindo); fi && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
