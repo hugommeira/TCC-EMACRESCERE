@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { Suspense }      from "react";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { AuthShell }     from "@/components/auth/AuthShell";
-import { PHOTOS }        from "@/components/landing/photos";
+import { AUTH_PHOTOS }        from "@/components/landing/photos";
 
 export const metadata: Metadata = { title: "Redefinir senha" };
 
 export default function ResetPasswordPage() {
   return (
     <AuthShell
-      photo={PHOTOS.activity}
+      photo={AUTH_PHOTOS.password}
       headline="Uma senha nova, e você volta para o seu acompanhamento."
       lead="Suas senhas são guardadas como hash, nunca em texto. Nem a equipe consegue vê-las."
       title="Criar nova senha"

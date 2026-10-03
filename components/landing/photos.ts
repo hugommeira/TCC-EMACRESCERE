@@ -21,3 +21,15 @@ export const PHOTOS = {
   // pexels.com/photo/male-doctor-doing-an-online-consultation-8376152
   doctorDesk: pexels(8376152, 1800),
 } as const;
+
+// Telas de autenticação: cada uma com foto própria, sem repetir as da landing.
+export const AUTH_PHOTOS = {
+  // pexels.com/photo/smiling-woman-using-mobile-phone-at-home-6697318
+  login:          pexels(6697318, 1600),
+  // pexels.com/photo/woman-preparing-food-on-the-table-3756481
+  register:       pexels(3756481, 1600),
+  // pexels.com/photo/a-doctor-using-a-laptop-7195379
+  registerDoctor: pexels(7195379, 1600),
+  // pexels.com/photo/woman-smiling-while-using-phone-on-sofa-in-home-27176011
+  password:       pexels(27176011, 1600),
+} as const;

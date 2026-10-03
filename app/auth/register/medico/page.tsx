@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link              from "next/link";
 import { RegisterForm }  from "@/components/auth/RegisterForm";
 import { AuthShell }     from "@/components/auth/AuthShell";
-import { PHOTOS }        from "@/components/landing/photos";
+import { AUTH_PHOTOS }        from "@/components/landing/photos";
 
 export const metadata: Metadata = { title: "Cadastro de médico" };
 
@@ -18,7 +18,7 @@ export default function DoctorRegisterPage() {
   return (
     <AuthShell
       variant="doctor"
-      photo={PHOTOS.doctorDesk}
+      photo={AUTH_PHOTOS.registerDoctor}
       badge="Área profissional"
       headline="Atenda por vídeo, com prontuário e receita digital."
       lead="Fila de pacientes, prontuário, prescrição com busca na base da ANVISA e assinatura com o seu certificado A1."

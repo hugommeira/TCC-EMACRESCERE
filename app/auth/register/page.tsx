@@ -2,7 +2,7 @@ import type { Metadata }    from "next";
 import Link                 from "next/link";
 import { RegisterForm }     from "@/components/auth/RegisterForm";
 import { AuthShell }        from "@/components/auth/AuthShell";
-import { PHOTOS }           from "@/components/landing/photos";
+import { AUTH_PHOTOS }           from "@/components/landing/photos";
 
 export const metadata: Metadata = { title: "Criar conta de paciente" };
 
@@ -21,7 +21,7 @@ const PERKS = [
 export default function RegisterPage() {
   return (
     <AuthShell
-      photo={PHOTOS.food}
+      photo={AUTH_PHOTOS.register}
       badge="Cadastro rápido em 2 minutos"
       headline="Comece sua jornada de emagrecimento com saúde."
       lead="Sem mensalidade. Você só paga quando for consultar."

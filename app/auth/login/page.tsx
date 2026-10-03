@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense }      from "react";
 import { LoginForm }     from "@/components/auth/LoginForm";
 import { AuthShell }     from "@/components/auth/AuthShell";
-import { PHOTOS }        from "@/components/landing/photos";
+import { AUTH_PHOTOS }        from "@/components/landing/photos";
 
 export const metadata: Metadata = { title: "Entrar" };
 
@@ -27,7 +27,7 @@ const HIGHLIGHTS = [
 export default function LoginPage() {
   return (
     <AuthShell
-      photo={PHOTOS.activity}
+      photo={AUTH_PHOTOS.login}
       headline="Sua jornada de emagrecimento continua aqui."
       lead="Plataforma de telessaúde para acompanhamento médico do emagrecimento."
       points={HIGHLIGHTS}
