@@ -19,7 +19,7 @@ que já pode ligar no site.
 | # | Asset | Modelo | `.glb` (KB) | Triângulos | Poster | Aprovado por | Observações |
 |---|---|---|---|---|---|---|---|
 | 1 | `logo-heart` | ✅ | 57,1 | 6.588 | ✅ | Hugo (03/10/2026) | 1 material, textura 256² WebP (2 KB). |
-| 2 | `phone-app` | ⬜ | — | — | ⬜ | — | |
+| 2 | `phone-app` | ✅ | 22,5 | 2.254 | ✅ | Hugo (03/10/2026) | 3 materiais; tela provisória `tela-3-videochamada` (WebP 6 KB embutido). |
 | 3 | `seal-signature` | ⬜ | — | — | ⬜ | — | |
 
 ## Decisões tomadas (preencha ao decidir)
@@ -34,6 +34,9 @@ que já pode ligar no site.
 | 03/10/2026 | Cabeça com 0,0377 m (proporção do logo para 0,20 m de largura), não 0,036 m. Profundidade 0,026 m. | Claude (aprovado pelo Hugo) |
 | 03/10/2026 | Poster: o logo ocupa 74% da altura (89% da largura), porque a 80% da altura ele encostaria nas laterais. | Claude (aprovado pelo Hugo) |
 | 03/10/2026 | WebP dos posters gerado com Pillow (q 85, alfa 90): `cwebp` não está instalado. | Claude |
+| 03/10/2026 | `phone-app`: tela provisória = `tela-3-videochamada` (a tela 1 "Agendar" não existe em `reference/screens/`). Os cantos da imagem (moldura do mockup e fundo claro) foram preenchidos com a cor da própria tela: `art/3d-src/phone-screen_placeholder.png`. | Claude (aprovado pelo Hugo) |
+| 03/10/2026 | `phone-app`: poster renderizado com a tela provisória de 260×540 ampliada (texto um pouco macio). Refazer o poster quando as telas definitivas 1040×2160 chegarem em `public/3d/screens/`. | Claude (aprovado pelo Hugo) |
+| 03/10/2026 | `phone-app`: borda do corpo com chanfro de 0,0028 m em 4 segmentos; botões: 2 de volume à esquerda e 1 de energia à direita, saliência de 0,7 mm. | Claude |
 
 ## Entregas para o agente da nuvem
 
@@ -67,4 +70,17 @@ tamanho: 57,1 KB · 6.588 triângulos
 notas para o código: compressão meshopt (EXT_meshopt_compression + KHR_mesh_quantization),
   precisa do MeshoptDecoder no GLTFLoader; pivô no centro (0,0,0) do Empty `Logo`;
   frente = +Z no glTF; largura 0,20 m; sem animação; material de face única (backface culling).
+```
+
+```
+asset: phone-app
+arquivo: public/3d/phone-app.glb
+poster: public/3d/posters/phone-app.webp (+ @1x)
+objetos: Phone (Empty raiz) > Phone_Body, Phone_Screen, Phone_Island, Phone_Buttons
+materiais: MAT_Phone_Body (#0B1220, rug. 0,3, met. 0,6), MAT_Phone_Black (#000000),
+  MAT_Screen (base preta, emissiveTexture, emissiveFactor 1)
+tamanho: 22,5 KB · 2.254 triângulos
+notas para o código: trocar a tela em MAT_Screen.emissiveMap (flipY = false, padrão do
+  GLTFLoader; UV 0–1, U → direita, V → cima, imagem em pé); a textura provisória é 260×540
+  (não potência de 2, ok no WebGL2); meshopt; pivô no centro; frente = +Z; sem animação.
 ```
