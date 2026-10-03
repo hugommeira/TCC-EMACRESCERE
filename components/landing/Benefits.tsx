@@ -109,7 +109,7 @@ export function Benefits() {
                 Consulta por vídeo
               </span>
               <p className="mt-4 font-display text-2xl font-semibold leading-snug text-white">
-                O médico chama você na sala, no horário marcado ou pela fila.
+                No horário marcado, o médico chama você na sala.
               </p>
             </div>
           </Reveal>

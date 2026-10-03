@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Cadastro de médico" };
 const STEPS = [
   { title: "Você envia o cadastro com o CRM", desc: "Verificamos a situação do registro." },
   { title: "A equipe analisa e aprova",        desc: "Você acompanha o status pelo painel." },
-  { title: "Você configura sua agenda",        desc: "E passa a atender pela fila ou por horário marcado." },
+  { title: "Você configura sua agenda",        desc: "E passa a atender nos horários que abrir." },
 ];
 
 export default function DoctorRegisterPage() {
@@ -21,7 +21,7 @@ export default function DoctorRegisterPage() {
       photo={AUTH_PHOTOS.registerDoctor}
       badge="Área profissional"
       headline="Atenda por vídeo, com prontuário e receita digital."
-      lead="Fila de pacientes, prontuário, prescrição com busca na base da ANVISA e assinatura com o seu certificado A1."
+      lead="Agenda de consultas, prontuário, prescrição com busca na base da ANVISA e assinatura com o seu certificado A1."
       points={STEPS}
       footnote="Toda conduta clínica e eventual prescrição são decisão exclusiva do médico."
       eyebrow="Área profissional"

@@ -64,8 +64,8 @@ function MobileHero() {
 
         <p className="mt-4 animate-rise text-base leading-relaxed text-slate-600" style={d(260)}>
           Conectamos você a médicos especialistas em obesidade e doenças
-          metabólicas, por vídeo, na fila on-demand ou com hora marcada. Se o
-          médico indicar, a receita sai assinada digitalmente por ele.
+          metabólicas, por vídeo, com dia e horário que você escolhe. Se o médico indicar, a receita
+          sai assinada digitalmente por ele.
         </p>
 
         <div className="mt-7 flex animate-rise flex-col gap-3" style={d(370)}>
@@ -146,8 +146,8 @@ function DesktopHero() {
 
           <p className="mt-6 max-w-xl animate-rise text-lg leading-relaxed text-slate-600" style={d(320)}>
             Conectamos você a médicos especialistas em obesidade e doenças
-            metabólicas, por vídeo, na fila on-demand ou com hora marcada. Se
-            o médico indicar, a receita sai assinada digitalmente por ele.
+            metabólicas, por vídeo, com dia e horário que você escolhe. Se o médico indicar, a
+            receita sai assinada digitalmente por ele.
           </p>
 
           <div className="mt-10 flex animate-rise gap-3" style={d(440)}>

@@ -79,8 +79,9 @@ dia útil e sem choque de horário — no dia da banca sempre haverá consultas
   página de validação e o PDF dizem isso.
 - Verificação de CRM é **simulada** (regra: final "000" = não encontrado,
   "999" = suspenso). Integração real com o CFM fica como trabalho futuro.
-- Fila de atendimento imediato (on-demand): implementada mas desligada nesta
-  entrega (`QUEUE_ENABLED` em `lib/constants.ts`) — trabalho futuro (5.5.1).
+- Fila de atendimento imediato (on-demand): descartada por decisão do grupo;
+  o atendimento é só com hora marcada. O código ficou desligado
+  (`QUEUE_ENABLED` em `lib/constants.ts`).
 - Arquivos (certificados, PDFs, anexos) ficam no banco, porque o S3 não foi
   configurado. Configurar as variáveis `S3_*` move tudo pro Contabo sem mudar
   código.

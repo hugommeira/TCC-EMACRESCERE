@@ -53,7 +53,7 @@ comparada com o banco; o certo é atualizar a branch com a `main`.
 
 ## Próximas frentes sugeridas (nesta ordem)
 
-1. **Área do médico** (`app/dashboard/doctor/page.tsx`): destacar a fila/
+1. **Área do médico** (`app/dashboard/doctor/page.tsx`): destacar as
    próximas consultas e pendências (certificado A1, perfil incompleto), no tom
    da área profissional. Reaproveitar o padrão de `NextConsultation`.
 2. **Demais telas do paciente** (consultas, receitas, perfil): mesmo padrão de
@@ -147,8 +147,8 @@ Os 3 primeiros assets (logo, celular, selo) já estão ligados:
   `ink-950`), para o conjunto parecer coeso.
 - **Ordem sugerida:** (1) logo 3D (coração com pessoa e folha) nas telas de
   login; (2) celular 3D com as telas do roteiro do Figma ("Celular animado");
-  (3) selo de assinatura digital em "Para médicos"; (4) mini-3D nos 4 passos
-  do "Como funciona"; (5) animação na fila de espera.
+  (3) selo de assinatura digital em "Para médicos"; os itens (4) mini-3D
+  nos passos e (5) animação da fila foram descartados (ver `docs/3d/ASSETS.md`).
 - **Não fazer:** 3D em gráfico de peso/IMC ou receita (clareza dos dados);
   cápsulas, canetas ou frascos (a plataforma não vende nem indica remédio);
   corpo humano realista; logo do Android (marca registrada).

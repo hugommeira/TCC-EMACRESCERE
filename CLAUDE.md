@@ -11,6 +11,9 @@ metabólicas.
   ou 3D pode sugerir o contrário nem prometer resultado.
 - Paciente e médico são experiências **diferentes** (o médico usa o tom escuro).
 - Textos de segurança só afirmam o que o código faz.
+- Consulta **só com hora marcada**. A fila on-demand foi descartada pelo grupo:
+  nenhum texto, tela ou asset fala em fila (o código fica desligado em
+  `QUEUE_ENABLED`, `lib/constants.ts`).
 - Nunca rode `prisma db push --accept-data-loss`.
 
 ## Onde está cada coisa

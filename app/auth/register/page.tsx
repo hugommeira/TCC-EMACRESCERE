@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Criar conta de paciente" };
 // dispensa medicamento.
 const PERKS = [
   "Consulta com médico de CRM ativo e verificado",
-  "Fila on-demand ou dia e horário que você escolher",
+  "Consulta no dia e horário que você escolher",
   "Receita digital válida em todo o Brasil, quando indicada pelo médico",
   "Histórico de consultas, receitas e peso sempre à mão",
 ];

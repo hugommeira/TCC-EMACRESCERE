@@ -120,7 +120,7 @@ não "medalha de esporte".
 
 ## 4 e 5. Removidos
 
-Os ícones `step-*` e a ampulheta `queue-hourglass` foram retirados em 03/10/2026 (decisão do Hugo): o ícone de farmácia sugeria que a plataforma indica ou entrega remédio, e a fila on-demand está desligada no site (atendimento só por agendamento).
+Os ícones `step-*` e a ampulheta `queue-hourglass` foram retirados em 03/10/2026 (decisão do Hugo): o ícone de farmácia sugeria que a plataforma indica ou entrega remédio, e a fila on-demand foi descartada pelo grupo (atendimento só com hora marcada).
 
 ---
 

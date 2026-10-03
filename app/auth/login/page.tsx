@@ -19,8 +19,8 @@ const HIGHLIGHTS = [
   // A plataforma não vende nem entrega medicamento (ver aviso legal do
   // rodapé), então não pode prometer entrega, prazo nem o próprio remédio.
   {
-    title: "Fila ou hora marcada",
-    desc:  "Entre na fila on-demand ou escolha o médico e o horário.",
+    title: "Consulta com hora marcada",
+    desc:  "Você escolhe o médico, o dia e o horário.",
   },
 ];
 
@@ -35,7 +35,10 @@ export default function LoginPage() {
       subtitle="Entre na sua conta para continuar seu acompanhamento."
     >
       <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-slate-100" />}>
-        <LoginForm />
+        <LoginForm
+          facebookEnabled={Boolean(process.env["FACEBOOK_CLIENT_ID"] && process.env["FACEBOOK_CLIENT_SECRET"])}
+          googleEnabled={Boolean(process.env["GOOGLE_CLIENT_ID"] && process.env["GOOGLE_CLIENT_SECRET"])}
+        />
       </Suspense>
     </AuthShell>
   );

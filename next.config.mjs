@@ -63,6 +63,11 @@ const nextConfig = {
       { protocol: "https", hostname: "images.pexels.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
       { protocol: "https", hostname: "usc1.contabostorage.com" },
+      // Foto de perfil de quem entra com Facebook ou Google (avatarUrl). Sem
+      // isso o next/image recusa o host e a página com o avatar quebra.
+      { protocol: "https", hostname: "platform-lookaside.fbsbx.com" },
+      { protocol: "https", hostname: "**.fbcdn.net" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
   poweredByHeader: false,

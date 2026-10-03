@@ -4,10 +4,10 @@ import { PHOTOS } from "./photos";
 import { Reveal } from "./motion/Reveal";
 import { Scene3D } from "@/components/three/Scene3D";
 
-// A área profissional é outra experiência (fila, prontuário, prescrição),
+// A área profissional é outra experiência (agenda, prontuário, prescrição),
 // não o painel do paciente com outra cor. Aqui ela ganha a sua vitrine.
 const FEATURES = [
-  "Fila de pacientes e consultas agendadas",
+  "Agenda com as consultas marcadas",
   "Prontuário e exames enviados pelo paciente",
   "Prescrição com busca na base da ANVISA",
   "Receita assinada com o seu certificado A1 (ICP-Brasil)",
