@@ -22,6 +22,8 @@ metabólicas.
   `docs/frontend-handoff.md`. Diagnóstico técnico: `docs/frontend-diagnostico.md`.
 - **Assets 3D / Blender:** `docs/3d/BRIEFING.md` (comece por ele), depois
   `ASSETS.md`, `EXPORT.md` e `STATUS.md`. Skills em `.claude/skills`.
+- **Fotos:** `docs/fotos/BRIEFING.md` (alta qualidade sempre; servir de
+  `public/photos/`, com fonte e licença registradas).
 
 ## Antes de enviar mudanças de código
 
