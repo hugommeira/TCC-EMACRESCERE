@@ -1,37 +1,26 @@
-// Fotos da página inicial num lugar só, pra trocar por fotos próprias depois.
-// Pexels: licença livre para uso comercial, sem atribuição obrigatória
-// (https://www.pexels.com/license/). O domínio está liberado no CSP e em
-// images.remotePatterns (next.config.mjs).
-const pexels = (id: number, w = 1400) =>
-  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
+// Fotos do site num lugar só. Todas locais (public/photos), vindas do Pexels:
+// licença livre para uso comercial, sem atribuição obrigatória
+// (https://www.pexels.com/license/). Créditos completos em docs/fotos/BRIEFING.md.
 
 export const PHOTOS = {
-  // Local: não depende de CDN, é a primeira imagem que o visitante vê.
-  hero:       "/hero-mobile.jpg",
-  // Topo no celular (foto vertical).
-  // pexels.com/photo/portrait-photo-of-smiling-woman-in-black-t-shirt-and-glasses-using-her-smartphone-3769022
-  heroMobile: pexels(3769022, 1000),
-  // pexels.com/photo/a-smiling-doctor-in-white-lab-coat-with-stethoscope-on-her-neck-8376309
-  doctor:     pexels(8376309),
-  // pexels.com/photo/a-doctor-in-a-video-conference-using-a-laptop-8376339
-  videoCall:  pexels(8376339),
-  // pexels.com/photo/a-doctor-and-patient-looking-the-digital-tablet-6010873
-  tablet:     pexels(6010873),
-  // pexels.com/photo/photo-of-vegetable-salad-in-bowls-1640770
-  food:       pexels(1640770),
-  // pexels.com/photo/male-doctor-doing-an-online-consultation-8376152
-  doctorDesk: pexels(8376152, 1800),
+  // Topo no celular (foto vertical). pexels.com/photo/7330711 — MART PRODUCTION
+  heroMobile: "/photos/heroMobile.jpg",
+  // pexels.com/photo/4474047 — Ketut Subiyanto
+  videoCall:  "/photos/videoCall.jpg",
+  // pexels.com/photo/724300 — Cats Coming
+  food:       "/photos/food.jpg",
+  // pexels.com/photo/8376291 — Tima Miroshnichenko
+  doctorDesk: "/photos/doctorDesk.jpg",
 } as const;
 
 // Telas de autenticação: cada uma com foto própria, sem repetir as da landing.
 export const AUTH_PHOTOS = {
-  // pexels.com/photo/active-woman-walking-on-the-beach-4939431
-  // (saiu do hero da landing quando entrou o celular 3D)
-  login:          pexels(4939431, 1600),
-  // pexels.com/photo/woman-preparing-food-on-the-table-3756481
-  register:       pexels(3756481, 1600),
-  // pexels.com/photo/a-doctor-using-a-laptop-7195379
-  registerDoctor: pexels(7195379, 1600),
-  // pexels.com/photo/woman-smiling-while-using-phone-on-sofa-in-home-27176011
-  password:       pexels(27176011, 1600),
+  // pexels.com/photo/4939431 — Nataliya Vaitkevich
+  login:          "/photos/login.jpg",
+  // pexels.com/photo/5495142 — Anastasia Shuraeva
+  register:       "/photos/register.jpg",
+  // pexels.com/photo/7195379 — Karola G (kaboompics)
+  registerDoctor: "/photos/registerDoctor.jpg",
+  // pexels.com/photo/27176011 — Helena Lopes
+  password:       "/photos/password.jpg",
 } as const;

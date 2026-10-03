@@ -82,4 +82,13 @@ final em KB. O agente da nuvem lê aqui antes de mexer em fotos.
 
 | Chave | Link | Autor | Licença | KB |
 |---|---|---|---|---|
-| | | | | |
+| `heroMobile` | https://www.pexels.com/photo/7330711/ | MART PRODUCTION | Pexels License (uso comercial, sem atribuição obrigatória) | 177 |
+| `videoCall` | https://www.pexels.com/photo/4474047/ | Ketut Subiyanto | Pexels License (uso comercial, sem atribuição obrigatória) | 439 |
+| `food` | https://www.pexels.com/photo/724300/ | Cats Coming | Pexels License (uso comercial, sem atribuição obrigatória) | 402 |
+| `doctorDesk` | https://www.pexels.com/photo/8376291/ | Tima Miroshnichenko | Pexels License (uso comercial, sem atribuição obrigatória) | 254 |
+| `login` | https://www.pexels.com/photo/4939431/ | Nataliya Vaitkevich | Pexels License (uso comercial, sem atribuição obrigatória) | 708 |
+| `register` | https://www.pexels.com/photo/5495142/ | Anastasia Shuraeva | Pexels License (uso comercial, sem atribuição obrigatória) | 314 |
+| `registerDoctor` | https://www.pexels.com/photo/7195379/ | Karola G (kaboompics) || 245 |
+| `password` | https://www.pexels.com/photo/27176011/ | Helena Lopes | Pexels License (uso comercial, sem atribuição obrigatória) | 332 |
+
+Notas: originais todos com lado maior ≥ 4000 px. `videoCall` foi cortada em 3:4. `login` ficou acima de 500 KB (708) de propósito, para manter a textura do mar sem artefatos. Foram descartadas fotos com marca visível (logo Apple em `7195308`), relógio na parede (`7195424`), frascos de remédio no fundo (`8376152`, `8376339`, `8376227`); `registerDoctor` voltou à foto anterior (`7195379`) a pedido do dono e máscara/doente (`4031710`, `7195087`).
