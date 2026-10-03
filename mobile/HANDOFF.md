@@ -30,8 +30,19 @@ ficou tão atrasado que chegou a não compilar, e a casa do app passou a ser `mo
 sincronizar. Não existe mais subtree; o remote `flutter-mobile` do clone local do site é
 resto daquela época e não é usado.
 
-Commits que só tocam `mobile/` não disparam build do site na Vercel (`ignoreCommand` no
-`vercel.json`).
+### Deploy na Vercel
+
+- **Só a produção altera o banco.** O `npm run build` (`package.json`) roda
+  `prisma db push` + `prisma/seed-demo.ts` em produção; numa prévia
+  (`VERCEL_ENV=preview`) ele só faz `prisma generate` + `next build` e não toca o banco
+  (commit `a11379b`). Rodado localmente, o `VERCEL_ENV` fica vazio e ele **altera** o
+  banco de produção — por isso não se roda `npm run build` local.
+- O `vercel.json` tem um `ignoreCommand` que decide se o build roda:
+  - fora da `main`, só builda se a mensagem do commit tiver `[preview]`;
+  - push cujo último commit toca só `mobile/` **não** builda o site;
+  - mensagem com `[build]` **sempre** builda, em qualquer branch — use em commit vazio
+    de redeploy (ex.: depois de trocar variável de ambiente no painel), que de outro jeito
+    seria pulado por não mudar nada fora de `mobile/`.
 
 Atenção: a pasta `app/` do site **não** é o aplicativo — é a pasta de rotas do Next.js
 (App Router: páginas + API).
@@ -99,7 +110,8 @@ webhooks/asaas
 - Landing do site com seção "App Android": QR code real (`public/qr-app.svg`, gerado com o
   pacote Dart `qr`) apontando pra `/app.apk` (build arm64 real, ~19 MB, hospedado no próprio
   site, headers corretos pro Android instalar direto).
-- Dados de demonstração: `prisma/seed-demo.ts` roda em todo build da Vercel (idempotente).
+- Dados de demonstração: `prisma/seed-demo.ts` roda no build de **produção** da Vercel
+  (idempotente; prévias não rodam seed nem `db push` — ver "Deploy na Vercel").
   Cria médicos em cada situação de credenciamento (aprovado, pendente com CRM ativo, pendente
   com CRM suspenso, reprovado), pacientes com histórico completo (consultas pagas, evolução
   de peso no prontuário, receitas emitidas, follow-up respondido), base de medicamentos.
@@ -138,7 +150,7 @@ webhooks/asaas
 | Médico | `dr.silva@telemed.com.br` | `Doctor@12345` |
 | Paciente | `maria@email.com` | `Patient@12345` — **CPF inválido (22222222222), Asaas recusa cobrança dela; não usar pra testar pagamento** |
 
-### Seed de demonstração (`prisma/seed-demo.ts` — roda em todo deploy, idempotente)
+### Seed de demonstração (`prisma/seed-demo.ts` — roda em todo deploy de produção, idempotente; prévias não)
 Senha de **todos**: `Demo@12345`.
 - Pacientes fictícios (`*@demo.emacrescere.app`): históricos variados (consulta cancelada,
   concluída, agendada, rascunho de receita).
