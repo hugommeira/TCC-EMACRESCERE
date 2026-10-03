@@ -20,7 +20,7 @@ que já pode ligar no site.
 |---|---|---|---|---|---|---|---|
 | 1 | `logo-heart` | ✅ | 57,1 | 6.588 | ✅ | Hugo (03/10/2026) | 1 material, textura 256² WebP (2 KB). |
 | 2 | `phone-app` | ✅ | 22,5 | 2.254 | ✅ | Hugo (03/10/2026) | 3 materiais; tela provisória `tela-3-videochamada` (WebP 6 KB embutido). |
-| 3 | `seal-signature` | ⬜ | — | — | ⬜ | — | |
+| 3 | `seal-signature` | ✅ | 39,6 | 6.888 | ✅ | Hugo (03/10/2026) | 4 materiais, sem textura. |
 
 ## Decisões tomadas (preencha ao decidir)
 
@@ -37,6 +37,7 @@ que já pode ligar no site.
 | 03/10/2026 | `phone-app`: tela provisória = `tela-3-videochamada` (a tela 1 "Agendar" não existe em `reference/screens/`). Os cantos da imagem (moldura do mockup e fundo claro) foram preenchidos com a cor da própria tela: `art/3d-src/phone-screen_placeholder.png`. | Claude (aprovado pelo Hugo) |
 | 03/10/2026 | `phone-app`: poster renderizado com a tela provisória de 260×540 ampliada (texto um pouco macio). Refazer o poster quando as telas definitivas 1040×2160 chegarem em `public/3d/screens/`. | Claude (aprovado pelo Hugo) |
 | 03/10/2026 | `phone-app`: borda do corpo com chanfro de 0,0028 m em 4 segmentos; botões: 2 de volume à esquerda e 1 de energia à direita, saliência de 0,7 mm. | Claude |
+| 03/10/2026 | `seal-signature`: borda com 14 lóbulos senoidais (amplitude 2,2 mm; diâmetro máx. 0,10 m); anel `Seal_Ring` em relevo **na frente e no verso** (para o giro não mostrar um verso vazio); escudo com 2,4 mm de relevo e check com mais 2,2 mm. Todos os materiais com metálico 0 (evita cara de medalha esportiva). | Claude (aprovado pelo Hugo) |
 
 ## Entregas para o agente da nuvem
 
@@ -55,7 +56,8 @@ notas para o código: (ex.: pivô no centro, frente = +Z no glTF)
 
 ## Pendências e dúvidas
 
-- (nada por enquanto)
+- Totais: soma dos `.glb` = 118,7 KB (limite 700 KB); tudo em `public/3d/` = 287 KB (limite 1,5 MB).
+- Refazer o poster do `phone-app` quando as telas definitivas (1040×2160) chegarem em `public/3d/screens/`.
 
 ## Entregas prontas
 
@@ -83,4 +85,17 @@ tamanho: 22,5 KB · 2.254 triângulos
 notas para o código: trocar a tela em MAT_Screen.emissiveMap (flipY = false, padrão do
   GLTFLoader; UV 0–1, U → direita, V → cima, imagem em pé); a textura provisória é 260×540
   (não potência de 2, ok no WebGL2); meshopt; pivô no centro; frente = +Z; sem animação.
+```
+
+```
+asset: seal-signature
+arquivo: public/3d/seal-signature.glb
+poster: public/3d/posters/seal-signature.webp (+ @1x)
+objetos: Seal (Empty raiz) > Seal_Disc, Seal_Ring, Seal_Shield, Seal_Check
+materiais: MAT_Seal_Disc (#10B981, rug. 0,3), MAT_Seal_Ring (#2DD4BF, rug. 0,25),
+  MAT_Seal_Shield (#064E3B), MAT_Seal_Check (#FFFFFF, rug. 0,3)
+tamanho: 39,6 KB · 6.888 triângulos
+notas para o código: o pulo do Seal_Check pode ser feito escalando o próprio nó (origem dele
+  em 0,0,0 do conjunto; para escalar a partir do centro do check, compensar a posição);
+  meshopt; pivô no centro; frente = +Z; sem animação.
 ```
