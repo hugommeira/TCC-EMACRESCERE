@@ -49,9 +49,8 @@ e hooks. Isso é adequado ao tamanho atual e deve permanecer.
 5. O link "Fale conosco" do bloco "Para quem" apontava para `#contato`, que não
    existe. O bloco foi refeito com CTAs reais (`/auth/register` e
    `/auth/register/medico`).
-6. Os rótulos em caixa alta acima dos títulos e o degradê verde→teal em todo
-   botão deixavam a página com cara de template. Os botões agora são sólidos
-   (`brand-600`) e os rótulos ficaram em caixa normal.
+6. Textos em `slate-400` sobre branco na landing passaram para `slate-500`
+   pelo mesmo motivo de contraste.
 
 ## O que precisa ser corrigido (próximas etapas)
 
@@ -85,32 +84,28 @@ e hooks. Isso é adequado ao tamanho atual e deve permanecer.
 
 ## O que foi feito nesta etapa (área pública)
 
-Referências estudadas: os sites enviados (VitalCare, Celltrion, SalvaMedic,
-Medora, Synora), o modelo on-demand do Blis citado no TCC (seção 3.1.1), o
-design system do NHS e a atualização do GOV.UK para WCAG 2.2 AA.
+Direção: evoluir o site atual, sem trocar a identidade. Ficaram o degradê
+verde→teal dos botões, o título com "saúde metabólica" em degradê, o fundo
+verde-claro com manchas desfocadas, o cartão "Emacrescere ao vivo", o selo
+de CRM, os cards com ícone e o CTA final em degradê.
 
-- **Hero**: título grande em Fraunces, foto real do projeto e a curva de
-  evolução do peso se desenhando sobre ela, com os selos "CRM verificado" e
-  "Receita com assinatura digital" e o cartão "Evolução do peso". É a única
-  animação automática da página e representa uma função real do produto.
-- **Faixa de confiança** com cinco garantias objetivas.
-- **Trilho de cards com fotos** (substitui a grade de Benefícios, mesmo
-  conteúdo), rolável por toque ou pelos botões.
-- **Como funciona** em seção escura: é uma sequência real, então os números
-  grandes se justificam; a linha de progresso e os números acendem ao entrar
-  na tela.
-- **Painéis Paciente / Médico** lado a lado com foto que se revela, deixando
-  claro que são duas experiências diferentes, cada uma com seu cadastro.
-- **CTA final** com o preço vindo de `CONSULTATION_FEE_REAIS`.
-- Primitivos novos: `components/landing/motion/Reveal.tsx` (IntersectionObserver,
-  dispara uma vez), `components/landing/Photo.tsx` (fallback de marca se a foto
-  remota falhar) e `components/landing/photos.ts` (todas as fotos num lugar só,
-  para trocar por fotos próprias).
-- Animações só por CSS (sem biblioteca nova). Conteúdo nunca fica escondido
-  sem JS: o estado inicial só vale com `html.js`.
-
-Protótipo no Figma: arquivo "Emacrescere — Landing redesign", com a sequência
-de entrada do hero animada (keyframes).
+- **Hero**: entrada animada em sequência; os itens do cartão "ao vivo"
+  aparecem um a um; a curva de evolução do peso se desenha sobre a foto; o
+  selo de CRM flutua devagar; o degradê do título tem um brilho lento.
+- **Como funciona**: os mesmos 4 cards, com entrada escalonada ao rolar e
+  faixa de cor no hover.
+- **Benefícios**: os 6 cards com ícone ganharam uma coluna de foto ao lado
+  (mosaico) e o ícone acende no hover.
+- **Para quem**: foto em alta resolução que se revela ao rolar; o link
+  quebrado `#contato` virou o cadastro de médicos.
+- **Para médicos** (bloco novo): a área profissional como experiência
+  própria (fila, prontuário, prescrição ANVISA, certificado A1).
+- **Cabeçalho**: link "Para médicos" e barra de progresso de leitura.
+- Fotos do Pexels (licença livre) centralizadas em
+  `components/landing/photos.ts`, com fallback de marca.
+- Primitivos: `components/landing/motion/Reveal.tsx` e
+  `components/landing/Photo.tsx`. Animações só por CSS, sem biblioteca nova;
+  com `prefers-reduced-motion` tudo nasce parado e visível.
 
 ## Fora do escopo desta etapa
 

@@ -15,16 +15,16 @@ export function DownloadApp() {
               <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden />
               App Android
             </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-ink-950 sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
               Leve o acompanhamento no bolso
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-ink-600 sm:text-lg">
+            <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
               Consultas agendadas, chat com o médico, receitas e evolução de peso —
               tudo no app Emacrescere. Aponte a câmera do celular para o QR code
               ou toque no botão para baixar.
             </p>
 
-            <ol className="mt-6 space-y-2 text-sm text-ink-600">
+            <ol className="mt-6 space-y-2 text-sm text-slate-600">
               <li className="flex gap-2"><span className="font-semibold text-brand-700">1.</span> Baixe o arquivo <code className="rounded bg-slate-100 px-1">app.apk</code> no Android.</li>
               <li className="flex gap-2"><span className="font-semibold text-brand-700">2.</span> Ao abrir, permita a instalação de apps desta fonte (o Android pede uma vez).</li>
               <li className="flex gap-2"><span className="font-semibold text-brand-700">3.</span> Entre com a mesma conta do site.</li>
@@ -34,7 +34,7 @@ export function DownloadApp() {
               <a
                 href={APK_PATH}
                 download="emacrescere.apk"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 hover:bg-brand-700 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-200"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-7 py-3.5 text-base font-semibold text-white shadow-md shadow-brand-500/25 transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/40"
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
@@ -42,7 +42,7 @@ export function DownloadApp() {
                 Baixar APK (Android)
               </a>
             </div>
-            <p className="mt-3 text-xs text-ink-500">
+            <p className="mt-3 text-xs text-slate-500">
               Versão de teste (arm64, ~19 MB). Distribuição pela Google Play em breve.
             </p>
           </div>
@@ -56,8 +56,8 @@ export function DownloadApp() {
                 height={260}
                 className="h-[260px] w-[260px]"
               />
-              <p className="mt-4 text-center text-sm font-medium text-ink-700">Escaneie para baixar</p>
-              <p className="mt-1 text-center text-xs text-ink-500">tcc-emacrescere.vercel.app/app.apk</p>
+              <p className="mt-4 text-center text-sm font-medium text-slate-700">Escaneie para baixar</p>
+              <p className="mt-1 text-center text-xs text-slate-500">tcc-emacrescere.vercel.app/app.apk</p>
             </div>
           </div>
         </div>

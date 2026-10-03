@@ -31,15 +31,15 @@ export function MobileCtaBar({ priceLabel }: { priceLabel: string }) {
     >
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-ink-950">
-            {priceLabel} <span className="font-medium text-ink-500">/ consulta</span>
+          <p className="truncate text-sm font-bold text-slate-900">
+            {priceLabel} <span className="font-medium text-slate-500">/ consulta</span>
           </p>
-          <p className="truncate text-xs text-ink-500">Sem espera, sem burocracia</p>
+          <p className="truncate text-xs text-slate-500">Sem espera, sem burocracia</p>
         </div>
         <Link
           href="/auth/register"
           tabIndex={visible ? 0 : -1}
-          className="inline-flex min-h-[44px] flex-none items-center rounded-full bg-brand-600 hover:bg-brand-700 px-6 text-sm font-semibold text-white focus:outline-none focus:ring-4 focus:ring-brand-500/30"
+          className="inline-flex min-h-[44px] flex-none items-center rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-6 text-sm font-semibold text-white shadow-md shadow-brand-500/25 focus:outline-none focus:ring-4 focus:ring-brand-500/30"
         >
           Começar
         </Link>

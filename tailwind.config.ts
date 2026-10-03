@@ -92,6 +92,14 @@ const config: Config = {
           from: { opacity: "0", transform: "scale(0.96)" },
           to:   { opacity: "1", transform: "scale(1)" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%":      { transform: "translateY(-8px)" },
+        },
+        shimmer: {
+          from: { backgroundPosition: "200% 0" },
+          to:   { backgroundPosition: "-200% 0" },
+        },
       },
       transitionTimingFunction: {
         "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
@@ -100,6 +108,8 @@ const config: Config = {
         rise:            "rise 0.7s cubic-bezier(0.16,1,0.3,1) both",
         draw:            "draw 1.6s cubic-bezier(0.65,0,0.35,1) both",
         "scale-in":      "scale-in 0.9s cubic-bezier(0.16,1,0.3,1) both",
+        float:           "float 6s ease-in-out infinite",
+        shimmer:         "shimmer 6s linear infinite",
         "fade-in":       "fade-in 0.3s ease-out forwards",
         "slide-in-right": "slide-in-right 0.3s ease-out forwards",
         pulse:           "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite",

@@ -1,108 +1,129 @@
 import Link from "next/link";
-import type { Route } from "next";
 import { Photo } from "./Photo";
 import { PHOTOS } from "./photos";
 import { Reveal } from "./motion/Reveal";
 
-// Paciente e médico têm jornadas diferentes na plataforma; cada um ganha o
-// seu painel, com o que de fato encontra ao entrar.
-const AUDIENCES = [
+const REASONS = [
   {
-    id: "para-pacientes",
-    eyebrow: "Para pacientes",
-    title: "Acompanhamento que continua depois da consulta",
-    body: "Você registra o peso, conversa com o médico pelo chat e encontra receitas e exames no mesmo painel.",
-    points: [
-      "Fila on-demand ou horário marcado",
-      "Chat com o médico da consulta",
-      "Cancelamento grátis até 24 h antes",
-    ],
-    cta: { label: "Criar conta de paciente", href: "/auth/register" },
-    photo: PHOTOS.activity,
-    alt: "Mulher caminhando na praia",
-    tone: "light",
+    title: "Você já tentou dietas sem sucesso",
+    description:
+      "Acompanhamento médico real e contínuo, com plano individualizado para o seu corpo e rotina.",
   },
   {
-    id: "para-medicos",
-    eyebrow: "Para médicos",
-    title: "Uma área profissional feita para o atendimento",
-    body: "Fila de pacientes, prontuário, anexos da consulta e prescrição com busca na base da ANVISA, assinada com o seu certificado A1.",
-    points: [
-      "Cadastro com CRM e aprovação da equipe",
-      "Prontuário e exames enviados pelo paciente",
-      "Receita assinada com ICP-Brasil",
-    ],
-    cta: { label: "Cadastrar como médico", href: "/auth/register/medico" },
-    photo: PHOTOS.doctorDesk,
-    alt: "Médico em consulta online pelo notebook",
-    tone: "dark",
+    title: "Tem IMC acima de 27 ou comorbidades",
+    description:
+      "Avaliação especializada com médicos focados em obesidade e doenças metabólicas, para um plano individualizado.",
   },
-] as const;
+  {
+    title: "Quer um processo digital e prático",
+    description:
+      "Tudo online: agendamento, consulta por vídeo, receita digital quando indicada e seu histórico sempre à mão.",
+  },
+  {
+    title: "Busca segurança e profissionais sérios",
+    description:
+      "Médicos com CRM ativo, prescrição conforme a Resolução CFM 2.314/2022 e medicamento, se prescrito, comprado em farmácia autorizada.",
+  },
+];
 
 export function ForWhom() {
   return (
-    <div>
-      {AUDIENCES.map((a, i) => {
-        const dark = a.tone === "dark";
-        const photoFirst = i % 2 === 0;
-        return (
-          <section
-            key={a.id}
-            id={a.id}
-            aria-labelledby={`${a.id}-titulo`}
-            className={`grid lg:grid-cols-2 ${dark ? "bg-brand-900 text-white" : "bg-ink-50 text-ink-950"}`}
-          >
-            <Reveal
-              variant="clip"
-              className={`relative h-[320px] sm:h-[420px] lg:h-auto lg:min-h-[640px] ${photoFirst ? "" : "lg:order-2"}`}
-            >
-              <Photo src={a.photo} alt={a.alt} sizes="(min-width: 1024px) 50vw, 100vw" className="absolute inset-0" />
-            </Reveal>
+    <section
+      id="para-quem"
+      className="relative overflow-hidden bg-gradient-to-b from-white to-brand-50/40 py-24 sm:py-28"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:grid lg:grid-cols-12 lg:gap-12 lg:px-8">
+        <div className="lg:col-span-5">
+          <Reveal variant="clip" className="relative overflow-hidden rounded-3xl shadow-xl ring-1 ring-slate-900/5">
+            <Photo
+              src={PHOTOS.food}
+              alt="Tigelas com salada e legumes frescos"
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              className="relative aspect-[4/5] w-full"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-slate-900/45 via-transparent"
+            />
 
-            <div className="flex flex-col justify-center px-4 py-16 sm:px-12 lg:px-20 lg:py-24 xl:px-24">
-              <span aria-hidden className="block h-0.5 w-16 bg-brand-500" />
-              <p className={`mt-6 text-[15px] font-medium ${dark ? "text-brand-200" : "text-brand-800"}`}>{a.eyebrow}</p>
-              <h2
-                id={`${a.id}-titulo`}
-                className="mt-3 max-w-lg text-balance font-display text-4xl font-semibold leading-[1.08] tracking-[-0.02em] sm:text-[2.8rem]"
-              >
-                {a.title}
-              </h2>
-              <p className={`mt-5 max-w-lg text-[17px] leading-relaxed ${dark ? "text-white/80" : "text-ink-600"}`}>{a.body}</p>
-
-              <ul className="mt-7 space-y-3">
-                {a.points.map((p) => (
-                  <li key={p} className="flex items-center gap-3 text-[15px]">
-                    <svg viewBox="0 0 24 24" className="h-5 w-5 flex-none text-brand-500" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M5 12l5 5L20 7" />
-                    </svg>
-                    {p}
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href={a.cta.href as Route}
-                className="group mt-10 inline-flex w-fit min-h-[44px] items-center gap-3 rounded-full text-[15px] font-semibold focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/40"
-              >
-                {a.cta.label}
-                <span
-                  aria-hidden
-                  className={`grid h-10 w-10 place-items-center rounded-full border transition-colors duration-200 ${
-                    dark
-                      ? "border-white/40 group-hover:border-white group-hover:bg-white group-hover:text-brand-900"
-                      : "border-ink-200 group-hover:border-ink-950 group-hover:bg-ink-950 group-hover:text-white"
-                  }`}
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 6l6 6-6 6" />
+            <div className="absolute bottom-6 left-6 right-6 rounded-2xl bg-white/95 p-4 shadow-lg backdrop-blur">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M12 2v6M12 22v-6M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5" />
+                    <circle cx="12" cy="12" r="4" />
                   </svg>
                 </span>
-              </Link>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Acompanhamento médico
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    Plano individualizado para você
+                  </p>
+                </div>
+              </div>
             </div>
-          </section>
-        );
-      })}
-    </div>
+          </Reveal>
+        </div>
+
+        <div className="mt-12 lg:col-span-7 lg:mt-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+            Para quem
+          </p>
+          <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+            Feito para quem busca emagrecimento com saúde
+          </h2>
+          <p className="mt-4 text-lg leading-relaxed text-slate-600">
+            Cadastre-se como paciente e tenha acesso a uma jornada completa,
+            do agendamento ao acompanhamento.
+          </p>
+
+          <ul className="mt-10 space-y-3">
+            {REASONS.map((r, i) => (
+              <Reveal
+                as="li"
+                key={r.title}
+                delay={i * 100}
+                className="flex gap-4 rounded-2xl p-3 transition-colors duration-200 hover:bg-white hover:shadow-sm hover:ring-1 hover:ring-slate-200"
+              >
+                <span className="mt-1 inline-flex h-7 w-7 flex-none items-center justify-center rounded-full bg-brand-50 text-brand-600 ring-1 ring-brand-100">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M5 12l5 5L20 7" />
+                  </svg>
+                </span>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {r.title}
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                    {r.description}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </ul>
+
+          <div className="mt-10">
+            <Link
+              href="/auth/register"
+              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-brand-500/40 focus:outline-none focus:ring-4 focus:ring-brand-500/30"
+            >
+              Quero ser paciente
+              <svg viewBox="0 0 24 24" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <p className="mt-3 text-xs text-slate-500">
+              É médico?{" "}
+              <Link href="/auth/register/medico" className="font-medium text-brand-700 hover:underline">
+                Cadastre-se pela área profissional
+              </Link>
+              , informando seu CRM.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

@@ -1,121 +1,145 @@
-"use client";
-
-import { useRef } from "react";
+import { Reveal } from "./motion/Reveal";
 import { Photo } from "./Photo";
 import { PHOTOS } from "./photos";
 
-// O que o paciente encontra na plataforma, cada item com uma foto. Mesmo
-// conteúdo da antiga grade de benefícios, sem prometer resultado clínico.
-const ITEMS = [
+const BENEFITS = [
   {
     title: "Médicos com CRM verificado",
-    description: "Especialistas em obesidade e doenças metabólicas, aprovados pela equipe depois de conferido o CRM.",
-    photo: PHOTOS.doctor,
-    alt: "Médica sorrindo, de jaleco e estetoscópio",
-  },
-  {
-    title: "Consulta por vídeo",
-    description: "Entre na fila on-demand ou marque um horário. O médico chama você na sala da consulta.",
-    photo: PHOTOS.videoCall,
-    alt: "Médica em videochamada pelo notebook",
+    description:
+      "Cada médico é aprovado pela equipe depois de conferida a situação do CRM.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 11l-3 3-1.5-1.5" />
+      </svg>
+    ),
   },
   {
     title: "Receita com assinatura digital",
-    description: "Se o médico indicar, a receita sai na plataforma, assinada com o certificado ICP-Brasil dele.",
-    photo: PHOTOS.tablet,
-    alt: "Médico e paciente olhando um tablet juntos",
+    description:
+      "Se o médico indicar, ele emite a receita na plataforma, assinada com o certificado digital dele, com data de validade.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    ),
   },
   {
-    title: "Exames e evolução",
-    description: "Envie exames e registre o peso. Você e o médico acompanham o mesmo histórico.",
-    photo: PHOTOS.hero,
-    alt: "Pessoa medindo a glicemia com glicosímetro",
+    title: "Farmácias autorizadas",
+    description:
+      "Caso o médico prescreva, você compra em qualquer farmácia autorizada — sempre com receita válida.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2V9z" />
+        <path d="M11 13h2M12 12v2" />
+      </svg>
+    ),
+  },
+  {
+    title: "Acompanhamento pelo app",
+    description:
+      "Acompanhe seu progresso, suas consultas e receitas, e converse com seu médico pelo chat da consulta.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+        <rect x="5" y="2" width="14" height="20" rx="2.5" />
+        <path d="M11 18h2" />
+      </svg>
+    ),
+  },
+  {
+    title: "Pagamento seguro",
+    description:
+      "Plataforma com PIX, cartão e boleto — pagamentos processados com criptografia.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+        <rect x="2" y="6" width="20" height="12" rx="2" />
+        <path d="M2 10h20" />
+      </svg>
+    ),
   },
   {
     title: "Orientação nutricional",
-    description: "Guias sobre alimentação saudável. Não substituem a consulta com nutricionista.",
-    photo: PHOTOS.food,
-    alt: "Tigelas com salada e legumes frescos",
-  },
-  {
-    title: "Rotina e movimento",
-    description: "O acompanhamento olha para o seu dia a dia, não só para a balança.",
-    photo: PHOTOS.activity,
-    alt: "Mulher caminhando na praia",
+    description:
+      "Guias e suporte sobre alimentação saudável — não substitui consulta com nutricionista.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+        <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z" />
+        <path d="M9 9c1 1 2 1.5 3 1.5S14 10 15 9" />
+      </svg>
+    ),
   },
 ];
 
 export function Benefits() {
-  const rail = useRef<HTMLUListElement>(null);
-
-  const scroll = (dir: 1 | -1) => {
-    const el = rail.current;
-    if (!el) return;
-    const card = el.querySelector("li");
-    const step = card ? card.getBoundingClientRect().width + 20 : el.clientWidth * 0.8;
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
-  };
-
   return (
-    <section id="jornada" aria-labelledby="jornada-titulo" className="bg-white py-20 sm:py-28">
+    <section id="beneficios" className="bg-white py-24 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            <h2 id="jornada-titulo" className="text-balance font-display text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink-950 sm:text-5xl">
-              Tudo o que o acompanhamento precisa, num lugar só
-            </h2>
-            <p className="mt-4 max-w-xl text-lg leading-relaxed text-ink-600">
-              Consulta, receita, exames e evolução ficam juntos. Você não repete
-              sua história a cada atendimento.
-            </p>
-          </div>
-
-          <div className="hidden gap-2.5 md:flex">
-            <RailButton label="Anterior" onClick={() => scroll(-1)} d="M15 6l-6 6 6 6" />
-            <RailButton label="Próximo" onClick={() => scroll(1)} d="M9 6l6 6-6 6" />
-          </div>
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+            Por que Emacrescere
+          </p>
+          <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+            Segurança e praticidade em cada etapa
+          </h2>
+          <p className="mt-4 text-lg text-slate-600">
+            Plataforma de telessaúde com médicos certificados pelo CFM e
+            tecnologia em conformidade com a LGPD.
+          </p>
         </div>
-      </div>
 
-      {/* Trilho alinhado à grade à esquerda e sangrando à direita */}
-      <ul
-        ref={rail}
-        className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-4 pb-4 [scrollbar-width:none] sm:px-6 lg:px-[max(2rem,calc((100vw_-_80rem)/2_+_2rem))] lg:scroll-px-[max(2rem,calc((100vw_-_80rem)/2_+_2rem))] [&::-webkit-scrollbar]:hidden"
-      >
-        {ITEMS.map((item) => (
-          <li
-            key={item.title}
-            className="group relative h-[420px] w-[78%] flex-none snap-start overflow-hidden rounded-3xl sm:w-[300px] lg:h-[440px]"
+        <ul className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {/* Coluna de foto: dá rosto ao que os cards descrevem */}
+          <Reveal
+            as="li"
+            variant="clip"
+            className="relative min-h-[380px] overflow-hidden rounded-3xl md:col-span-2 lg:col-span-1 lg:row-span-3"
           >
             <Photo
-              src={item.photo}
-              alt={item.alt}
-              sizes="(min-width: 640px) 300px, 78vw"
-              className="absolute inset-0 transition-transform duration-700 ease-out-expo group-hover:scale-[1.04]"
+              src={PHOTOS.videoCall}
+              alt="Médica em videochamada pelo notebook"
+              sizes="(min-width: 1024px) 33vw, 100vw"
+              className="absolute inset-0"
             />
-            <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-transparent from-40% to-brand-950/90" />
-            <div className="absolute inset-x-0 bottom-0 p-6">
-              <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-white/80">{item.description}</p>
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brand-950/90 via-brand-950/20 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-7">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand-300" />
+                Consulta por vídeo
+              </span>
+              <p className="mt-4 font-display text-2xl font-semibold leading-snug text-white">
+                O médico chama você na sala, no horário marcado ou pela fila.
+              </p>
             </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
+          </Reveal>
 
-function RailButton({ label, onClick, d }: { label: string; onClick: () => void; d: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="grid h-16 w-12 place-items-center rounded-full border border-ink-200 text-ink-800 transition-colors duration-200 hover:border-ink-800 hover:bg-ink-950 hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/30"
-    >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d={d} />
-      </svg>
-    </button>
+          {BENEFITS.map((b, i) => (
+            <Reveal
+              as="li"
+              key={b.title}
+              delay={(i % 2) * 120}
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-colors duration-300 hover:border-brand-200 hover:shadow-xl hover:shadow-slate-900/5"
+            >
+              <span
+                aria-hidden
+                className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-brand-100 to-teal-100 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+              />
+
+              <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand-50 to-teal-50 text-brand-700 ring-1 ring-brand-100 transition-colors duration-300 group-hover:from-brand-500 group-hover:to-teal-500 group-hover:text-white group-hover:ring-transparent">
+                {b.icon}
+              </span>
+
+              <h3 className="relative mt-5 text-base font-semibold text-slate-900">
+                {b.title}
+              </h3>
+              <p className="relative mt-2 text-sm leading-relaxed text-slate-600">
+                {b.description}
+              </p>
+            </Reveal>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }

@@ -7,6 +7,7 @@ import { Hero }         from "@/components/landing/Hero";
 import { HowItWorks }   from "@/components/landing/HowItWorks";
 import { Benefits }     from "@/components/landing/Benefits";
 import { ForWhom }      from "@/components/landing/ForWhom";
+import { ForDoctors }   from "@/components/landing/ForDoctors";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Faq }          from "@/components/landing/Faq";
 import { CtaFinal }     from "@/components/landing/CtaFinal";
@@ -31,17 +32,18 @@ export default async function RootPage() {
   }
 
   return (
-    <main className="overflow-x-hidden bg-white text-ink-950">
+    <main className="overflow-x-hidden bg-white text-slate-900">
       <Header />
       <Hero />
       <TrustBar />
-      <Benefits />
       <HowItWorks />
+      <Benefits />
       <ForWhom />
+      <ForDoctors />
       <Testimonials />
       <DownloadApp />
       <Faq />
-      <CtaFinal priceLabel={formatCurrency(CONSULTATION_FEE_REAIS)} />
+      <CtaFinal />
       <Footer />
       <MobileCtaBar priceLabel={formatCurrency(CONSULTATION_FEE_REAIS)} />
     </main>

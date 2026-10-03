@@ -1,69 +1,69 @@
 const ITEMS = [
   {
-    title: "Consulta por vídeo",
-    detail: "sem sair de casa",
-    icon: <path d="M15 10l4.5-2.5v9L15 14M3 7h12v10H3z" />,
-  },
-  {
-    title: "Fila ou hora marcada",
-    detail: "você escolhe",
+    label: "Médicos verificados",
     icon: (
-      <>
-        <rect x="3" y="5" width="18" height="16" rx="2" />
-        <path d="M3 10h18M8 3v4M16 3v4" />
-      </>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 11l-3 3-1.5-1.5" />
+      </svg>
     ),
   },
   {
-    title: "Receita digital",
-    detail: "quando o médico indicar",
+    label: "Pix, cartão ou boleto",
     icon: (
-      <>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z" />
+        <path d="M16 7V5a4 4 0 0 0-8 0v2" />
+        <path d="M12 12v4M10 14h4" />
+      </svg>
+    ),
+  },
+  {
+    label: "Receita assinada digitalmente",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2v6h6M9 13h6M9 17h4" />
-      </>
+        <path d="M14 2v6h6" />
+        <path d="M9 13h6M9 17h4" />
+      </svg>
     ),
   },
   {
-    title: "CRM verificado",
-    detail: "de cada médico",
+    label: "Conformidade LGPD",
     icon: (
-      <>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         <path d="M9 12l2 2 4-4" />
-      </>
+      </svg>
     ),
   },
   {
-    title: "Pix, cartão ou boleto",
-    detail: "pagamento seguro",
+    label: "Atendimento humanizado",
     icon: (
-      <>
-        <rect x="2" y="6" width="20" height="12" rx="2" />
-        <path d="M2 10h20" />
-      </>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
     ),
   },
 ];
 
 export function TrustBar() {
   return (
-    <div className="border-y border-ink-100 bg-white">
-      <ul className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-5 px-4 py-7 sm:px-6 md:grid-cols-3 lg:grid-cols-5 lg:px-8">
-        {ITEMS.map((item) => (
-          <li key={item.title} className="flex items-center gap-3.5">
-            <span aria-hidden className="grid h-11 w-11 flex-none place-items-center rounded-2xl bg-ink-50 text-brand-700">
-              <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-                {item.icon}
-              </svg>
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-ink-950">{item.title}</span>
-              <span className="block text-[13px] text-ink-500">{item.detail}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
+    <div className="border-y border-slate-100 bg-white">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:justify-between">
+          {ITEMS.map((item) => (
+            <li
+              key={item.label}
+              className="flex items-center gap-2 text-sm text-slate-600"
+            >
+              <span className="text-brand-600" aria-hidden>{item.icon}</span>
+              <span className="font-medium">{item.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
