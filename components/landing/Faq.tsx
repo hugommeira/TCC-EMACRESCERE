@@ -46,10 +46,10 @@ export function Faq() {
   return (
     <section id="faq" className="bg-brand-50/60 py-24 sm:py-28">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+        <p className="text-[15px] font-medium text-brand-800">
           Perguntas frequentes
         </p>
-        <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+        <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-ink-950 sm:text-5xl">
           Tire suas dúvidas
         </h2>
 
@@ -70,12 +70,12 @@ export function Faq() {
                   aria-expanded={isOpen}
                   aria-controls={`faq-${i}`}
                 >
-                  <span className="text-base font-medium text-slate-900">
+                  <span className="text-base font-medium text-ink-950">
                     {item.q}
                   </span>
                   <span
                     aria-hidden
-                    className={`flex h-7 w-7 flex-none items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all duration-200 ${
+                    className={`flex h-7 w-7 flex-none items-center justify-center rounded-full bg-slate-100 text-ink-600 transition-all duration-200 ${
                       isOpen ? "rotate-180 bg-brand-500 text-white" : ""
                     }`}
                   >
@@ -91,7 +91,7 @@ export function Faq() {
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <p className="px-5 pb-5 text-sm leading-relaxed text-slate-600">
+                    <p className="px-5 pb-5 text-sm leading-relaxed text-ink-600">
                       {item.a}
                     </p>
                   </div>

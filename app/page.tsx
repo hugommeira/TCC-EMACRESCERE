@@ -31,17 +31,17 @@ export default async function RootPage() {
   }
 
   return (
-    <main className="overflow-x-hidden bg-white text-slate-900">
+    <main className="overflow-x-hidden bg-white text-ink-950">
       <Header />
       <Hero />
       <TrustBar />
-      <HowItWorks />
       <Benefits />
+      <HowItWorks />
       <ForWhom />
       <Testimonials />
       <DownloadApp />
       <Faq />
-      <CtaFinal />
+      <CtaFinal priceLabel={formatCurrency(CONSULTATION_FEE_REAIS)} />
       <Footer />
       <MobileCtaBar priceLabel={formatCurrency(CONSULTATION_FEE_REAIS)} />
     </main>

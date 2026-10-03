@@ -5,7 +5,7 @@
 /* ─── CSS Custom Properties ────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --color-brand:   14 165 233;   /* brand-500 */
+    --color-brand:   16 185 129;   /* brand-500 (era o azul sky-500, fora da marca) */
     --color-success: 34 197 94;    /* success-500 */
     --color-warning: 245 158 11;   /* warning-500 */
     --color-danger:  239 68  68;   /* danger-500 */
@@ -143,6 +143,29 @@
     @apply rounded-full bg-gray-300;
   }
 
+  /* Revelação ao rolar (components/landing/motion/Reveal.tsx). O estado
+     inicial só se aplica com JS ativo (html.js), então sem JS tudo aparece. */
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(var(--reveal-y, 24px));
+    transition:
+      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
+      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
+  }
+  .js .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Foto que se abre de baixo pra cima (painéis paciente/médico) */
+  .js .reveal-clip {
+    clip-path: inset(18% 0 0 0 round 0);
+    transition: clip-path 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .js .reveal-clip.is-visible {
+    clip-path: inset(0 0 0 0 round 0);
+  }
+
   /* SSE status indicator */
   .sse-dot-connected    { @apply animate-pulse bg-green-500; }
   .sse-dot-disconnected { @apply bg-red-500; }
@@ -208,5 +231,24 @@
   .table-responsive.-mx-5 {
     margin-left: 0;
     margin-right: 0;
+  }
+}
+
+/* ─── Movimento reduzido ───────────────────────────────────────────────────── */
+/* Quem pede menos movimento no sistema recebe o conteúdo já no lugar final. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .js .reveal,
+  .js .reveal-clip {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
   }
 }

@@ -32,8 +32,11 @@ const config: Config = {
           50:  "#f4f7fb",
           100: "#e6ecf4",
           200: "#c6d3e2",
-          400: "#7a8ca4",
+          300: "#a3b2c6",
+          400: "#7a8ca4", // só decorativo/ícones: 3,4:1 no branco, abaixo do AA pra texto
+          500: "#56677f", // texto secundário no branco (~5,6:1)
           600: "#3a4b66",
+          700: "#26354f",
           800: "#172033",
           900: "#0d1424",
           950: "#070b18",
@@ -76,8 +79,27 @@ const config: Config = {
           "0%, 100%": { opacity: "1" },
           "50%":       { opacity: "0.5" },
         },
+        // Sequência de entrada do hero da página inicial
+        rise: {
+          from: { opacity: "0", transform: "translateY(24px)" },
+          to:   { opacity: "1", transform: "translateY(0)" },
+        },
+        draw: {
+          from: { strokeDashoffset: "1" },
+          to:   { strokeDashoffset: "0" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.96)" },
+          to:   { opacity: "1", transform: "scale(1)" },
+        },
+      },
+      transitionTimingFunction: {
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
       },
       animation: {
+        rise:            "rise 0.7s cubic-bezier(0.16,1,0.3,1) both",
+        draw:            "draw 1.6s cubic-bezier(0.65,0,0.35,1) both",
+        "scale-in":      "scale-in 0.9s cubic-bezier(0.16,1,0.3,1) both",
         "fade-in":       "fade-in 0.3s ease-out forwards",
         "slide-in-right": "slide-in-right 0.3s ease-out forwards",
         pulse:           "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite",

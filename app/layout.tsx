@@ -58,6 +58,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${fraunces.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Marca que o JS está ativo antes da pintura: as animações de
+            revelação (.js .reveal) só escondem conteúdo nesse caso. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="min-h-screen bg-white text-gray-900 antialiased">
         <SessionProvider>{children}</SessionProvider>
         <Toaster />

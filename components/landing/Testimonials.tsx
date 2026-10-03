@@ -30,13 +30,13 @@ export function Testimonials() {
     <section className="bg-white py-16 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-[15px] font-medium text-brand-800">
             Como é usar a plataforma
           </p>
-          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink-950 sm:text-5xl">
             Três situações do dia a dia
           </h2>
-          <p className="mt-4 text-base text-slate-600 sm:text-lg">
+          <p className="mt-4 text-base text-ink-600 sm:text-lg">
             Histórias ilustrativas, com personagens fictícios, que mostram como
             a agenda, o painel e o reembolso funcionam. Não são depoimentos de
             pacientes reais, e resultados clínicos variam de pessoa para pessoa.
@@ -51,7 +51,7 @@ export function Testimonials() {
               key={r.name}
               className="flex w-[85%] flex-none snap-center flex-col rounded-3xl bg-gradient-to-br from-brand-50/60 via-white to-white p-6 ring-1 ring-slate-900/5 sm:w-auto sm:p-7"
             >
-              <blockquote className="flex-1 text-base leading-relaxed text-slate-700">
+              <blockquote className="flex-1 text-base leading-relaxed text-ink-700">
                 &ldquo;{r.quote}&rdquo;
               </blockquote>
 
@@ -60,8 +60,8 @@ export function Testimonials() {
                   {r.name.charAt(0)}
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">{r.name}</p>
-                  <p className="truncate text-xs text-slate-600">{r.role} · personagem ilustrativo</p>
+                  <p className="truncate text-sm font-semibold text-ink-950">{r.name}</p>
+                  <p className="truncate text-xs text-ink-600">{r.role} · personagem ilustrativo</p>
                 </div>
               </div>
             </li>
