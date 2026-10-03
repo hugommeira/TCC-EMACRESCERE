@@ -225,21 +225,6 @@ function HeroVisual() {
         />
         <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-slate-900/35 via-transparent" />
 
-        {/* curva de evolução desenhada sobre a foto */}
-        <svg aria-hidden viewBox="0 0 400 160" preserveAspectRatio="none" className="absolute inset-x-0 bottom-[30%] h-[22%] w-full" fill="none">
-          <path
-            d="M0 30 C 70 24, 110 60, 170 70 S 270 100, 320 118 S 380 132, 400 136"
-            pathLength={1}
-            stroke="white"
-            strokeOpacity={0.85}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeDasharray="1"
-            className="animate-draw"
-            style={d(900)}
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
       </div>
 
       {/* Cartão "ao vivo" */}
