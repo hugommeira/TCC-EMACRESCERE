@@ -52,7 +52,7 @@ export function TrustBar() {
   return (
     <div className="border-y border-slate-100 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:justify-between">
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-8">
           {ITEMS.map((item) => (
             <li
               key={item.label}

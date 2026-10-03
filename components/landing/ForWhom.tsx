@@ -116,7 +116,7 @@ export function ForWhom() {
             </Link>
             <p className="mt-3 text-xs text-slate-500">
               É médico?{" "}
-              <Link href="/auth/register/medico" className="font-medium text-brand-700 hover:underline">
+              <Link href="/auth/register/medico" className="relative font-medium text-brand-700 after:absolute after:-inset-x-1 after:-inset-y-3 after:content-[''] hover:underline">
                 Cadastre-se pela área profissional
               </Link>
               , informando seu CRM.

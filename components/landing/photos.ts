@@ -8,6 +8,9 @@ const pexels = (id: number, w = 1400) =>
 export const PHOTOS = {
   // Local: não depende de CDN, é a primeira imagem que o visitante vê.
   hero:       "/hero-mobile.jpg",
+  // Topo no celular (foto vertical).
+  // pexels.com/photo/portrait-photo-of-smiling-woman-in-black-t-shirt-and-glasses-using-her-smartphone-3769022
+  heroMobile: pexels(3769022, 1000),
   // pexels.com/photo/a-smiling-doctor-in-white-lab-coat-with-stethoscope-on-her-neck-8376309
   doctor:     pexels(8376309),
   // pexels.com/photo/a-doctor-in-a-video-conference-using-a-laptop-8376339

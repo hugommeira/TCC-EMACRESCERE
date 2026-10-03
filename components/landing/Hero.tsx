@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Photo } from "./Photo";
 import { PHOTOS } from "./photos";
 
@@ -32,14 +31,13 @@ function MobileHero() {
   return (
     <section className="relative lg:hidden">
       <div className="relative h-[56vh] min-h-[360px] max-h-[540px] w-full animate-scale-in overflow-hidden">
-        <Image
-          src={PHOTOS.hero}
-          alt="Pessoa medindo a glicemia com lanceta e glicosímetro"
-          fill
+        <Photo
+          src={PHOTOS.heroMobile}
+          alt="Mulher sorrindo usando o celular"
           priority
           // hidden on desktop: ask for the smallest candidate there
           sizes="(min-width: 1024px) 1px, 100vw"
-          className="object-cover"
+          className="absolute inset-0 [&_img]:object-[center_25%]"
         />
         <div
           aria-hidden
@@ -91,7 +89,7 @@ function MobileHero() {
           <StatCompact value="LGPD" label="Protegido" />
         </dl>
 
-        <p className="mt-5 text-[11px] leading-relaxed text-slate-500">
+        <p className="mt-5 text-xs leading-relaxed text-slate-500">
           A Emacrescere é uma plataforma de telessaúde. Não vende, dispensa ou
           indica medicamentos. Toda conduta clínica é decisão exclusiva do
           médico responsável, em consulta individualizada.
@@ -105,7 +103,7 @@ function StatCompact({ value, label }: { value: string; label: string }) {
   return (
     <div className="px-2 text-center">
       <dt className="font-display text-base font-bold text-brand-700">{value}</dt>
-      <dd className="mt-0.5 text-[11px] leading-tight text-slate-500">{label}</dd>
+      <dd className="mt-0.5 text-xs leading-tight text-slate-500">{label}</dd>
     </div>
   );
 }

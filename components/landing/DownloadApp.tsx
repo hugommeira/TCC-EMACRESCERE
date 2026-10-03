@@ -20,8 +20,11 @@ export function DownloadApp() {
             </h2>
             <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
               Consultas agendadas, chat com o médico, receitas e evolução de peso —
-              tudo no app Emacrescere. Aponte a câmera do celular para o QR code
-              ou toque no botão para baixar.
+              tudo no app Emacrescere.{" "}
+              <span className="sm:hidden">Toque no botão para baixar.</span>
+              <span className="hidden sm:inline">
+                Aponte a câmera do celular para o QR code ou toque no botão para baixar.
+              </span>
             </p>
 
             <ol className="mt-6 space-y-2 text-sm text-slate-600">
@@ -47,7 +50,8 @@ export function DownloadApp() {
             </p>
           </div>
 
-          <div className="flex justify-center lg:justify-end">
+          {/* No celular o QR não serve (a pessoa já está no aparelho): fica só o botão. */}
+          <div className="hidden justify-center sm:flex lg:justify-end">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60">
               <img
                 src="/qr-app.svg"
