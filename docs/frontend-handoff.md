@@ -80,23 +80,27 @@ npx vitest run
 
 ## 3D e Blender (próxima frente visual)
 
-As skills de Blender de [arjun988/blender-skills](https://github.com/arjun988/blender-skills)
-(MIT, só Markdown, 94 skills) estão em `.claude/skills/`. Elas mandam o
-Claude operar o Blender por MCP, então só rendem no PC com o Blender aberto.
-O `.mcp.json` do repositório de origem **não** foi copiado de propósito: ele
-roda programas de terceiros sozinho (`uvx blender-mcp`). Ligue você mesmo:
+Skills de Blender de [arjun988/blender-skills](https://github.com/arjun988/blender-skills)
+(MIT, só Markdown) em `.claude/skills/`. Do pacote original (94 skills) ficaram
+só as 17 úteis para os assets 3D do site, mais a pasta `references/`
+(compartilhada): `blender-director`, `blender-modeler`, `hard-surface`,
+`materials`, `texture-workflow`, `uv-workflow`, `lighting`, `rendering`,
+`lookdev`, `camera-cinematography`, `compositing`, `animation`,
+`stylized-style`, `realistic-style`, `asset-optimization`, `export-pipeline`
+e `qa-review`. O resto (terror, estilos de jogo, gêneros, personagens,
+exportação para Unity/Unreal/Godot) saiu; para recuperar alguma, copie-a de
+`arjun988/blender-skills/.claude/skills/`.
+
+Elas mandam o Claude operar o Blender por MCP, então só rendem no PC com o
+Blender aberto. O `.mcp.json` do repositório de origem **não** foi copiado de
+propósito: ele roda programas de terceiros sozinho (`uvx blender-mcp`). Ligue
+você mesmo:
 
 1. Instalar o Blender 3.0+ e o `uv`.
 2. No Blender: Edit → Preferences → Add-ons → Install, escolher o `addon.py`
    de [ahujasid/blender-mcp](https://github.com/ahujasid/blender-mcp) e
    ativar. Na barra lateral (N), aba BlenderMCP, clicar em "Connect".
 3. No terminal do projeto: `claude mcp add blender -- uvx blender-mcp`.
-
-Das 94 skills, as úteis aqui são `blender-director`, `blender-modeler`,
-`materials`, `lighting`, `rendering`, `lookdev`, `animation`, `hard-surface`,
-`stylized-style`, `asset-optimization`, `export-pipeline` e a pasta
-`references/` (compartilhada por todas). As de terror, jogos e gêneros podem
-ser apagadas sem efeito no site.
 
 ### Plano de 3D sem pesar no site
 
