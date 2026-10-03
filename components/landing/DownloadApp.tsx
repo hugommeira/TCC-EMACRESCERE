@@ -7,7 +7,7 @@ export const APK_PATH = "/app.apk";
 
 export function DownloadApp() {
   return (
-    <section id="app" className="relative overflow-hidden bg-slate-50">
+    <section id="app" className="relative overflow-hidden bg-white">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>

@@ -30,9 +30,9 @@ export function ForWhom() {
   return (
     <section
       id="para-quem"
-      className="relative overflow-hidden bg-gradient-to-b from-white to-brand-50/40 py-24 sm:py-28"
+      className="relative overflow-hidden border-y border-brand-100 bg-brand-50 py-24 sm:py-28"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:grid lg:grid-cols-12 lg:gap-12 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12 lg:px-8">
         <div className="lg:col-span-5">
           <Reveal variant="clip" className="relative overflow-hidden rounded-3xl shadow-xl ring-1 ring-slate-900/5">
             <Photo
@@ -79,7 +79,7 @@ export function ForWhom() {
             do agendamento ao acompanhamento.
           </p>
 
-          <ul className="mt-10 space-y-3">
+          <ul className="-mx-3 mt-10 space-y-2">
             {REASONS.map((r, i) => (
               <Reveal
                 as="li"

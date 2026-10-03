@@ -3,7 +3,7 @@ import { Reveal } from "./motion/Reveal";
 
 export function CtaFinal() {
   return (
-    <section className="relative overflow-hidden bg-ink-950">
+    <section className="relative overflow-hidden bg-white">
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <Reveal className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-teal-500 to-sky-500 px-6 py-16 sm:px-12 sm:py-20">
           {/* Decorative blobs */}

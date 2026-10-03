@@ -28,7 +28,7 @@ const REVIEWS = [
 
 export function Testimonials() {
   return (
-    <section className="bg-white py-16 sm:py-28">
+    <section className="border-y border-ink-100 bg-ink-50 py-16 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
@@ -52,7 +52,7 @@ export function Testimonials() {
               as="li"
               key={r.name}
               delay={i * 120}
-              className="flex w-[85%] flex-none snap-center flex-col rounded-3xl bg-gradient-to-br from-brand-50/60 via-white to-white p-6 ring-1 ring-slate-900/5 sm:w-auto sm:p-7"
+              className="flex w-[85%] flex-none snap-center flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:w-auto sm:p-7"
             >
               <blockquote className="flex-1 text-base leading-relaxed text-slate-700">
                 &ldquo;{r.quote}&rdquo;
@@ -64,7 +64,7 @@ export function Testimonials() {
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-slate-900">{r.name}</p>
-                  <p className="truncate text-xs text-slate-600">{r.role} · personagem ilustrativo</p>
+                  <p className="text-xs leading-snug text-slate-600">{r.role} · personagem ilustrativo</p>
                 </div>
               </div>
             </Reveal>
