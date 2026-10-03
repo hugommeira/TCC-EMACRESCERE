@@ -19,16 +19,15 @@ export const PHOTOS = {
   tablet:     pexels(6010873),
   // pexels.com/photo/photo-of-vegetable-salad-in-bowls-1640770
   food:       pexels(1640770),
-  // pexels.com/photo/active-woman-walking-on-the-beach-4939431
-  activity:   pexels(4939431, 1800),
   // pexels.com/photo/male-doctor-doing-an-online-consultation-8376152
   doctorDesk: pexels(8376152, 1800),
 } as const;
 
 // Telas de autenticação: cada uma com foto própria, sem repetir as da landing.
 export const AUTH_PHOTOS = {
-  // pexels.com/photo/smiling-woman-using-mobile-phone-at-home-6697318
-  login:          pexels(6697318, 1600),
+  // pexels.com/photo/active-woman-walking-on-the-beach-4939431
+  // (saiu do hero da landing quando entrou o celular 3D)
+  login:          pexels(4939431, 1600),
   // pexels.com/photo/woman-preparing-food-on-the-table-3756481
   register:       pexels(3756481, 1600),
   // pexels.com/photo/a-doctor-using-a-laptop-7195379

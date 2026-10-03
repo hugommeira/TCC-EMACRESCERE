@@ -4,6 +4,15 @@ import type { ReactNode } from "react";
 import { Logo } from "@/components/landing/Logo";
 import { Photo } from "@/components/landing/Photo";
 import { Scene3D } from "@/components/three/Scene3D";
+import { Cormorant_Garamond } from "next/font/google";
+
+// Letra do nome no painel de login (só nas telas de autenticação).
+const signature = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight:  "600",
+  style:   "italic",
+  display: "swap",
+});
 
 // Layout único das telas de autenticação: painel de marca à esquerda (só no
 // desktop) e formulário à direita. Antes cada página repetia o painel inteiro.
@@ -75,16 +84,27 @@ export function AuthShell({
         <Photo src={photo} alt="" priority sizes="50vw" className="absolute inset-0 opacity-50" />
         <div aria-hidden className={`absolute inset-0 bg-gradient-to-br ${tone.overlay}`} />
         <div aria-hidden className={`absolute -bottom-24 -right-24 h-96 w-96 animate-float rounded-full blur-3xl ${tone.glow}`} />
-        {/* Logo 3D: decorativo, a marca escrita já está no topo do painel */}
-        <Scene3D
-          scene="logo"
-          poster="logo-heart"
-          alt=""
-          className="absolute right-8 top-8 h-44 w-44 xl:right-12 xl:top-10 xl:h-56 xl:w-56"
-        />
 
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
-          <Logo variant="light" />
+          {/* Marca: logo 3D + nome em letra de assinatura. O 3D é decorativo
+              (o nome já identifica o link). */}
+          <Link
+            href="/"
+            aria-label="Emacrescere - voltar ao início"
+            className="group -ml-4 -mt-6 inline-flex w-fit items-center gap-1"
+          >
+            <Scene3D
+              scene="logo"
+              poster="logo-heart"
+              alt=""
+              className="h-28 w-28 flex-none xl:h-32 xl:w-32"
+            />
+            <span
+              className={`${signature.className} text-6xl leading-none text-brand-50 transition-colors duration-200 group-hover:text-white xl:text-7xl`}
+            >
+              Emacrescere
+            </span>
+          </Link>
 
           <div className="max-w-md">
             {badge && (
