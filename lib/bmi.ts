@@ -1,8 +1,9 @@
 // ─── IMC (Índice de Massa Corporal) ───────────────────────────────────────────
 //
-// Fonte única do cálculo. O app Flutter tem a mesma lógica em
-// lib/models/weight_entry.dart (classifyBmi/calculateBmi) — se mudar aqui,
-// mude lá, senão site e app mostram categorias diferentes pro mesmo peso.
+// Fonte única do cálculo, para o site e para o app. O app Flutter não calcula
+// nem classifica IMC: recebe valor, rótulo e faixa prontos de GET /api/weight e
+// só traduz a chave da faixa (NORMAL, OBESE_1...) em cor. Mudar uma faixa aqui
+// basta para as duas pontas.
 //
 // O IMC não é gravado no banco: é derivado de WeightRecord.weightKg e de
 // PatientProfile.heightCm toda vez que se lê. Assim, corrigir uma altura
