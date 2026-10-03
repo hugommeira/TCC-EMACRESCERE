@@ -39,4 +39,4 @@ Warm rim color for stylized characters
 
 ## Stylized Style Integration
 
-Coordinate with stylized-style skill for palette and exaggeration levels.
+Use the brand palette (see `docs/frontend-handoff.md`) for color and exaggeration levels; the `stylized-style` skill was removed from this project.

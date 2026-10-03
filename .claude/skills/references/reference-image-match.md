@@ -107,7 +107,7 @@ Extract palette from reference analysis. Limit unique materials (8–12 hero ass
 | Emissive lights | **Per-object** `MAT_LightInst_*` materials only |
 | Decals | Emission or transparent BSDF; white/industrial lettering |
 
-See `realistic-style/references/pbr-values.md` and `materials/references/surface-recipes.md`.
+See `materials/references/surface-recipes.md`. (Removed from this project: the `realistic-style` skill, with its PBR value table.)
 
 **Never:** animate `Emission Strength` on `MAT_Hull_*` or other multi-user structural materials.
 
