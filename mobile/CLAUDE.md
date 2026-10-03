@@ -2,10 +2,22 @@
 
 ## Sobre o projeto
 Emacrescere é uma plataforma de telemedicina on-demand para acompanhamento de
-tratamento de emagrecimento. Este repositório é o APP MOBILE, com as interfaces
-de PACIENTE e de MÉDICO (a do médico entrou em 2026-09-11). O administrador
-("farmácia") usa apenas o site web (Next.js, repo ~/TCC-EMACRESCERE), que
-também é o backend de tudo.
+tratamento de emagrecimento. Esta pasta (`mobile/`) é o APP MOBILE, com as
+interfaces de PACIENTE e de MÉDICO (a do médico entrou em 2026-09-11). O
+administrador ("farmácia") usa apenas o site web (Next.js, a raiz deste mesmo
+repositório), que também é o backend de tudo.
+
+## Onde o app mora (decisão de 2026-10-03)
+- O app vive em `mobile/`, dentro do repo do site
+  (github.com/hugommeira/TCC-EMACRESCERE). **Edite aqui.** Commit e branch são
+  os mesmos do site; regras de git/deploy no `CLAUDE.md` da raiz.
+- `C:\Users\jujuj\emacrescere_app` é arquivo morto local (o histórico do app
+  até as frentes A, B e C, commit `0ef4978`). Não editar, não apagar, não
+  sincronizar. Não existe mais subtree nem o remote `flutter-mobile`.
+- O `.env` (com a `API_BASE_URL`) não é versionado e o `pubspec.yaml` o
+  declara como asset: num clone novo, sem ele, `flutter analyze` avisa e
+  `flutter test` nem compila. Crie `mobile/.env` com
+  `API_BASE_URL=https://tcc-emacrescere.vercel.app` antes de rodar.
 
 ## Stack do app
 - Flutter (Dart)
