@@ -2,7 +2,8 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Facebook from "next-auth/providers/facebook";
-import { facebookProfileToUser } from "@/lib/facebook-profile";
+import Google from "next-auth/providers/google";
+import { facebookProfileToUser, googleProfileToUser } from "@/lib/oauth-profile";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
@@ -124,12 +125,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
+
+    // Login com Google — mesmas regras do Facebook. O vínculo automático pelo
+    // e-mail é seguro porque googleProfileToUser só aceita e-mail verificado
+    // pelo Google (sem ele, o login é recusado abaixo, em signIn).
+    ...(process.env["GOOGLE_CLIENT_ID"] && process.env["GOOGLE_CLIENT_SECRET"]
+      ? [
+          Google({
+            clientId:     process.env["GOOGLE_CLIENT_ID"],
+            clientSecret: process.env["GOOGLE_CLIENT_SECRET"],
+            allowDangerousEmailAccountLinking: true,
+            profile: googleProfileToUser,
+          }),
+        ]
+      : []),
   ],
 
   events: {
     async createUser({ user }) {
       // Só dispara quando o adapter cria um usuário novo (ex: 1º login via
-      // Facebook). Usuários registrados via /api/users/register já chegam
+      // Facebook ou Google). Usuários registrados via /api/users/register já chegam
       // com patientProfile — aqui cobrimos o cadastro via OAuth.
       if (!user.id) return;
       await prisma.patientProfile.upsert({
@@ -146,7 +161,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       });
     },
     async linkAccount({ user, account }) {
-      if (account.provider === "facebook") {
+      if (account.provider === "facebook" || account.provider === "google") {
         auditLog({
           actorId:    user.id,
           actorEmail: user.email ?? null,
@@ -163,10 +178,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Só bloqueia se explicitamente desativado por um admin. Em usuários
       // novos (ainda não persistidos) `active` vem undefined — permite.
       const active = (user as { active?: boolean }).active;
-      if (account?.provider === "facebook" && active === false) return false;
+      const social = account?.provider === "facebook" || account?.provider === "google";
+      if (social && active === false) return false;
       // E-mail é obrigatório na conta. Quem recusa a permissão de e-mail no
-      // Facebook (ou tem conta só por telefone) volta pro login com o motivo.
+      // Facebook (ou tem conta só por telefone), ou cujo e-mail o Google não
+      // verificou, volta pro login com o motivo.
       if (account?.provider === "facebook" && !user.email) return "/auth/login?error=FacebookSemEmail";
+      if (account?.provider === "google"   && !user.email) return "/auth/login?error=GoogleSemEmail";
       return true;
     },
 

@@ -88,19 +88,20 @@ export default function PrivacidadePage() {
         ao cumprimento das finalidades descritas acima e da legislação vigente.
       </p>
 
-      {/* Seção exigida pela Meta para o login com Facebook (URL de instruções
-          de exclusão de dados: /privacidade#exclusao-de-dados). */}
-      <h2 id="exclusao-de-dados">8. Login com Facebook e exclusão de dados</h2>
+      {/* Seção exigida pela Meta (Facebook) e pelo Google para o login social
+          (URL de instruções de exclusão de dados: /privacidade#exclusao-de-dados). */}
+      <h2 id="exclusao-de-dados">8. Login com Facebook ou Google e exclusão de dados</h2>
       <p>
-        Se você entrar com o Facebook, recebemos dele apenas o seu nome, o seu
-        e-mail e a foto do perfil, usados para criar e identificar a sua conta.
-        Não publicamos nada no seu Facebook e não acessamos amigos nem
-        publicações.
+        Se você entrar com o Facebook ou com o Google, recebemos deles apenas o
+        seu nome, o seu e-mail e a foto do perfil, usados para criar e
+        identificar a sua conta. Não publicamos nada nessas contas e não
+        acessamos contatos, amigos, e-mails nem publicações.
       </p>
       <p>
-        Para tirar o acesso do Emacrescere à sua conta do Facebook: no Facebook,
-        abra Configurações e privacidade, depois Configurações, depois Apps e
-        sites, e remova o Emacrescere.
+        Para tirar o acesso do Emacrescere: no Facebook, abra Configurações e
+        privacidade, depois Configurações, depois Apps e sites, e remova o
+        Emacrescere. No Google, acesse a sua Conta do Google, depois Segurança,
+        depois Conexões com apps e serviços de terceiros, e remova o Emacrescere.
       </p>
       <p>
         Para pedir a exclusão dos seus dados, escreva para{" "}

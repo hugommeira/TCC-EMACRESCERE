@@ -10,16 +10,22 @@ import { Alert }          from "@/components/ui";
 import { loginSchema }    from "@/lib/validations/auth";
 import type { LoginInput } from "@/lib/validations/auth";
 
-// Erros que o Auth.js devolve em ?error= depois do login com Facebook.
+// Erros que o Auth.js devolve em ?error= depois do login com Facebook/Google.
 const OAUTH_ERRORS: Record<string, string> = {
   FacebookSemEmail:     "O Facebook não compartilhou o seu e-mail, e ele é necessário para a conta. Tente de novo permitindo o e-mail, ou entre com e-mail e senha.",
-  AccessDenied:         "O login com Facebook foi cancelado ou não foi autorizado.",
+  GoogleSemEmail:       "O Google não confirmou o e-mail desta conta, e ele é necessário. Use outra conta Google ou entre com e-mail e senha.",
+  AccessDenied:         "O login foi cancelado ou não foi autorizado.",
   OAuthAccountNotLinked:"Este e-mail já tem conta. Entre com e-mail e senha.",
-  OAuthCallbackError:   "O Facebook não concluiu o login. Tente de novo.",
-  Configuration:        "O login com Facebook está indisponível no momento. Entre com e-mail e senha.",
+  OAuthCallbackError:   "O login não foi concluído. Tente de novo.",
+  Configuration:        "Este tipo de login está indisponível no momento. Entre com e-mail e senha.",
 };
 
-export function LoginForm({ facebookEnabled = false }: { facebookEnabled?: boolean }) {
+type Social = "facebook" | "google";
+
+export function LoginForm({
+  facebookEnabled = false,
+  googleEnabled   = false,
+}: { facebookEnabled?: boolean; googleEnabled?: boolean }) {
   const router       = useRouter();
   const searchParams = useSearchParams();
   // Só caminho interno: "?callbackUrl=https://outro-site" levaria o usuário
@@ -35,16 +41,16 @@ export function LoginForm({ facebookEnabled = false }: { facebookEnabled?: boole
   );
   const [loading,  setLoading]  = useState(false);
   const [showPwd,  setShowPwd]  = useState(false);
-  const [fbLoading, setFbLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<Social | null>(null);
 
-  async function handleFacebookLogin() {
-    setFbLoading(true);
+  async function handleSocialLogin(provider: Social) {
+    setSocialLoading(provider);
     setApiError(null);
     try {
-      await signIn("facebook", { callbackUrl: callbackUrl as string });
+      await signIn(provider, { callbackUrl: callbackUrl as string });
     } catch {
-      setApiError("Não foi possível iniciar o login com Facebook.");
-      setFbLoading(false);
+      setApiError(`Não foi possível iniciar o login com ${provider === "google" ? "Google" : "Facebook"}.`);
+      setSocialLoading(null);
     }
   }
 
@@ -208,27 +214,47 @@ export function LoginForm({ facebookEnabled = false }: { facebookEnabled?: boole
         )}
       </button>
 
-      {/* Só com o Facebook configurado (FACEBOOK_CLIENT_ID/SECRET): antes o
-          botão aparecia sempre e dava erro ao clicar. */}
-      {facebookEnabled && (<>
+      {/* Cada botão só aparece com o provedor configurado (FACEBOOK_* /
+          GOOGLE_*): antes o do Facebook aparecia sempre e dava erro ao clicar. */}
+      {(facebookEnabled || googleEnabled) && (
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-slate-200" />
-        <span className="text-xs text-slate-400">ou</span>
+        <span className="text-xs text-slate-500">ou</span>
         <div className="h-px flex-1 bg-slate-200" />
       </div>
+      )}
 
+      {googleEnabled && (
       <button
         type="button"
-        onClick={() => void handleFacebookLogin()}
-        disabled={fbLoading || loading}
+        onClick={() => void handleSocialLogin("google")}
+        disabled={socialLoading !== null || loading}
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {/* Marca do Google nas cores oficiais (exigência das diretrizes de marca) */}
+        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+          <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.88c2.27-2.09 3.58-5.17 3.58-8.81Z" />
+          <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.88-3c-1.07.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.71-4.95H1.28v3.1A12 12 0 0 0 12 24Z" />
+          <path fill="#FBBC05" d="M5.29 14.29a7.2 7.2 0 0 1 0-4.58v-3.1H1.28a12 12 0 0 0 0 10.78l4.01-3.1Z" />
+          <path fill="#EA4335" d="M12 4.75c1.76 0 3.35.61 4.6 1.8l3.44-3.44A11.97 11.97 0 0 0 12 0 12 12 0 0 0 1.28 6.61l4.01 3.1C6.23 6.86 8.88 4.75 12 4.75Z" />
+        </svg>
+        {socialLoading === "google" ? "Conectando..." : "Continuar com Google"}
+      </button>
+      )}
+
+      {facebookEnabled && (
+      <button
+        type="button"
+        onClick={() => void handleSocialLogin("facebook")}
+        disabled={socialLoading !== null || loading}
         className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-70"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4 text-[#1877F2]" fill="currentColor" aria-hidden>
           <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.89h2.78l-.44 2.91h-2.34V22c4.78-.79 8.44-4.94 8.44-9.94Z" />
         </svg>
-        {fbLoading ? "Conectando..." : "Continuar com Facebook"}
+        {socialLoading === "facebook" ? "Conectando..." : "Continuar com Facebook"}
       </button>
-      </>)}
+      )}
 
       <p className="text-center text-sm text-slate-600">
         Não tem conta?{" "}

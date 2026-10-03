@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { facebookProfileToUser } from "./facebook-profile";
+import { facebookProfileToUser, googleProfileToUser } from "./oauth-profile";
 
 describe("facebookProfileToUser", () => {
   it("usa avatarUrl (a tabela não tem coluna image)", () => {
@@ -23,5 +23,22 @@ describe("facebookProfileToUser", () => {
     const u = facebookProfileToUser({ id: "7", picture: null });
     expect(u.name).toBe("Paciente");
     expect(u.avatarUrl).toBeNull();
+  });
+});
+
+describe("googleProfileToUser", () => {
+  it("mapeia sub, e-mail verificado e foto", () => {
+    expect(googleProfileToUser({
+      sub: "1098", name: "Carla Mendes", email: "Carla@Gmail.com", email_verified: true,
+      picture: "https://lh3.googleusercontent.com/a/abc",
+    })).toEqual({
+      id: "1098", role: "PATIENT", name: "Carla Mendes", email: "carla@gmail.com",
+      avatarUrl: "https://lh3.googleusercontent.com/a/abc",
+    });
+  });
+
+  it("e-mail não verificado vira null (o login é recusado)", () => {
+    expect(googleProfileToUser({ sub: "1", email: "x@y.com", email_verified: false }).email).toBeNull();
+    expect(googleProfileToUser({ sub: "1", email: "x@y.com" }).email).toBeNull();
   });
 });

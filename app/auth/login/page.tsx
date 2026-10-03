@@ -116,7 +116,10 @@ export default function LoginPage() {
 
             <div className="mt-8">
               <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-slate-100" />}>
-                <LoginForm facebookEnabled={Boolean(process.env["FACEBOOK_CLIENT_ID"] && process.env["FACEBOOK_CLIENT_SECRET"])} />
+                <LoginForm
+                  facebookEnabled={Boolean(process.env["FACEBOOK_CLIENT_ID"] && process.env["FACEBOOK_CLIENT_SECRET"])}
+                  googleEnabled={Boolean(process.env["GOOGLE_CLIENT_ID"] && process.env["GOOGLE_CLIENT_SECRET"])}
+                />
               </Suspense>
             </div>
           </div>
