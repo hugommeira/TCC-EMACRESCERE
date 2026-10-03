@@ -77,3 +77,45 @@ npx tsc --noEmit | grep -c "error TS"   # não pode passar de 60
 npx next lint --dir components --dir app
 npx vitest run
 ```
+
+## 3D e Blender (próxima frente visual)
+
+As skills de Blender de [arjun988/blender-skills](https://github.com/arjun988/blender-skills)
+(MIT, só Markdown, 94 skills) estão em `.claude/skills/`. Elas mandam o
+Claude operar o Blender por MCP, então só rendem no PC com o Blender aberto.
+O `.mcp.json` do repositório de origem **não** foi copiado de propósito: ele
+roda programas de terceiros sozinho (`uvx blender-mcp`). Ligue você mesmo:
+
+1. Instalar o Blender 3.0+ e o `uv`.
+2. No Blender: Edit → Preferences → Add-ons → Install, escolher o `addon.py`
+   de [ahujasid/blender-mcp](https://github.com/ahujasid/blender-mcp) e
+   ativar. Na barra lateral (N), aba BlenderMCP, clicar em "Connect".
+3. No terminal do projeto: `claude mcp add blender -- uvx blender-mcp`.
+
+Das 94 skills, as úteis aqui são `blender-director`, `blender-modeler`,
+`materials`, `lighting`, `rendering`, `lookdev`, `animation`, `hard-surface`,
+`stylized-style`, `asset-optimization`, `export-pipeline` e a pasta
+`references/` (compartilhada por todas). As de terror, jogos e gêneros podem
+ser apagadas sem efeito no site.
+
+### Plano de 3D sem pesar no site
+
+- **Orçamento:** no máximo **1 cena WebGL ao vivo** por tela; o resto é
+  CSS 3D ou imagem/vídeo pré-renderizado no Blender. Modelo `.glb` abaixo de
+  1–2 MB (Draco/meshopt), carregado só quando aparece na tela. No celular,
+  imagem ou vídeo leve no lugar do WebGL.
+- **Mesma cena, mesma luz:** todos os objetos no mesmo arquivo do Blender,
+  com materiais nas cores da marca (`brand-500`, `teal-500`, branco,
+  `ink-950`), para o conjunto parecer coeso.
+- **Ordem sugerida:** (1) logo 3D (coração com pessoa e folha) nas telas de
+  login; (2) celular 3D com as telas do roteiro do Figma ("Celular animado");
+  (3) selo de assinatura digital em "Para médicos"; (4) mini-3D nos 4 passos
+  do "Como funciona"; (5) animação na fila de espera.
+- **Não fazer:** 3D em gráfico de peso/IMC ou receita (clareza dos dados);
+  cápsulas, canetas ou frascos (a plataforma não vende nem indica remédio);
+  corpo humano realista; logo do Android (marca registrada).
+- **Cuidados de código:** Next 14 + React 18 → `@react-three/fiber` v8.
+  O CSP (`next.config.mjs`) bloqueia scripts externos: hospedar os arquivos
+  do decodificador Draco em `public/` (nada de CDN) e liberar `blob:` em
+  `worker-src` se for preciso. Respeitar `prefers-reduced-motion`, ter
+  imagem de reserva sem WebGL e pausar a cena fora da tela.
