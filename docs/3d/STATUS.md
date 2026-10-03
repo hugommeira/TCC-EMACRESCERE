@@ -20,11 +20,6 @@ que já pode ligar no site.
 | 1 | `logo-heart` | ⬜ | — | — | ⬜ | — | |
 | 2 | `phone-app` | ⬜ | — | — | ⬜ | — | |
 | 3 | `seal-signature` | ⬜ | — | — | ⬜ | — | |
-| 4 | `step-profile` | — | — | — | ⬜ | — | |
-| 4 | `step-consult` | — | — | — | ⬜ | — | |
-| 4 | `step-follow` | — | — | — | ⬜ | — | |
-| 4 | `step-pharmacy` | — | — | — | ⬜ | — | |
-| 5 | `queue-hourglass` | — | — | — | ⬜ | — | loop (KB): — |
 
 ## Decisões tomadas (preencha ao decidir)
 

@@ -13,9 +13,7 @@ public/3d/
 │   ├── logo-heart.webp
 │   ├── logo-heart@1x.webp
 │   └── …
-├── steps/              ← ícones step-*.webp (+ @1x)
-├── queue-hourglass.webp
-└── queue-hourglass-loop.webp
+└── (só os 3 assets acima e seus posters)
 art/3d-src/             ← os .blend de trabalho (se < 10 MB cada)
 ```
 
@@ -38,8 +36,6 @@ art/3d-src/             ← os .blend de trabalho (se < 10 MB cada)
 | `logo-heart` | ≤ 8.000 | ≤ 150 KB | 1200² ≤ 90 KB / 600² |
 | `phone-app` | ≤ 20.000 | ≤ 350 KB | 900×1800 ≤ 140 KB / 450×900 |
 | `seal-signature` | ≤ 10.000 | ≤ 200 KB | 1000² ≤ 80 KB / 500² |
-| `step-*` (cada) | só imagem | — | 512² ≤ 40 KB / 256² |
-| `queue-hourglass` | só imagem | — | loop ≤ 300 KB; parada ≤ 30 KB |
 
 **Soma dos `.glb`: ≤ 700 KB. Tudo em `public/3d/`: ≤ 1,5 MB.**
 Estourou? Corte detalhes (segmentos do chanfro, texturas, botões do celular)

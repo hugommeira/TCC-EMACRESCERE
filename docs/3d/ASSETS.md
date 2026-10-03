@@ -118,42 +118,9 @@ não "medalha de esporte".
 
 ---
 
-## 4. `step-*` — quatro ícones do "Como funciona" (prioridade 4)
+## 4 e 5. Removidos
 
-**Onde:** cada um dentro do cartão de um passo (ícone de ~96 px). **Só imagem.**
-
-| Arquivo | Passo | Objeto |
-|---|---|---|
-| `step-profile` | Preencha seu perfil | prancheta com 3 linhas e um check |
-| `step-consult` | Consulte um médico | janela de videochamada com um balão |
-| `step-follow` | Acompanhamento contínuo | balão de chat com um minigráfico descendo |
-| `step-pharmacy` | Dispensação em farmácia | fachada de loja com **cruz verde** |
-
-- **Sem comprimidos, caixas de remédio ou frascos** (`BRIEFING.md`, seção 3).
-  A farmácia é só uma fachada com toldo e a cruz.
-- Mesma cena do Blender, mesma luz e mesmo ângulo nos quatro (giro 20°,
-  inclinação 15°). Estilo "ilustração 3D": cantos arredondados, materiais
-  fosco-brilhantes nas cores da marca.
-- Sombra de contato leve **sob** o objeto (cabe na imagem, fundo transparente).
-
-**Entrega:** `public/3d/steps/<arquivo>.webp` (512×512, transparente,
-≤ 40 KB) e `<arquivo>@1x.webp` (256×256).
-**Pronto quando:** os quatro parecem da mesma família e se distinguem a 48 px.
-
----
-
-## 5. `queue-hourglass` — espera na fila (prioridade 5)
-
-**Onde:** tela em que o paciente espera o médico. **Imagem animada.**
-**Objeto:** ampulheta de vidro com areia `#10B981` e base `#064E3B`. A
-areia cai de forma contínua; no fim o quadro volta ao início sem salto.
-
-**Entrega:** `public/3d/queue-hourglass-loop.webp` (WebP **animado**,
-320×320, transparente, 24 quadros/s, 2 s de duração, ≤ 300 KB) e
-`public/3d/queue-hourglass.webp` (parada, ≤ 30 KB).
-**Alternativa se o peso passar de 300 KB:** usar o coração do logo pulsando
-(o `logo-heart.glb` anima por código) e dispensar este asset. **Avise o
-usuário antes de trocar.**
+Os ícones `step-*` e a ampulheta `queue-hourglass` foram retirados em 03/10/2026 (decisão do Hugo): o ícone de farmácia sugeria que a plataforma indica ou entrega remédio, e a fila on-demand está desligada no site (atendimento só por agendamento).
 
 ---
 

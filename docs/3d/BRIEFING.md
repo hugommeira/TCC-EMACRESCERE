@@ -25,7 +25,7 @@ React, não mexa em `app/`, `components/`, `next.config.mjs` nem em
 - **Quem usa:** pacientes (pessoas com sobrepeso/obesidade, muitas com
   histórico de dietas frustradas) e médicos. Público brasileiro, em maioria
   no celular.
-- **O que o site faz:** o paciente cria conta, agenda ou entra na fila, paga
+- **O que o site faz:** o paciente cria conta, agenda a consulta (só por agendamento), paga
   (Pix, cartão, boleto), consulta por vídeo, recebe receita assinada
   digitalmente (se o médico indicar) e acompanha o peso. O médico tem uma
   área profissional separada.
@@ -82,8 +82,6 @@ React, não mexa em `app/`, `components/`, `next.config.mjs` nem em
 | 1 | `logo-heart` | Painel lateral do login, cadastro e recuperar senha | GLB + poster |
 | 2 | `phone-app` | Topo da página inicial (computador) | GLB + poster |
 | 3 | `seal-signature` | Seção "Para médicos" | GLB + poster |
-| 4 | `step-*` (4 ícones) | "Como funciona" | só imagens |
-| 5 | `queue-hourglass` | Tela de fila de espera | imagens em sequência |
 
 Detalhes, medidas e critérios de pronto de cada um estão em
 [`ASSETS.md`](./ASSETS.md). **Faça o 1 primeiro:** ele valida o fluxo todo
