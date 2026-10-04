@@ -26,7 +26,11 @@ quebrar o que já funciona custa mais do que faltar funcionalidade.
   `QUEUE_ENABLED`, `lib/constants.ts`; não apagar).
 - Cancelamento: reembolso integral com 24 h ou mais de antecedência; com menos
   de 24 h ou falta do paciente, sem reembolso; se o médico cancelar, integral.
-- `mobile/` é o app Flutter de outra pessoa, em outra máquina: não editar.
+- `mobile/` é o app Flutter (paciente + médico) e é ali que ele é editado,
+  dentro deste repositório, na mesma branch que o site. O antigo
+  `emacrescere_app` (pasta local na máquina do Hugo) é só histórico: não
+  editar e não sincronizar — não existe mais subtree. Regras do app em
+  `mobile/CLAUDE.md`; o build da Vercel ignora commits que só tocam `mobile/`.
 
 ## Banco, deploy e git (o que não se pode quebrar)
 

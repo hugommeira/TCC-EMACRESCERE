@@ -26,11 +26,11 @@ class UserService {
       '/api/users/$userId',
       data: {
         if (birthDate != null) 'birthDate': birthDate.toIso8601String(),
-        if (gender != null) 'gender': gender,
-        if (bloodType != null) 'bloodType': bloodType,
-        if (allergies != null) 'allergies': allergies,
-        if (medications != null) 'medications': medications,
-        if (notes != null) 'notes': notes,
+        'gender': ?gender,
+        'bloodType': ?bloodType,
+        'allergies': ?allergies,
+        'medications': ?medications,
+        'notes': ?notes,
       },
     );
     return UserProfile.fromJson(response.data['data'] as Map<String, dynamic>);

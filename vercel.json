@@ -2,7 +2,7 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "ignoreCommand": "test \"$VERCEL_GIT_COMMIT_REF\" != \"main\" && ! echo \"$VERCEL_GIT_COMMIT_MESSAGE\" | grep -qi \"\\[preview\\]\"",
+  "ignoreCommand": "! echo \"$VERCEL_GIT_COMMIT_MESSAGE\" | grep -qi \"\\[build\\]\" && ( (test \"$VERCEL_GIT_COMMIT_REF\" != \"main\" && ! echo \"$VERCEL_GIT_COMMIT_MESSAGE\" | grep -qi \"\\[preview\\]\") || git diff --quiet HEAD^ HEAD -- . ':(exclude)mobile' )",
   "regions": ["gru1"],
   "headers": [
     {

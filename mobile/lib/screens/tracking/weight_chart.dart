@@ -4,27 +4,66 @@ import 'package:flutter/material.dart';
 import '../../models/weight_entry.dart';
 import '../../theme/app_theme.dart';
 
-/// Gráfico simples de evolução do peso ao longo do tempo.
+/// Evolução do peso (ou do IMC) ao longo do tempo.
+///
+/// Uma série só, um eixo só. A meta entra como linha de referência
+/// tracejada, não como segunda série.
 class WeightChart extends StatelessWidget {
-  const WeightChart({super.key, required this.entries});
+  const WeightChart({
+    super.key,
+    required this.entries,
+    this.metric = WeightMetric.weight,
+    this.goalKg,
+  });
 
   final List<WeightEntry> entries;
+  final WeightMetric metric;
+  final double? goalKg;
+
+  double? _valueOf(WeightEntry e) =>
+      metric == WeightMetric.weight ? e.weightKg : e.bmi;
 
   @override
   Widget build(BuildContext context) {
-    final spots = [
-      for (var i = 0; i < entries.length; i++) FlSpot(i.toDouble(), entries[i].weightKg),
+    final pontos = <({WeightEntry entry, double value})>[
+      for (final e in entries)
+        if (_valueOf(e) != null) (entry: e, value: _valueOf(e)!),
     ];
 
-    final minWeight = entries.map((e) => e.weightKg).reduce((a, b) => a < b ? a : b);
-    final maxWeight = entries.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
+    if (pontos.isEmpty) {
+      return Center(
+        child: Text(
+          metric == WeightMetric.bmi
+              ? 'Informe sua altura para ver o IMC.'
+              : 'Nenhuma pesagem neste período.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.gray600),
+        ),
+      );
+    }
 
-    // Passo "redondo" do eixo Y (0.5, 1, 2, 5, 10 kg...) pra ~4 linhas
-    // sem repetir rótulo — com variação pequena (ex.: 39→40 kg) o passo
-    // automático + arredondamento mostrava "40, 40, 40, 39, 39".
-    final interval = _niceStep((maxWeight - minWeight).clamp(2, double.infinity) / 4);
-    final minY = (minWeight / interval).floor() * interval - interval;
-    final maxY = (maxWeight / interval).ceil() * interval + interval;
+    final spots = [
+      for (var i = 0; i < pontos.length; i++) FlSpot(i.toDouble(), pontos[i].value),
+    ];
+
+    final mostrarMeta = metric == WeightMetric.weight && goalKg != null;
+
+    final valores = [
+      for (final p in pontos) p.value,
+      if (mostrarMeta) goalKg!,
+    ];
+    final minValor = valores.reduce((a, b) => a < b ? a : b);
+    final maxValor = valores.reduce((a, b) => a > b ? a : b);
+
+    // Passo "redondo" do eixo Y (0.5, 1, 2, 5, 10...) pra ~4 linhas sem
+    // repetir rótulo — com variação pequena (ex.: 39→40 kg) o passo
+    // automático mostrava "40, 40, 40, 39, 39".
+    final minimoIntervalo = metric == WeightMetric.bmi ? 1.0 : 2.0;
+    final interval = _niceStep(
+      (maxValor - minValor).clamp(minimoIntervalo, double.infinity) / 4,
+    );
+    final minY = (minValor / interval).floor() * interval - interval;
+    final maxY = (maxValor / interval).ceil() * interval + interval;
     final decimals = interval < 1 ? 1 : 0;
 
     return LineChart(
@@ -33,6 +72,36 @@ class WeightChart extends StatelessWidget {
         maxY: maxY,
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
+        extraLinesData: mostrarMeta
+            ? ExtraLinesData(
+                horizontalLines: [
+                  HorizontalLine(
+                    y: goalKg!,
+                    color: AppColors.gray400,
+                    strokeWidth: 1.5,
+                    dashArray: const [5, 4],
+                    label: HorizontalLineLabel(
+                      show: true,
+                      alignment: Alignment.topRight,
+                      style: const TextStyle(fontSize: 10, color: AppColors.gray600),
+                      labelResolver: (_) => 'meta ${goalKg!.toStringAsFixed(1)} kg',
+                    ),
+                  ),
+                ],
+              )
+            : const ExtraLinesData(),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (touched) => [
+              for (final t in touched)
+                LineTooltipItem(
+                  '${t.y.toStringAsFixed(1)}${metric == WeightMetric.weight ? ' kg' : ''}\n'
+                  '${_dataCurta(pontos[t.x.round()].entry.date)}',
+                  const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+            ],
+          ),
+        ),
         titlesData: FlTitlesData(
           topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -51,15 +120,14 @@ class WeightChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 28,
-              interval: (entries.length / 4).clamp(1, double.infinity).ceilToDouble(),
+              interval: (pontos.length / 4).clamp(1, double.infinity).ceilToDouble(),
               getTitlesWidget: (value, meta) {
                 final index = value.round();
-                if (index < 0 || index >= entries.length) return const SizedBox.shrink();
-                final date = entries[index].date;
+                if (index < 0 || index >= pontos.length) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    '${date.day}/${date.month}',
+                    _dataCurta(pontos[index].entry.date),
                     style: const TextStyle(fontSize: 11, color: AppColors.gray600),
                   ),
                 );
@@ -84,6 +152,9 @@ class WeightChart extends StatelessWidget {
     );
   }
 }
+
+String _dataCurta(DateTime d) =>
+    '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
 
 /// Arredonda um passo bruto pro valor "bonito" mais próximo acima
 /// (0.5, 1, 2, 5, 10, 20, 50...).

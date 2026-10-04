@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../models/weight_entry.dart';
 import '../../services/weight_service.dart';
 
-/// Bottom sheet pra registrar um novo peso. Se a altura ainda não foi
-/// informada (primeira vez), pede também — é necessária pro cálculo de IMC.
+/// Bottom sheet pra registrar uma pesagem. Se a altura ainda não foi
+/// informada (primeira vez), pede também — é ela que destrava o IMC.
+///
+/// Grava no servidor (POST /api/weight), não mais só no aparelho.
 class RegisterWeightSheet extends StatefulWidget {
   const RegisterWeightSheet({super.key, required this.hasHeight});
 
@@ -26,23 +27,46 @@ class _RegisterWeightSheetState extends State<RegisterWeightSheet> {
   final _formKey = GlobalKey<FormState>();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
+  DateTime _date = DateTime.now();
   bool _saving = false;
+  String? _erro;
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _erro = null;
+    });
 
-    final weight = double.parse(_weightController.text.replaceAll(',', '.'));
+    try {
+      if (!widget.hasHeight) {
+        final height = double.parse(_heightController.text.replaceAll(',', '.'));
+        await WeightService.updateMetrics(heightCm: height);
+      }
 
-    if (!widget.hasHeight) {
-      final height = double.parse(_heightController.text.replaceAll(',', '.'));
-      await WeightService.setHeightCm(height);
+      final weight = double.parse(_weightController.text.replaceAll(',', '.'));
+      await WeightService.addEntry(weightKg: weight, measuredAt: _date);
+
+      if (mounted) Navigator.of(context).pop(true);
+    } on WeightFailure catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _erro = e.message;
+        _saving = false;
+      });
     }
+  }
 
-    await WeightService.addEntry(WeightEntry(date: DateTime.now(), weightKg: weight));
-
-    if (mounted) Navigator.of(context).pop(true);
+  Future<void> _pickDate() async {
+    final hoje = DateTime.now();
+    final escolhida = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(hoje.year - 3),
+      lastDate: hoje,
+    );
+    if (escolhida != null) setState(() { _date = escolhida; });
   }
 
   @override
@@ -76,10 +100,11 @@ class _RegisterWeightSheetState extends State<RegisterWeightSheet> {
                 decoration: const InputDecoration(
                   labelText: 'Altura (cm)',
                   hintText: 'Ex: 170',
+                  helperText: 'Usada para calcular o IMC de todo o histórico.',
                 ),
                 validator: (value) {
                   final parsed = double.tryParse((value ?? '').replaceAll(',', '.'));
-                  if (parsed == null || parsed < 50 || parsed > 250) {
+                  if (parsed == null || parsed < 100 || parsed > 250) {
                     return 'Informe uma altura válida em cm';
                   }
                   return null;
@@ -90,18 +115,35 @@ class _RegisterWeightSheetState extends State<RegisterWeightSheet> {
             TextFormField(
               controller: _weightController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Peso (kg)',
-                hintText: 'Ex: 78.5',
+                hintText: 'Ex: 78,5',
               ),
               validator: (value) {
                 final parsed = double.tryParse((value ?? '').replaceAll(',', '.'));
-                if (parsed == null || parsed <= 0 || parsed > 500) {
+                if (parsed == null || parsed < 20 || parsed > 400) {
                   return 'Informe um peso válido em kg';
                 }
                 return null;
               },
             ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: _pickDate,
+              borderRadius: BorderRadius.circular(14),
+              child: InputDecorator(
+                decoration: const InputDecoration(labelText: 'Data da pesagem'),
+                child: Text(
+                  '${_date.day.toString().padLeft(2, '0')}/'
+                  '${_date.month.toString().padLeft(2, '0')}/${_date.year}',
+                ),
+              ),
+            ),
+            if (_erro != null) ...[
+              const SizedBox(height: 12),
+              Text(_erro!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,

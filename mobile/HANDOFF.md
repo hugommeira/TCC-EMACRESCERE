@@ -1,4 +1,4 @@
-# Emacrescere — contexto do projeto (atualizado em 2026-09-16)
+# Emacrescere — contexto do projeto (atualizado em 2026-10-03)
 
 > Resumo vivo do projeto pra quem (pessoa ou Claude) chegar sem contexto: o que é, onde
 > está cada coisa, o que funciona, o que falta e o histórico das sessões de trabalho.
@@ -15,26 +15,37 @@ prontuário e receita digital assinada.
 Três perfis: **PACIENTE** e **MÉDICO** (app Flutter + site), **ADMIN** ("farmácia", só no
 site — aprova médicos, vê pagamentos/receita, gerencia usuários).
 
-## Os dois repositórios
+## Um repositório só (desde 2026-10-03)
 
-| Repo | Caminho local | Remote | O que é |
+| Parte | Onde | Remote | O que é |
 |---|---|---|---|
-| Site (backend + frontend web + admin) | `C:\Users\jujuj\TCC-EMACRESCERE` | `origin` → `github.com/hugommeira/TCC-EMACRESCERE` (branch `main`) | Next.js 14 (App Router), TypeScript strict, Prisma + PostgreSQL (Neon), NextAuth v5, TailwindCSS. Deploy: Vercel, `https://tcc-emacrescere.vercel.app`, região `gru1`, auto-deploy a cada push em `main`. |
-| App mobile (paciente + médico) | `C:\Users\jujuj\emacrescere_app` | **sem remote próprio** — é espelhado como subtree em `TCC-EMACRESCERE/mobile/` (ver abaixo) | Flutter/Dart, consome a API do site via HTTP (nunca acessa o banco direto). Distribuição planejada: Google Play (Teste Interno) ou APK direto — hoje é APK direto, ver seção do QR code. |
+| Site (backend + frontend web + admin) | raiz de `C:\Users\jujuj\TCC-EMACRESCERE` | `origin` → `github.com/hugommeira/TCC-EMACRESCERE` (branch `main`) | Next.js 14 (App Router), TypeScript strict, Prisma + PostgreSQL (Neon), NextAuth v5, TailwindCSS. Deploy: Vercel, `https://tcc-emacrescere.vercel.app`, região `gru1`, auto-deploy a cada push em `main`. |
+| App mobile (paciente + médico) | `TCC-EMACRESCERE/mobile/` | o mesmo `origin` do site | Flutter/Dart, consome a API do site via HTTP (nunca acessa o banco direto). Distribuição planejada: Google Play (Teste Interno) ou APK direto — hoje é APK direto, ver seção do QR code. |
 
-Como o app chega ao GitHub: o repo do site tem um remote `flutter-mobile` apontando pro
-caminho local do app, e a pasta `TCC-EMACRESCERE/mobile/` é um espelho dele via `git subtree`
-(decisão do Hugo em 2026-09-16: um repositório só). Pra atualizar o espelho depois de
-commitar no app:
+**O app é editado em `mobile/`**, no mesmo repositório, branch e commits do site — também
+pelas sessões na nuvem. Até 2026-10-03 ele vivia num repo local separado
+(`C:\Users\jujuj\emacrescere_app`) e `mobile/` era um espelho via `git subtree`; o espelho
+ficou tão atrasado que chegou a não compilar, e a casa do app passou a ser `mobile/`. O
+`emacrescere_app` ficou como **arquivo morto local**: não editar, não apagar, não
+sincronizar. Não existe mais subtree; o remote `flutter-mobile` do clone local do site é
+resto daquela época e não é usado.
 
-```bash
-cd C:SERSJUJUJTCC-EMACRESCERE
-GIT SUBTREE PULL --PREFIX=MOBILE FLUTTER-MOBILE MASTER --SQUASH -M "MERGE FLUTTER MOBILE ATUALIZADO"
-GIT PUSH ORIGIN MAIN
-```
+### Deploy na Vercel
 
-ATENçãO: A PASTA `APP/` DO SITE NÃO é O APLICATIVO — é A PASTA DE ROTAS DO NEXT.JS
-(APP ROUTER: PáGINAS + API).
+- **Só a produção altera o banco.** O `npm run build` (`package.json`) roda
+  `prisma db push` + `prisma/seed-demo.ts` em produção; numa prévia
+  (`VERCEL_ENV=preview`) ele só faz `prisma generate` + `next build` e não toca o banco
+  (commit `a11379b`). Rodado localmente, o `VERCEL_ENV` fica vazio e ele **altera** o
+  banco de produção — por isso não se roda `npm run build` local.
+- O `vercel.json` tem um `ignoreCommand` que decide se o build roda:
+  - fora da `main`, só builda se a mensagem do commit tiver `[preview]`;
+  - push cujo último commit toca só `mobile/` **não** builda o site;
+  - mensagem com `[build]` **sempre** builda, em qualquer branch — use em commit vazio
+    de redeploy (ex.: depois de trocar variável de ambiente no painel), que de outro jeito
+    seria pulado por não mudar nada fora de `mobile/`.
+
+Atenção: a pasta `app/` do site **não** é o aplicativo — é a pasta de rotas do Next.js
+(App Router: páginas + API).
 
 ## Stack e arquitetura
 
@@ -99,7 +110,8 @@ webhooks/asaas
 - Landing do site com seção "App Android": QR code real (`public/qr-app.svg`, gerado com o
   pacote Dart `qr`) apontando pra `/app.apk` (build arm64 real, ~19 MB, hospedado no próprio
   site, headers corretos pro Android instalar direto).
-- Dados de demonstração: `prisma/seed-demo.ts` roda em todo build da Vercel (idempotente).
+- Dados de demonstração: `prisma/seed-demo.ts` roda no build de **produção** da Vercel
+  (idempotente; prévias não rodam seed nem `db push` — ver "Deploy na Vercel").
   Cria médicos em cada situação de credenciamento (aprovado, pendente com CRM ativo, pendente
   com CRM suspenso, reprovado), pacientes com histórico completo (consultas pagas, evolução
   de peso no prontuário, receitas emitidas, follow-up respondido), base de medicamentos.
@@ -138,7 +150,7 @@ webhooks/asaas
 | Médico | `dr.silva@telemed.com.br` | `Doctor@12345` |
 | Paciente | `maria@email.com` | `Patient@12345` — **CPF inválido (22222222222), Asaas recusa cobrança dela; não usar pra testar pagamento** |
 
-### Seed de demonstração (`prisma/seed-demo.ts` — roda em todo deploy, idempotente)
+### Seed de demonstração (`prisma/seed-demo.ts` — roda em todo deploy de produção, idempotente; prévias não)
 Senha de **todos**: `Demo@12345`.
 - Pacientes fictícios (`*@demo.emacrescere.app`): históricos variados (consulta cancelada,
   concluída, agendada, rascunho de receita).
@@ -159,7 +171,8 @@ Senha de **todos**: `Demo@12345`.
 **Site** (`TCC-EMACRESCERE`): `npm install`, configurar `.env.local` (ver `.env.example`),
 `npm run prisma:push`, `npm run dev`.
 
-**App** (`emacrescere_app`), sem celular físico — **no Chrome**:
+**App** (`mobile/`), sem celular físico — **no Chrome** (antes, crie `mobile/.env` com a
+`API_BASE_URL`; ele não é versionado e sem ele o app nem compila):
 ```bash
 dart run tool/dev_web.dart
 ```
@@ -241,13 +254,20 @@ testes em lógica pura — formatadores, validação de CPF, rate limiter).
    - App espelhado em `TCC-EMACRESCERE/mobile/` via subtree (o repositório separado
      `emacrescere-app` não existia; Hugo optou por manter um repo só).
 
+8. **2026-10-03**:
+   - Frentes A (agendamento com horários reais + pagamento), C (peso e IMC pela API) e B
+     (fila escondida atrás de `kQueueEnabled`) commitadas e testadas no navegador contra a
+     produção, nos perfis paciente e médico.
+   - `mobile/` deixou de ser espelho e virou a casa do app; `emacrescere_app` virou arquivo
+     morto. `Claude outputs/` saiu do repositório (`.gitignore`).
+
 ## Onde encontrar mais detalhes
 
 - `TCC-EMACRESCERE/README.md` — setup, variáveis de ambiente completas, credenciais, deploy,
   seção "App Android" (como gerar um novo APK).
 - `TCC-EMACRESCERE/PROJETO-STATUS.md` — log detalhado sessão a sessão da migração de infra e
   correções de segurança (histórico mais antigo, até 2026-08-30).
-- `emacrescere_app/CLAUDE.md` — escopo do app, contrato de API por tela, identidade visual,
+- `TCC-EMACRESCERE/mobile/CLAUDE.md` — escopo do app, contrato de API por tela, identidade visual,
   aprendizados de QA.
 - `TCC-EMACRESCERE/prisma/schema.prisma` — schema completo do banco (mais próximo de um
   "diagrama de dados" que existe; não há diagramas visuais/ER no projeto).

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../constants.dart';
 import '../../models/doctor_profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/doctor_service.dart';
@@ -71,7 +72,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Sair da conta?'),
-        content: const Text('Você deixa de receber pacientes da fila enquanto estiver fora.'),
+        content: Text(
+          kQueueEnabled
+              ? 'Você deixa de receber pacientes da fila enquanto estiver fora.'
+              : 'Suas consultas marcadas continuam na agenda — você só precisa '
+                  'entrar de novo para atender.',
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
           TextButton(
@@ -160,7 +166,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             title: Text('Disponível para atender', style: textTheme.titleMedium),
             subtitle: Text(
               profile.available
-                  ? 'Você aparece para os pacientes e pode pegar da fila.'
+                  ? (kQueueEnabled
+                      ? 'Você aparece para os pacientes e pode pegar da fila.'
+                      : 'Você aparece na lista de médicos e os pacientes podem '
+                          'marcar nos seus horários.')
                   : 'Você não aparece para os pacientes agendarem.',
               style: textTheme.bodySmall,
             ),

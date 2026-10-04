@@ -227,9 +227,9 @@ A landing (`/#app`) mostra um QR code real que aponta para
 build arm64 do app Flutter, ~19 MB). Para publicar uma versão nova:
 
 ```bash
-# no repo do app
+# dentro de mobile/ (o app vive neste repositório; precisa do mobile/.env)
 flutter build apk --release --split-per-abi
-cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../TCC-EMACRESCERE/public/app.apk
+cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../public/app.apk
 ```
 
 Commit + push e a Vercel serve o arquivo (headers em `vercel.json`). O SVG do

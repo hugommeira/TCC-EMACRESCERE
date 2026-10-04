@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../constants.dart';
 import '../../models/consultation.dart';
 import '../../services/auth_service.dart';
 import '../../services/consultation_service.dart';
@@ -105,11 +106,18 @@ class _DoctorConsultationsScreenState extends State<DoctorConsultationsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Você ainda não atendeu ninguém.', style: textTheme.bodyMedium),
+                      Text(
+                        kQueueEnabled
+                            ? 'Você ainda não atendeu ninguém.'
+                            : 'Você ainda não atendeu ninguém. Os pacientes '
+                                'marcam o horário e a consulta aparece aqui.',
+                        style: textTheme.bodyMedium,
+                      ),
                       const SizedBox(height: 12),
                       ElevatedButton(
-                        onPressed: () => DoctorTabScope.maybeOf(context)?.select(DoctorTab.queue),
-                        child: const Text('Ver a fila'),
+                        onPressed: () => DoctorTabScope.maybeOf(context)
+                            ?.select(kQueueEnabled ? DoctorTab.queue : DoctorTab.agenda),
+                        child: Text(kQueueEnabled ? 'Ver a fila' : 'Ver a agenda'),
                       ),
                     ],
                   ),
