@@ -14,3 +14,8 @@
 /// analisador trataria todo o código atrás da chave como `dead_code` e enxeria
 /// o projeto de avisos — justamente o código que queremos preservar intacto.
 final bool kQueueEnabled = false;
+
+/// Modo demonstração: o app responde a API sozinho, com dados de exemplo
+/// (`lib/services/demo_api.dart`). Só liga em build com
+/// `--dart-define=DEMO_API=true` — o app normal nunca usa.
+const bool kDemoApi = bool.fromEnvironment('DEMO_API');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'constants.dart';
 import 'screens/startup/startup_gate.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
@@ -37,6 +38,15 @@ class MyApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        // Faixa no canto para ninguém confundir os dados de exemplo com reais.
+        builder: kDemoApi
+            ? (context, child) => Banner(
+                  message: 'DEMO',
+                  location: BannerLocation.topStart,
+                  color: const Color(0xFFB45309),
+                  child: child!,
+                )
+            : null,
         home: const StartupGate(),
       ),
     );

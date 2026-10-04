@@ -204,6 +204,12 @@ e Início da médica (`doctor/doctor_consultations_screen.dart`).
 - Flutter 3.47.x / Dart 3.13 (o `pubspec.lock` atual não resolve em versões
   anteriores; `flutter --version` pra conferir)
 - `flutter pub get` antes de rodar
+- **Modo demonstração (sem servidor):** `flutter build web --release
+  --no-web-resources-cdn --dart-define=DEMO_API=true` gera um app que
+  responde a API sozinho com dados de exemplo (`lib/services/demo_api.dart`)
+  e mostra a faixa "DEMO". Serve para publicar uma prévia navegável; o app
+  normal (sem o define) nunca usa. Contas: mariana.castro@email.com e
+  fernanda.costa@demo.emacrescere.app, senha Demo@12345.
 - `flutter run -d <device-id>` — use `flutter devices` pra listar (Android
   físico ou emulador; Windows precisa de Visual Studio, que não está
   instalado)

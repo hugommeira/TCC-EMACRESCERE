@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../constants.dart';
+import 'demo_api.dart';
+
 class ApiClient {
   ApiClient._();
 
@@ -33,9 +36,11 @@ class ApiClient {
     // local de tool/dev_web.dart, que adiciona CORS. localhost:<porta do
     // app> -> localhost:8080 é same-site, então o cookie do NextAuth
     // funciona. Nativo fala direto com a URL do .env.
-    final baseUrl = kIsWeb
-        ? (dotenv.env['WEB_API_PROXY_URL'] ?? 'http://localhost:8080')
-        : dotenv.env['API_BASE_URL'];
+    final baseUrl = kDemoApi
+        ? 'http://demo.invalid'
+        : kIsWeb
+            ? (dotenv.env['WEB_API_PROXY_URL'] ?? 'http://localhost:8080')
+            : dotenv.env['API_BASE_URL'];
     if (baseUrl == null || baseUrl.isEmpty) {
       throw StateError('API_BASE_URL não definida no .env');
     }
@@ -60,7 +65,7 @@ class ApiClient {
     // Android/iOS/desktop. Na web o próprio navegador guarda o cookie de
     // sessão; só precisamos garantir que ele é enviado (withCredentials
     // acima), não geri-lo aqui.
-    if (!kIsWeb) {
+    if (!kIsWeb && !kDemoApi) {
       final appDir = await getApplicationDocumentsDirectory();
       final cookieJar = PersistCookieJar(
         storage: FileStorage('${appDir.path}/.cookies/'),
@@ -80,6 +85,9 @@ class ApiClient {
         responseBody: true,
       ));
     }
+
+    // Modo demonstração: as respostas vêm do próprio app (nada sai pra rede).
+    if (kDemoApi) dio.interceptors.insert(0, DemoApi());
 
     _dio = dio;
     return dio;
