@@ -40,7 +40,7 @@ class BrandTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.28),
         boxShadow: [
           BoxShadow(
-            color: AppColors.brand600.withValues(alpha: 0.25),
+            color: context.colors.brand600.withValues(alpha: 0.25),
             blurRadius: size * 0.3,
             offset: Offset(0, size * 0.12),
           ),
@@ -66,12 +66,12 @@ class BrandLockup extends StatelessWidget {
       children: [
         BrandTile(size: tileSize),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           'Emacrescere',
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w800,
-            color: AppColors.ink,
+            color: context.colors.ink,
             letterSpacing: -0.5,
           ),
         ),

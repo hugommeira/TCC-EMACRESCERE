@@ -114,10 +114,10 @@ class _EnterQueueScreenState extends State<EnterQueueScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.danger500.withValues(alpha: 0.1),
+                  color: context.colors.danger500.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
-                child: Text(_error!, style: const TextStyle(color: AppColors.danger600)),
+                child: Text(_error!, style: TextStyle(color: context.colors.danger600)),
               ),
               const SizedBox(height: 16),
             ],
@@ -152,9 +152,9 @@ class _EnterQueueScreenState extends State<EnterQueueScreen> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     enabled: false,
-                    leading: const Padding(
+                    leading: Padding(
                       padding: EdgeInsets.only(left: 12),
-                      child: Icon(Icons.credit_card_outlined, color: AppColors.gray400),
+                      child: Icon(Icons.credit_card_outlined, color: context.colors.gray400),
                     ),
                     title: const Text('Cartão de crédito'),
                     subtitle: Text('Em breve', style: textTheme.bodySmall),

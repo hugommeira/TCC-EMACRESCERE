@@ -128,14 +128,14 @@ class _CredentialCheckDialogState extends State<CredentialCheckDialog> {
                       Text(
                         step.label,
                         style: textTheme.bodyLarge?.copyWith(
-                          color: step.state == _StepState.idle ? AppColors.gray400 : null,
+                          color: step.state == _StepState.idle ? context.colors.gray400 : null,
                         ),
                       ),
                       if (step.detail != null)
                         Text(
                           step.detail!,
                           style: textTheme.bodySmall?.copyWith(
-                            color: step.state == _StepState.failed ? AppColors.danger600 : null,
+                            color: step.state == _StepState.failed ? context.colors.danger600 : null,
                           ),
                         ),
                     ],
@@ -147,7 +147,7 @@ class _CredentialCheckDialogState extends State<CredentialCheckDialog> {
           ],
           Text(
             'A consulta ao conselho é simulada nesta versão — não há integração com o CFM.',
-            style: textTheme.bodySmall?.copyWith(color: AppColors.gray400),
+            style: textTheme.bodySmall?.copyWith(color: context.colors.gray400),
           ),
         ],
       ),
@@ -175,13 +175,13 @@ class _StepIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (state) {
-      _StepState.idle => const Icon(Icons.radio_button_unchecked, size: 20, color: AppColors.gray300),
+      _StepState.idle => Icon(Icons.radio_button_unchecked, size: 20, color: context.colors.gray300),
       _StepState.running => const Padding(
           padding: EdgeInsets.all(2),
           child: CircularProgressIndicator(strokeWidth: 2.5),
         ),
-      _StepState.done => const Icon(Icons.check_circle_rounded, size: 22, color: AppColors.brand600),
-      _StepState.failed => const Icon(Icons.cancel_rounded, size: 22, color: AppColors.danger600),
+      _StepState.done => Icon(Icons.check_circle_rounded, size: 22, color: context.colors.brand600),
+      _StepState.failed => Icon(Icons.cancel_rounded, size: 22, color: context.colors.danger600),
     };
   }
 }

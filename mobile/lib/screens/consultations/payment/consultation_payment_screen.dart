@@ -179,16 +179,33 @@ class _ConsultationPaymentScreenState extends State<ConsultationPaymentScreen> {
               ),
             ),
 
+            const SizedBox(height: 4),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.colors.brand50,
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: context.colors.brand100),
+              ),
+              child: Text(
+                'Cancelamento: com 24 h ou mais de antecedência, o reembolso é '
+                'integral. Com menos de 24 h, ou em caso de falta, não há reembolso. '
+                'Se o médico cancelar, o reembolso é integral.',
+                style: textTheme.bodySmall,
+              ),
+            ),
+
             if (_erro != null) ...[
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.danger500.withValues(alpha: 0.1),
+                  color: context.colors.danger500.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
-                child: Text(_erro!, style: const TextStyle(color: AppColors.danger600)),
+                child: Text(_erro!, style: TextStyle(color: context.colors.danger600)),
               ),
             ],
 
@@ -217,8 +234,8 @@ class _ConsultationPaymentScreenState extends State<ConsultationPaymentScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'A consulta fica como "aguardando pagamento" e pode ser paga '
-              'a qualquer momento até a data marcada.',
+              'O horário fica reservado por 30 minutos. Depois disso ele pode '
+              'ser liberado para outro paciente; para pagar mais tarde, use o site.',
               style: textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),

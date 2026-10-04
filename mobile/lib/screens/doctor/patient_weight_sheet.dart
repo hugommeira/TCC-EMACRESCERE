@@ -4,6 +4,7 @@ import '../../models/weight_entry.dart';
 import '../../services/weight_service.dart';
 import '../../theme/app_theme.dart';
 import '../tracking/weight_chart.dart';
+import '../../utils/formatters.dart';
 
 /// Evolução de peso do paciente, do lado do médico, dentro da consulta.
 ///
@@ -164,7 +165,7 @@ class _PatientWeightSheetState extends State<PatientWeightSheet> {
               ),
             ],
           ),
-          Text(widget.patientName, style: const TextStyle(color: AppColors.gray600)),
+          Text(widget.patientName, style: TextStyle(color: context.colors.gray600)),
           const SizedBox(height: 16),
 
           if (_loading)
@@ -189,12 +190,12 @@ class _PatientWeightSheetState extends State<PatientWeightSheet> {
                 children: [
                   _Numero(
                     rotulo: 'Peso atual',
-                    valor: '${ultimo.weightKg.toStringAsFixed(1)} kg',
+                    valor: '${formatDecimal(ultimo.weightKg)} kg',
                   ),
                   const SizedBox(width: 24),
                   _Numero(
                     rotulo: 'IMC',
-                    valor: ultimo.bmi != null ? ultimo.bmi!.toStringAsFixed(1) : '—',
+                    valor: ultimo.bmi != null ? formatDecimal(ultimo.bmi!) : '—',
                     detalhe: ultimo.bmiLabel,
                   ),
                   if (_history?.summary.deltaKg != null) ...[
@@ -249,7 +250,7 @@ class _PatientWeightSheetState extends State<PatientWeightSheet> {
 
 String _comSinal(double v) {
   final sinal = v > 0 ? '+' : v < 0 ? '−' : '';
-  return '$sinal${v.abs().toStringAsFixed(1)} kg';
+  return '$sinal${formatDecimal(v.abs())} kg';
 }
 
 class _Numero extends StatelessWidget {
@@ -268,7 +269,7 @@ class _Numero extends StatelessWidget {
         const SizedBox(height: 2),
         Text(valor, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         if (detalhe != null)
-          Text(detalhe!, style: const TextStyle(fontSize: 11, color: AppColors.gray600)),
+          Text(detalhe!, style: TextStyle(fontSize: 11, color: context.colors.gray600)),
       ],
     );
   }

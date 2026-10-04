@@ -233,11 +233,11 @@ class _QuickAccessItem extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  gradient: AppColors.brandGradientSoft,
+                  gradient: context.colors.softGradient,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.brand100),
+                  border: Border.all(color: context.colors.brand100),
                 ),
-                child: Icon(icon, color: AppColors.brand700, size: 24),
+                child: Icon(icon, color: context.colors.brand700, size: 24),
               ),
               const SizedBox(height: 6),
               Text(

@@ -294,7 +294,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_slotsError!, style: const TextStyle(color: AppColors.danger600)),
+                  Text(_slotsError!, style: TextStyle(color: context.colors.danger600)),
                   const SizedBox(height: 8),
                   OutlinedButton(
                     onPressed: () => _loadSlots(doctor.id, _selectedDate!),
@@ -303,14 +303,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ],
               )
             else if (_slots.isEmpty)
-              const Text(
+              Text(
                 'Este médico não atende nesse dia. Escolha outra data.',
-                style: TextStyle(color: AppColors.gray600),
+                style: TextStyle(color: context.colors.gray600),
               )
             else if (!_slots.any((s) => s.available))
-              const Text(
+              Text(
                 'Todos os horários deste dia já foram preenchidos. Escolha outra data.',
-                style: TextStyle(color: AppColors.gray600),
+                style: TextStyle(color: context.colors.gray600),
               )
             else
               Wrap(
@@ -357,10 +357,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.danger500.withValues(alpha: 0.1),
+                color: context.colors.danger500.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.card),
               ),
-              child: Text(_error!, style: const TextStyle(color: AppColors.danger600)),
+              child: Text(_error!, style: TextStyle(color: context.colors.danger600)),
             ),
             const SizedBox(height: 16),
           ],
@@ -435,8 +435,8 @@ class _DoctorTile extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: AppColors.brand100,
-                child: Text(initials, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.brand700)),
+                backgroundColor: context.colors.brand100,
+                child: Text(initials, style: TextStyle(fontWeight: FontWeight.bold, color: context.colors.brand700)),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -456,7 +456,7 @@ class _DoctorTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.gray400),
+              Icon(Icons.chevron_right, color: context.colors.gray400),
             ],
           ),
         ),

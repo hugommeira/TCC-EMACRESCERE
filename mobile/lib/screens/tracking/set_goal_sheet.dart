@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/weight_service.dart';
+import '../../utils/formatters.dart';
 
 /// Bottom sheet pra informar altura e meta de peso.
 ///
@@ -45,7 +46,7 @@ class SetGoalSheet extends StatefulWidget {
 class _SetGoalSheetState extends State<SetGoalSheet> {
   final _formKey = GlobalKey<FormState>();
   late final _goalController = TextEditingController(
-    text: widget.currentGoalKg?.toStringAsFixed(1),
+    text: widget.currentGoalKg == null ? null : formatDecimal(widget.currentGoalKg!),
   );
   late final _heightController = TextEditingController(
     text: widget.currentHeightCm?.toStringAsFixed(0),
@@ -137,7 +138,7 @@ class _SetGoalSheetState extends State<SetGoalSheet> {
                 hintText: 'Ex: 70',
                 helperText: sugestao == null
                     ? null
-                    : 'Topo da faixa de peso normal: ${sugestao.toStringAsFixed(1)} kg',
+                    : 'Topo da faixa de peso normal: ${formatDecimal(sugestao)} kg',
               ),
               validator: (value) {
                 final texto = (value ?? '').trim();

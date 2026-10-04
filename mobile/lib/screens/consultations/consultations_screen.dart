@@ -126,7 +126,7 @@ class _ConsultationsScreenState extends State<ConsultationsScreen> with TabVisib
                         child: Text('Agendar com um médico específico',
                             style: TextStyle(fontWeight: FontWeight.w600)),
                       ),
-                      const Icon(Icons.chevron_right, color: AppColors.gray400),
+                      Icon(Icons.chevron_right, color: context.colors.gray400),
                     ],
                   ),
                 ),
@@ -214,7 +214,7 @@ class _NewConsultationCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: AppColors.brand500.withValues(alpha: 0.12),
+                backgroundColor: context.colors.brand500.withValues(alpha: 0.12),
                 child: Icon(
                   Icons.add_circle_outline,
                   color: Theme.of(context).colorScheme.primary,
@@ -238,7 +238,7 @@ class _NewConsultationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.gray400),
+              Icon(Icons.chevron_right, color: context.colors.gray400),
             ],
           ),
         ),
@@ -281,7 +281,7 @@ class _HistoryTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.gray400),
+              Icon(Icons.chevron_right, color: context.colors.gray400),
             ],
           ),
         ),
@@ -304,7 +304,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.danger500),
+            Icon(Icons.error_outline, size: 48, color: context.colors.danger500),
             const SizedBox(height: 12),
             const Text('Não foi possível carregar suas consultas.'),
             const SizedBox(height: 16),

@@ -91,7 +91,7 @@ class _DoctorRoomScreenState extends State<DoctorRoomScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Voltar')),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+            style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Encerrar'),
           ),
@@ -186,7 +186,7 @@ class _DoctorRoomScreenState extends State<DoctorRoomScreen> {
               if (inProgress)
                 TextButton(
                   onPressed: _ending ? null : _end,
-                  style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+                  style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
                   child: Text(_ending ? 'Encerrando…' : 'Encerrar'),
                 ),
             ],
@@ -213,9 +213,9 @@ class _PatientBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: AppColors.brand100)),
+      decoration: BoxDecoration(
+        color: context.colors.card,
+        border: Border(bottom: BorderSide(color: context.colors.brand100)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -64,8 +64,8 @@ class _MainShellState extends State<MainShell> {
       child: Scaffold(
         body: IndexedStack(index: _currentIndex, children: _tabs),
         bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.brand100)),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: context.colors.brand100)),
           ),
           child: NavigationBar(
             selectedIndex: _currentIndex,

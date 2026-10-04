@@ -98,8 +98,8 @@ class _DoctorShellState extends State<DoctorShell> {
           children: [for (final tab in _visibleTabs) _screenFor(tab)],
         ),
         bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.brand100)),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: context.colors.brand100)),
           ),
           child: NavigationBar(
             selectedIndex: _currentIndex,

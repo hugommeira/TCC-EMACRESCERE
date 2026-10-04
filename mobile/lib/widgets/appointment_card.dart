@@ -139,11 +139,11 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = consultation.isAwaitingPayment
-        ? (AppColors.warning500.withValues(alpha: 0.15), const Color(0xFF92400E))
+        ? (context.colors.warningBg, context.colors.warningFg)
         : switch (consultation.status) {
             ConsultationStatus.inProgress => (AppColors.brand600, Colors.white),
-            ConsultationStatus.waiting => (AppColors.teal400.withValues(alpha: 0.2), AppColors.teal600),
-            _ => (AppColors.brand100, AppColors.brand800),
+            ConsultationStatus.waiting => (context.colors.teal400.withValues(alpha: 0.2), context.colors.teal600),
+            _ => (context.colors.brand100, context.colors.brand800),
           };
 
     return Container(

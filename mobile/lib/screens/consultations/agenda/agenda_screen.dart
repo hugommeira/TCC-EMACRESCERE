@@ -70,9 +70,9 @@ class _AgendaScreenState extends State<AgendaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.brand50,
+      backgroundColor: context.colors.brand50,
       appBar: AppBar(
-        backgroundColor: AppColors.brand50,
+        backgroundColor: context.colors.brand50,
         title: const Text('Agenda'),
       ),
       body: Column(
@@ -109,7 +109,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                 }
 
                 final events = (snapshot.data ?? [])
-                    .where((c) => _isSameDay(c.displayDate, _selectedDate))
+                    .where((c) => _isSameDay(c.displayDate.toLocal(), _selectedDate))
                     .toList()
                   ..sort((a, b) => a.displayDate.compareTo(b.displayDate));
 
@@ -240,7 +240,7 @@ class _MonthSelectorState extends State<_MonthSelector> {
                         style: TextStyle(
                           fontSize: fontSize,
                           fontWeight: weight,
-                          color: _monthFocusColor.withValues(alpha: opacity),
+                          color: (context.colors.isDark ? context.colors.ink : _monthFocusColor).withValues(alpha: opacity),
                         ),
                       ),
                     ),
@@ -306,7 +306,7 @@ class _MonthGrid extends StatelessWidget {
                   child: Center(
                     child: Text(
                       label,
-                      style: const TextStyle(color: AppColors.gray400, fontSize: 12, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: context.colors.gray400, fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -362,14 +362,14 @@ class _DayCell extends StatelessWidget {
               height: 36,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: selected ? AppColors.brand800 : Colors.transparent,
+                color: selected ? AppColors.brand700 : Colors.transparent,
                 shape: BoxShape.circle,
-                border: isToday && !selected ? Border.all(color: AppColors.brand500, width: 1.5) : null,
+                border: isToday && !selected ? Border.all(color: context.colors.brand500, width: 1.5) : null,
               ),
               child: Text(
                 '${date.day}',
                 style: TextStyle(
-                  color: selected ? Colors.white : AppColors.gray900,
+                  color: selected ? Colors.white : context.colors.gray900,
                   fontWeight: selected || isToday ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
@@ -379,8 +379,8 @@ class _DayCell extends StatelessWidget {
               width: 5,
               height: 5,
               child: busy
-                  ? const DecoratedBox(
-                      decoration: BoxDecoration(color: AppColors.brand500, shape: BoxShape.circle),
+                  ? DecoratedBox(
+                      decoration: BoxDecoration(color: context.colors.brand500, shape: BoxShape.circle),
                     )
                   : null,
             ),
@@ -396,8 +396,12 @@ class _Timeline extends StatelessWidget {
 
   final List<Consultation> consultations;
 
-  String _formatTime(DateTime date) =>
-      '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  // A API manda horário em UTC ("...Z"): sem toLocal() a agenda mostrava a
+  // consulta das 10h às 13h.
+  String _formatTime(DateTime date) {
+    final d = date.toLocal();
+    return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -428,18 +432,18 @@ class _Timeline extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: AppColors.brand500.withValues(alpha: 0.12),
+                      color: context.colors.brand500.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.videocam_outlined,
                       size: 16,
-                      color: AppColors.brand800,
+                      color: context.colors.brand800,
                     ),
                   ),
                   if (!isLast)
                     Expanded(
-                      child: Container(width: 2, color: AppColors.gray200),
+                      child: Container(width: 2, color: context.colors.gray200),
                     ),
                 ],
               ),

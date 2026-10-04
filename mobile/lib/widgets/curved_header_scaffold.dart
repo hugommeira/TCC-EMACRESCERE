@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'app_header.dart';
+import 'motion.dart';
 
 /// Estrutura reutilizada entre as abas: header verde curvo com um card
 /// branco "subindo" por cima dele, seguido do resto do conteúdo.
@@ -68,7 +69,7 @@ class CurvedHeaderScaffold extends StatelessWidget {
                 SizedBox(height: cardTop),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
-                  child: overlapCard,
+                  child: Rise(child: overlapCard),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -79,7 +80,14 @@ class CurvedHeaderScaffold extends StatelessWidget {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: children,
+                    // Cada bloco entra um pouco depois do anterior.
+                    children: [
+                      for (var i = 0; i < children.length; i++)
+                        Rise(
+                          delay: Duration(milliseconds: 60 * (i + 1).clamp(1, 6)),
+                          child: children[i],
+                        ),
+                    ],
                   ),
                 ),
               ],
@@ -96,7 +104,7 @@ class CurvedHeaderScaffold extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: AppColors.gray50,
+        backgroundColor: context.colors.gray50,
         body: body,
       ),
     );

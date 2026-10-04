@@ -88,7 +88,7 @@ class _QueueWaitingScreenState extends State<QueueWaitingScreen> {
             child: const Text('Ficar'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+            style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Sair da fila'),
           ),
@@ -139,7 +139,7 @@ class _QueueWaitingScreenState extends State<QueueWaitingScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: AppColors.brand500.withValues(alpha: 0.12),
+              color: context.colors.brand500.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -170,12 +170,12 @@ class _QueueWaitingScreenState extends State<QueueWaitingScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.gray100,
+              color: context.colors.gray100,
               borderRadius: BorderRadius.circular(AppRadius.card),
             ),
             child: Row(
               children: [
-                const Icon(Icons.phone_android, size: 18, color: AppColors.gray600),
+                Icon(Icons.phone_android, size: 18, color: context.colors.gray600),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -199,13 +199,13 @@ class _QueueWaitingScreenState extends State<QueueWaitingScreen> {
             children: [
               Expanded(child: body),
               if (_error != null) ...[
-                Text(_error!, style: const TextStyle(color: AppColors.danger600)),
+                Text(_error!, style: TextStyle(color: context.colors.danger600)),
                 const SizedBox(height: 12),
               ],
               if (pos == null || pos.isWaiting || pos.isAwaitingPayment)
                 TextButton(
                   onPressed: _leaving ? null : _leave,
-                  style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+                  style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
                   child: Text(_leaving ? 'Saindo…' : 'Sair da fila'),
                 ),
             ],
@@ -229,7 +229,7 @@ class _Message extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, size: 56, color: AppColors.gray400),
+        Icon(icon, size: 56, color: context.colors.gray400),
         const SizedBox(height: 16),
         Text(title, style: textTheme.titleLarge),
         const SizedBox(height: 8),

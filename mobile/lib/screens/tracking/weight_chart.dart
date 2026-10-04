@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/weight_entry.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/formatters.dart';
 
 /// Evolução do peso (ou do IMC) ao longo do tempo.
 ///
@@ -37,7 +38,7 @@ class WeightChart extends StatelessWidget {
               ? 'Informe sua altura para ver o IMC.'
               : 'Nenhuma pesagem neste período.',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.gray600),
+          style: TextStyle(color: context.colors.gray600),
         ),
       );
     }
@@ -77,14 +78,14 @@ class WeightChart extends StatelessWidget {
                 horizontalLines: [
                   HorizontalLine(
                     y: goalKg!,
-                    color: AppColors.gray400,
+                    color: context.colors.gray400,
                     strokeWidth: 1.5,
                     dashArray: const [5, 4],
                     label: HorizontalLineLabel(
                       show: true,
                       alignment: Alignment.topRight,
-                      style: const TextStyle(fontSize: 10, color: AppColors.gray600),
-                      labelResolver: (_) => 'meta ${goalKg!.toStringAsFixed(1)} kg',
+                      style: TextStyle(fontSize: 10, color: context.colors.gray600),
+                      labelResolver: (_) => 'meta ${formatDecimal(goalKg!)} kg',
                     ),
                   ),
                 ],
@@ -95,7 +96,7 @@ class WeightChart extends StatelessWidget {
             getTooltipItems: (touched) => [
               for (final t in touched)
                 LineTooltipItem(
-                  '${t.y.toStringAsFixed(1)}${metric == WeightMetric.weight ? ' kg' : ''}\n'
+                  '${formatDecimal(t.y)}${metric == WeightMetric.weight ? ' kg' : ''}\n'
                   '${_dataCurta(pontos[t.x.round()].entry.date)}',
                   const TextStyle(color: Colors.white, fontSize: 12),
                 ),
@@ -111,8 +112,8 @@ class WeightChart extends StatelessWidget {
               reservedSize: 40,
               interval: interval,
               getTitlesWidget: (value, meta) => Text(
-                value.toStringAsFixed(decimals),
-                style: const TextStyle(fontSize: 11, color: AppColors.gray600),
+                formatDecimal(value, decimals),
+                style: TextStyle(fontSize: 11, color: context.colors.gray600),
               ),
             ),
           ),
@@ -128,7 +129,7 @@ class WeightChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     _dataCurta(pontos[index].entry.date),
-                    style: const TextStyle(fontSize: 11, color: AppColors.gray600),
+                    style: TextStyle(fontSize: 11, color: context.colors.gray600),
                   ),
                 );
               },
@@ -139,12 +140,12 @@ class WeightChart extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: AppColors.brand600,
+            color: context.colors.brand600,
             barWidth: 3,
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.brand500.withValues(alpha: 0.12),
+              color: context.colors.brand500.withValues(alpha: 0.12),
             ),
           ),
         ],

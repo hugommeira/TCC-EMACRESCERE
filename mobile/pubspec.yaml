@@ -85,6 +85,7 @@ flutter:
   assets:
     - .env
     - assets/logo/
+    - assets/3d/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -230,9 +230,9 @@ class _QueueCard extends StatelessWidget {
                   height: 40,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    gradient: AppColors.brandGradientSoft,
+                    gradient: context.colors.softGradient,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.brand100),
+                    border: Border.all(color: context.colors.brand100),
                   ),
                   child: Text('$position', style: textTheme.titleMedium),
                 ),
@@ -249,12 +249,12 @@ class _QueueCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.brand100,
+                    color: context.colors.brand100,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     'espera ${_waitingLabel()}',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.brand800),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.brand800),
                   ),
                 ),
               ],
@@ -269,12 +269,12 @@ class _QueueCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, size: 16, color: AppColors.warning500),
+                  Icon(Icons.warning_amber_rounded, size: 16, color: context.colors.warning500),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       'Alergias: ${item.allergies.join(', ')}',
-                      style: textTheme.bodySmall?.copyWith(color: const Color(0xFF92400E)),
+                      style: textTheme.bodySmall?.copyWith(color: context.colors.warningFg),
                     ),
                   ),
                 ],
@@ -313,7 +313,7 @@ class _Notice extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            Icon(icon, color: danger ? AppColors.danger600 : AppColors.brand600),
+            Icon(icon, color: danger ? context.colors.danger600 : context.colors.brand600),
             const SizedBox(width: 12),
             Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium)),
           ],

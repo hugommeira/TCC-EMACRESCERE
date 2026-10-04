@@ -152,8 +152,34 @@ degradê esmeralda, letreiro verde-escuro). Tudo mora em
   onboarding.
 - Navegação: `NavigationBar` (Material 3) com indicador menta.
 
+### Tema claro e escuro (2026-10-04)
+- `AppTheme.light` e `AppTheme.dark` saem do mesmo construtor; a diferença
+  está na `AppPalette` (ThemeExtension em `lib/theme/app_theme.dart`).
+- **Em tela, cor vem de `context.colors.<nome>`**, não de `AppColors`. Os
+  nomes são os mesmos (`gray600`, `brand100`, `ink`, `card`...), mas no
+  escuro os tons claros da escala viram fundos/bordas escuros e os tons
+  escuros viram texto claro. `AppColors` fica só para o que não muda com o
+  tema: degradês, fundo esmeralda com texto branco (botão, bolha do chat,
+  dia selecionado), texto branco sobre o header verde.
+- `ThemeController` (`lib/theme/theme_controller.dart`) guarda a escolha no
+  SharedPreferences, separada por perfil: paciente começa no claro, médico
+  no escuro (experiências diferentes). O `StartupGate` informa o perfil.
+- Para trocar: botão sol/lua no header verde (`ThemeToggleButton`) ou o
+  cartão "Tema escuro" no Perfil (`ThemeSettingCard`).
+
+### Movimento e 3D (2026-10-04) — `lib/widgets/motion.dart`
+- `assets/3d/*.webp` são os renders dos modelos 3D do site
+  (`public/3d/posters/*@1x.webp`); o app não carrega `.glb`.
+- `FloatingLogo3D` (coração-folha flutuando com órbitas: boas-vindas e
+  onboarding), `Seal3D` (selo girando: receita assinada no detalhe da
+  consulta) e `Rise` (entrada dos blocos, aplicada no
+  `CurvedHeaderScaffold`). Todos param quando o sistema pede menos
+  animação, e `Rise` não usa opacidade (nada fica invisível).
+- Números de peso/IMC com vírgula: `formatDecimal` em `lib/utils/formatters.dart`.
+
 ## Como rodar / testar
-- Flutter 3.38.5 / Dart 3.10.4 (`flutter --version` pra conferir)
+- Flutter 3.47.x / Dart 3.13 (o `pubspec.lock` atual não resolve em versões
+  anteriores; `flutter --version` pra conferir)
 - `flutter pub get` antes de rodar
 - `flutter run -d <device-id>` — use `flutter devices` pra listar (Android
   físico ou emulador; Windows precisa de Visual Studio, que não está
@@ -172,8 +198,8 @@ degradê esmeralda, letreiro verde-escuro). Tudo mora em
   backend em produção: `https://tcc-emacrescere.vercel.app`
 - Testes automatizados: `flutter test` — widget tests de layout das telas
   de fila/pagamento (`test/queue_screens_test.dart`) e do cadastro/
-  credenciamento do médico (`test/doctor_screens_test.dart`), 320px de
-  largura, sem rede. Rode antes de commitar mudanças de UI.
+  credenciamento do médico (`test/doctor_screens_test.dart`) e dos temas
+  claro/escuro (`test/theme_test.dart`), 320px de largura, sem rede. Rode antes de commitar mudanças de UI.
 
 ### Contas de teste (seed do backend, `prisma/seed.ts` do repo Next.js)
 Já documentadas publicamente no `README.md` do backend — não são segredo.

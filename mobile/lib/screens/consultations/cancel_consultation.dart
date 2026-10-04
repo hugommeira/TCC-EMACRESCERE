@@ -14,7 +14,8 @@ Future<bool> confirmAndCancelConsultation(
     builder: (context) => AlertDialog(
       title: const Text('Desmarcar consulta?'),
       content: const Text(
-        'A consulta será cancelada. Se já houve pagamento, o reembolso é tratado pela clínica.',
+        'A consulta será cancelada. Com 24 h ou mais de antecedência, o '
+        'reembolso é integral; com menos de 24 h, não há reembolso.',
       ),
       actions: [
         TextButton(
@@ -22,7 +23,7 @@ Future<bool> confirmAndCancelConsultation(
           child: const Text('Manter'),
         ),
         TextButton(
-          style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+          style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
           onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Desmarcar'),
         ),

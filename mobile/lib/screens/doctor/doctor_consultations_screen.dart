@@ -187,7 +187,7 @@ class _StatsCard extends StatelessWidget {
         child: Row(
           children: [
             stat('Hoje', today),
-            Container(width: 1, height: 44, color: AppColors.brand100),
+            Container(width: 1, height: 44, color: context.colors.brand100),
             const SizedBox(width: 16),
             stat('Concluídas', completed),
           ],
@@ -216,7 +216,7 @@ class _Tile extends StatelessWidget {
         shape: highlight
             ? RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                side: const BorderSide(color: AppColors.brand500, width: 1.5),
+                side: BorderSide(color: context.colors.brand500, width: 1.5),
               )
             : null,
         child: InkWell(
@@ -231,12 +231,12 @@ class _Tile extends StatelessWidget {
                   height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    gradient: highlight ? AppColors.brandGradient : AppColors.brandGradientSoft,
+                    gradient: highlight ? AppColors.brandGradient : context.colors.softGradient,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
                     c.isOnDemand ? Icons.bolt_rounded : Icons.event_rounded,
-                    color: highlight ? Colors.white : AppColors.brand700,
+                    color: highlight ? Colors.white : context.colors.brand700,
                     size: 22,
                   ),
                 ),
@@ -253,7 +253,7 @@ class _Tile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: AppColors.gray400),
+                Icon(Icons.chevron_right, color: context.colors.gray400),
               ],
             ),
           ),

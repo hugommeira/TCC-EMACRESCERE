@@ -8,6 +8,7 @@ import '../../utils/formatters.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/curved_header_scaffold.dart';
 import '../startup/startup_gate.dart';
+import '../../widgets/theme_setting_card.dart';
 
 /// Perfil do médico (GET/PATCH /api/doctor/profile): dados do conselho,
 /// status do credenciamento e o interruptor "disponível pra atender".
@@ -81,7 +82,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+            style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Sair'),
           ),
@@ -142,12 +143,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               const SizedBox(height: 14),
               Row(
                 children: [
-                  const Icon(Icons.verified_rounded, color: AppColors.brand600, size: 18),
+                  Icon(Icons.verified_rounded, color: context.colors.brand600, size: 18),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       'Credenciado pela Emacrescere',
-                      style: textTheme.bodySmall?.copyWith(color: AppColors.brand800, fontWeight: FontWeight.w600),
+                      style: textTheme.bodySmall?.copyWith(color: context.colors.brand800, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -161,7 +162,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           child: SwitchListTile(
             value: profile.available,
             onChanged: _toggling ? null : _setAvailable,
-            activeThumbColor: AppColors.brand600,
+            activeThumbColor: context.colors.brand600,
             contentPadding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
             title: Text('Disponível para atender', style: textTheme.titleMedium),
             subtitle: Text(
@@ -204,13 +205,15 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
+        const ThemeSettingCard(),
+        const SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: _logout,
           icon: const Icon(Icons.logout, size: 18),
           label: const Text('Sair da conta'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.danger600,
-            side: const BorderSide(color: AppColors.danger500),
+            foregroundColor: context.colors.danger600,
+            side: BorderSide(color: context.colors.danger500),
           ),
         ),
       ],

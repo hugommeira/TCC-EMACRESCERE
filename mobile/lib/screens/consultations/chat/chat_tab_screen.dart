@@ -143,7 +143,7 @@ class _IntroCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundColor: AppColors.brand500.withValues(alpha: 0.12),
+              backgroundColor: context.colors.brand500.withValues(alpha: 0.12),
               child: Icon(Icons.chat_bubble_outline, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(width: 16),
@@ -188,7 +188,7 @@ class _RoomTile extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: AppColors.brand500.withValues(alpha: 0.12),
+                  backgroundColor: context.colors.brand500.withValues(alpha: 0.12),
                   child: Icon(Icons.person_outline, color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(width: 12),
@@ -209,7 +209,7 @@ class _RoomTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: AppColors.gray400),
+                Icon(Icons.chevron_right, color: context.colors.gray400),
               ],
             ),
           ),

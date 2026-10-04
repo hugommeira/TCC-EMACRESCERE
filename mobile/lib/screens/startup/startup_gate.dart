@@ -4,6 +4,7 @@ import '../../models/doctor_profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/doctor_service.dart';
 import '../../services/onboarding_service.dart';
+import '../../theme/theme_controller.dart';
 import '../doctor/doctor_pending_screen.dart';
 import '../doctor/doctor_shell.dart';
 import '../onboarding/onboarding_screen.dart';
@@ -38,9 +39,16 @@ class _StartupGateState extends State<StartupGate> {
 
     final session = await AuthService.checkSession();
     if (session == null) {
+      // Telas de entrada seguem o tema da paciente.
+      ThemeController.instance.setAudience(ThemeAudience.patient);
       setState(() => _stage = _Stage.blocked);
       return;
     }
+
+    // Paciente e médico têm tema próprio (o médico começa no escuro).
+    ThemeController.instance.setAudience(
+      session.role == 'DOCTOR' ? ThemeAudience.doctor : ThemeAudience.patient,
+    );
 
     if (session.role == 'DOCTOR') {
       try {

@@ -58,14 +58,14 @@ class _DoctorPendingScreenState extends State<DoctorPendingScreen> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: rejected
-                      ? AppColors.danger500.withValues(alpha: 0.12)
-                      : AppColors.warning500.withValues(alpha: 0.15),
+                      ? context.colors.danger500.withValues(alpha: 0.12)
+                      : context.colors.warning500.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   rejected ? Icons.block_rounded : Icons.hourglass_top_rounded,
                   size: 40,
-                  color: rejected ? AppColors.danger600 : const Color(0xFF92400E),
+                  color: rejected ? context.colors.danger600 : context.colors.warningFg,
                 ),
               ),
               const SizedBox(height: 20),

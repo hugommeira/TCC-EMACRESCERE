@@ -210,10 +210,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: ButtonStyle(
                     visualDensity: VisualDensity.comfortable,
                     backgroundColor: WidgetStateProperty.resolveWith(
-                      (states) => states.contains(WidgetState.selected) ? AppColors.brand100 : Colors.white,
+                      (states) => states.contains(WidgetState.selected) ? context.colors.brand100 : context.colors.card,
                     ),
-                    foregroundColor: WidgetStateProperty.all(AppColors.ink),
-                    side: WidgetStateProperty.all(const BorderSide(color: AppColors.brand200)),
+                    foregroundColor: WidgetStateProperty.all(context.colors.ink),
+                    side: WidgetStateProperty.all(BorderSide(color: context.colors.brand200)),
                   ),
                 ),
                 if (_isDoctor) ...[
@@ -221,13 +221,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: AppColors.brandGradientSoft,
+                      gradient: context.colors.softGradient,
                       borderRadius: BorderRadius.circular(AppRadius.card),
-                      border: Border.all(color: AppColors.brand100),
+                      border: Border.all(color: context.colors.brand100),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.verified_outlined, color: AppColors.brand700, size: 20),
+                        Icon(Icons.verified_outlined, color: context.colors.brand700, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -245,10 +245,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.danger500.withValues(alpha: 0.1),
+                      color: context.colors.danger500.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppRadius.card),
                     ),
-                    child: Text(_error!, style: const TextStyle(color: AppColors.danger600)),
+                    child: Text(_error!, style: TextStyle(color: context.colors.danger600)),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -357,7 +357,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  activeColor: AppColors.brand600,
+                  activeColor: context.colors.brand600,
                   title: Wrap(
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
@@ -402,7 +402,7 @@ class _LinkText extends StatelessWidget {
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.brand700,
+              color: context.colors.brand700,
               fontWeight: FontWeight.w700,
               decoration: TextDecoration.underline,
             ),

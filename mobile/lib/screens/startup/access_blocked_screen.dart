@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../theme/app_theme.dart';
-import '../../widgets/brand_mark.dart';
+import '../../widgets/motion.dart';
 import '../auth/login_screen.dart';
 import '../debug_login_test_screen.dart';
 
@@ -56,9 +56,22 @@ class AccessBlockedScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const BrandLockup(
-                tileSize: 96,
-                tagline: 'Seu acompanhamento de emagrecimento,\nsempre com você.',
+              const Center(child: FloatingLogo3D(size: 170)),
+              Text(
+                'Emacrescere',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  color: context.colors.ink,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Seu acompanhamento de emagrecimento,\nsempre com você.',
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 36),
               _FeatureRow(icon: Icons.chat_bubble_outline_rounded, text: 'Fale com o médico por chat'),
@@ -114,10 +127,10 @@ class _FeatureRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              gradient: AppColors.brandGradientSoft,
+              gradient: context.colors.softGradient,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 18, color: AppColors.brand700),
+            child: Icon(icon, size: 18, color: context.colors.brand700),
           ),
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyLarge)),

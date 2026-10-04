@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_controller.dart';
 import 'brand_mark.dart';
 
 /// Header das abas: degradê da marca, avatar + saudação, e o símbolo do
@@ -53,7 +54,7 @@ class GreenHeader extends StatelessWidget {
       child: Container(
         width: double.infinity,
         height: height,
-        decoration: const BoxDecoration(gradient: AppColors.brandGradient),
+        decoration: BoxDecoration(gradient: context.colors.headerGradient),
         child: Stack(
           children: [
             // Marca d'água: símbolo grande, translúcido, sangrando pela
@@ -117,7 +118,9 @@ class GreenHeader extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (onTrailingTap != null)
+                      const ThemeToggleButton(),
+                      if (onTrailingTap != null) ...[
+                        const SizedBox(width: 8),
                         Material(
                           color: Colors.white.withValues(alpha: 0.18),
                           shape: const CircleBorder(),
@@ -131,6 +134,7 @@ class GreenHeader extends StatelessWidget {
                             ),
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -139,6 +143,59 @@ class GreenHeader extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Botão sol/lua do header: alterna entre tema claro e escuro do perfil
+/// atual (a escolha fica salva no aparelho). O ícone gira ao trocar.
+class ThemeToggleButton extends StatelessWidget {
+  const ThemeToggleButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final themes = ThemeController.instance;
+    return ListenableBuilder(
+      listenable: themes,
+      builder: (context, _) {
+        final dark = themes.isDark;
+        return Tooltip(
+          message: dark ? 'Tema claro' : 'Tema escuro',
+          excludeFromSemantics: true,
+          child: Semantics(
+            container: true,
+            button: true,
+            label: dark ? 'Mudar para o tema claro' : 'Mudar para o tema escuro',
+            excludeSemantics: true,
+            child: Material(
+              color: Colors.white.withValues(alpha: 0.18),
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: themes.toggle,
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 420),
+                    switchInCurve: Curves.easeOutBack,
+                    transitionBuilder: (child, animation) => RotationTransition(
+                      turns: Tween<double>(begin: -0.35, end: 0).animate(animation),
+                      child: ScaleTransition(scale: animation, child: child),
+                    ),
+                    child: Icon(
+                      dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                      key: ValueKey(dark),
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

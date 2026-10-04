@@ -8,6 +8,7 @@ import '../../utils/formatters.dart';
 import '../../widgets/curved_header_scaffold.dart';
 import '../startup/startup_gate.dart';
 import 'edit_profile_sheet.dart';
+import '../../widgets/theme_setting_card.dart';
 
 /// Perfil do paciente — dados de User + PatientProfile
 /// (GET/PATCH /api/users/[id]).
@@ -73,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: const Text('Cancelar'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+            style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Sair'),
           ),
@@ -160,13 +161,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 24),
+        const ThemeSettingCard(),
+        const SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: _logout,
           icon: const Icon(Icons.logout, size: 18),
           label: const Text('Sair da conta'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.danger600,
-            side: const BorderSide(color: AppColors.danger500),
+            foregroundColor: context.colors.danger600,
+            side: BorderSide(color: context.colors.danger500),
           ),
         ),
       ],

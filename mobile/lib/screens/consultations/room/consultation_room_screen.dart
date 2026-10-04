@@ -103,7 +103,7 @@ class _VideoSoonBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: AppColors.brand500.withValues(alpha: 0.12),
+      color: context.colors.brand500.withValues(alpha: 0.12),
       child: Row(
         children: [
           Icon(Icons.videocam_off_outlined, size: 18, color: Theme.of(context).colorScheme.primary),

@@ -157,8 +157,8 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = isMine ? Theme.of(context).colorScheme.primary : Colors.white;
-    final textColor = isMine ? Colors.white : AppColors.gray900;
+    final bgColor = isMine ? AppColors.brand600 : context.colors.card;
+    final textColor = isMine ? Colors.white : context.colors.gray900;
 
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
@@ -174,7 +174,7 @@ class _MessageBubble extends StatelessWidget {
             bottomLeft: Radius.circular(isMine ? 16 : 4),
             bottomRight: Radius.circular(isMine ? 4 : 16),
           ),
-          border: isMine ? null : Border.all(color: AppColors.gray200),
+          border: isMine ? null : Border.all(color: context.colors.gray200),
         ),
         child: Text(message.content, style: TextStyle(color: textColor)),
       ),

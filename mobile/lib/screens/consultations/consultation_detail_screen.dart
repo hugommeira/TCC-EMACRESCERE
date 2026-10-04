@@ -9,6 +9,7 @@ import '../../models/consultation.dart';
 import '../../services/consultation_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/motion.dart';
 import 'chat/chat_screen.dart';
 
 /// Detalhe de uma consulta: prontuário (campos da própria consulta —
@@ -102,6 +103,10 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (consultation.prescriptionStatus == 'ISSUED') ...[
+                            const Center(child: Seal3D(size: 110)),
+                            const SizedBox(height: 8),
+                          ],
                           Text(
                             consultation.prescriptionStatus == 'ISSUED'
                                 ? 'Prescrição assinada e disponível.'
@@ -189,7 +194,7 @@ class _StatusCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.brand500.withValues(alpha: 0.12),
+                color: context.colors.brand500.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(

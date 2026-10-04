@@ -11,6 +11,7 @@ import '../shell/tab_visibility.dart';
 import 'register_weight_sheet.dart';
 import 'set_goal_sheet.dart';
 import 'weight_chart.dart';
+import '../../utils/formatters.dart';
 
 class TrackingScreen extends StatefulWidget {
   const TrackingScreen({super.key});
@@ -108,7 +109,7 @@ class _TrackingScreenState extends State<TrackingScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Apagar pesagem?'),
-        content: Text('${entry.weightKg.toStringAsFixed(1)} kg em $dia.'),
+        content: Text('${formatDecimal(entry.weightKg)} kg em $dia.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -147,7 +148,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.cloud_off_rounded, size: 40, color: AppColors.gray400),
+                Icon(Icons.cloud_off_rounded, size: 40, color: context.colors.gray400),
                 const SizedBox(height: 12),
                 Text(erro, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
@@ -192,9 +193,9 @@ class _TrackingScreenState extends State<TrackingScreen>
         if (resumo?.heightCm == null) ...[
           const SizedBox(height: 16),
           Card(
-            color: AppColors.brand50,
+            color: context.colors.brand50,
             child: ListTile(
-              leading: const Icon(Icons.info_outline, color: AppColors.brand700),
+              leading: Icon(Icons.info_outline, color: context.colors.brand700),
               title: const Text('Falta a sua altura'),
               subtitle: const Text('Sem ela o IMC não pode ser calculado.'),
               trailing: TextButton(onPressed: _openSetGoal, child: const Text('Informar')),
@@ -212,10 +213,10 @@ class _TrackingScreenState extends State<TrackingScreen>
                 children: [
                   Text('Comece agora', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Registre a sua primeira pesagem. O histórico fica salvo na sua '
                     'conta e o seu médico enxerga durante a consulta.',
-                    style: TextStyle(color: AppColors.gray600),
+                    style: TextStyle(color: context.colors.gray600),
                   ),
                 ],
               ),
@@ -327,7 +328,7 @@ class _SummaryCard extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              const Icon(Icons.monitor_weight_outlined, size: 32, color: AppColors.gray300),
+              Icon(Icons.monitor_weight_outlined, size: 32, color: context.colors.gray300),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
@@ -356,7 +357,7 @@ class _SummaryCard extends StatelessWidget {
                   Text('Peso atual', style: Theme.of(context).textTheme.labelMedium),
                   const SizedBox(height: 4),
                   Text(
-                    '${atual.weightKg.toStringAsFixed(1)} kg',
+                    '${formatDecimal(atual.weightKg)} kg',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -366,7 +367,7 @@ class _SummaryCard extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         'aferido por ${atual.recordedBy ?? 'seu médico'}',
-                        style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+                        style: TextStyle(fontSize: 12, color: context.colors.gray600),
                       ),
                     ),
                 ],
@@ -379,7 +380,7 @@ class _SummaryCard extends StatelessWidget {
                   Text('IMC', style: Theme.of(context).textTheme.labelMedium),
                   const SizedBox(height: 4),
                   Text(
-                    bmi.toStringAsFixed(1),
+                    formatDecimal(bmi),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -389,13 +390,13 @@ class _SummaryCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _categoryColor(categoria).withValues(alpha: 0.12),
+                        color: _categoryColor(context, categoria).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         atual.bmiLabel ?? categoria!.label,
                         style: TextStyle(
-                          color: _categoryColor(categoria),
+                          color: _categoryColor(context, categoria),
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                         ),
@@ -411,15 +412,15 @@ class _SummaryCard extends StatelessWidget {
 
   /// Cor do selo da faixa de IMC. Faixa desconhecida (o site criou uma que
   /// esta versão do app não conhece) cai no cinza em vez de sumir com o selo.
-  Color _categoryColor(BmiCategory? category) {
+  Color _categoryColor(BuildContext context, BmiCategory? category) {
     return switch (category) {
-      BmiCategory.normal => AppColors.success500,
-      BmiCategory.underweight || BmiCategory.overweight => AppColors.warning500,
+      BmiCategory.normal => context.colors.success500,
+      BmiCategory.underweight || BmiCategory.overweight => context.colors.warning500,
       BmiCategory.obeseClass1 ||
       BmiCategory.obeseClass2 ||
       BmiCategory.obeseClass3 =>
-        AppColors.danger500,
-      null => AppColors.gray600,
+        context.colors.danger500,
+      null => context.colors.gray600,
     };
   }
 }
@@ -459,11 +460,11 @@ class _ChartCard extends StatelessWidget {
                 if (variacao != null)
                   Text(
                     variacao,
-                    style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.brand700),
+                    style: TextStyle(fontWeight: FontWeight.w600, color: context.colors.brand700),
                   ),
               ],
             ),
-            Text(periodo, style: const TextStyle(fontSize: 12, color: AppColors.gray600)),
+            Text(periodo, style: TextStyle(fontSize: 12, color: context.colors.gray600)),
             const SizedBox(height: 16),
             SizedBox(
               height: 200,
@@ -485,7 +486,7 @@ class _ChartCard extends StatelessWidget {
     if (delta == null) return null;
     final sinal = delta > 0 ? '+' : delta < 0 ? '−' : '';
     final unidade = metric == WeightMetric.weight ? ' kg' : '';
-    return '$sinal${delta.abs().toStringAsFixed(1)}$unidade';
+    return '$sinal${formatDecimal(delta.abs())}$unidade';
   }
 }
 
@@ -509,10 +510,10 @@ class _GoalCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 24,
-              backgroundColor: AppColors.brand100,
-              child: Icon(Icons.flag_outlined, color: AppColors.brand700),
+              backgroundColor: context.colors.brand100,
+              child: Icon(Icons.flag_outlined, color: context.colors.brand700),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -552,13 +553,13 @@ class _GoalCard extends StatelessWidget {
       final sugestao = sugestaoKg;
       return sugestao == null
           ? 'Nenhuma meta definida'
-          : 'Nenhuma meta definida (sugestão: ${sugestao.toStringAsFixed(1)} kg)';
+          : 'Nenhuma meta definida (sugestão: ${formatDecimal(sugestao)} kg)';
     }
     final diff = latest.weightKg - meta;
-    if (diff.abs() < 0.1) return 'Meta atingida! (${meta.toStringAsFixed(1)} kg)';
+    if (diff.abs() < 0.1) return 'Meta atingida! (${formatDecimal(meta)} kg)';
     final direcao = diff > 0 ? 'perder' : 'ganhar';
-    return 'Faltam ${diff.abs().toStringAsFixed(1)} kg pra $direcao '
-        '(meta: ${meta.toStringAsFixed(1)} kg)';
+    return 'Faltam ${formatDecimal(diff.abs())} kg pra $direcao '
+        '(meta: ${formatDecimal(meta)} kg)';
   }
 }
 
@@ -581,9 +582,9 @@ class _HistoryCard extends StatelessWidget {
             Text('Histórico', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             if (recentes.isEmpty)
-              const Text(
+              Text(
                 'Nenhuma pesagem neste período.',
-                style: TextStyle(color: AppColors.gray600),
+                style: TextStyle(color: context.colors.gray600),
               ),
             for (final e in recentes)
               Padding(
@@ -598,12 +599,12 @@ class _HistoryCard extends StatelessWidget {
                           Text(
                             '${e.date.day.toString().padLeft(2, '0')}/'
                             '${e.date.month.toString().padLeft(2, '0')}/${e.date.year}',
-                            style: const TextStyle(color: AppColors.gray600),
+                            style: TextStyle(color: context.colors.gray600),
                           ),
                           if (e.registradoPeloMedico)
                             Text(
                               'aferido por ${e.recordedBy ?? 'seu médico'}',
-                              style: const TextStyle(fontSize: 11, color: AppColors.gray400),
+                              style: TextStyle(fontSize: 11, color: context.colors.gray400),
                             ),
                         ],
                       ),
@@ -612,13 +613,13 @@ class _HistoryCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          '${e.weightKg.toStringAsFixed(1)} kg',
+                          '${formatDecimal(e.weightKg)} kg',
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         if (e.bmi != null)
                           Text(
-                            'IMC ${e.bmi!.toStringAsFixed(1)}',
-                            style: const TextStyle(fontSize: 11, color: AppColors.gray600),
+                            'IMC ${formatDecimal(e.bmi!)}',
+                            style: TextStyle(fontSize: 11, color: context.colors.gray600),
                           ),
                       ],
                     ),
@@ -627,7 +628,7 @@ class _HistoryCard extends StatelessWidget {
                         tooltip: 'Apagar pesagem',
                         visualDensity: VisualDensity.compact,
                         onPressed: () => onDelete(e),
-                        icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.gray400),
+                        icon: Icon(Icons.delete_outline, size: 18, color: context.colors.gray400),
                       ),
                   ],
                 ),

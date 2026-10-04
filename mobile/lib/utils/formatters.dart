@@ -1,4 +1,4 @@
-// Formatação de datas no padrão brasileiro, sem depender de intl.
+// Formatação de datas e números no padrão brasileiro, sem depender de intl.
 
 String _two(int n) => n.toString().padLeft(2, '0');
 
@@ -41,3 +41,8 @@ String doctorTitle(String? fullName) {
   final hasTitle = RegExp(r'^dr\.?a?\.?\s+', caseSensitive: false).hasMatch(n);
   return hasTitle ? n : 'Dr(a). $n';
 }
+
+/// Número com vírgula decimal: 88,5 (peso, IMC, metas). Os campos de
+/// digitação já aceitam vírgula, então a tela e o teclado falam igual.
+String formatDecimal(double value, [int decimals = 1]) =>
+    value.toStringAsFixed(decimals).replaceAll('.', ',');

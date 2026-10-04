@@ -132,7 +132,7 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
             child: const Text('Voltar'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+            style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Desistir'),
           ),
@@ -195,7 +195,7 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.gray100,
+                            color: context.colors.gray100,
                             borderRadius: BorderRadius.circular(AppRadius.card),
                           ),
                           child: Text(
@@ -248,10 +248,10 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.danger500.withValues(alpha: 0.1),
+                  color: context.colors.danger500.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
-                child: Text(_notice!, style: const TextStyle(color: AppColors.danger600)),
+                child: Text(_notice!, style: TextStyle(color: context.colors.danger600)),
               ),
             ],
             if (kDebugMode) ...[
@@ -259,8 +259,8 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.warning500.withValues(alpha: 0.1),
-                  border: Border.all(color: AppColors.warning500),
+                  color: context.colors.warning500.withValues(alpha: 0.1),
+                  border: Border.all(color: context.colors.warning500),
                   borderRadius: BorderRadius.circular(AppRadius.cardLarge),
                 ),
                 child: Column(
@@ -284,7 +284,7 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
             const SizedBox(height: 24),
             TextButton(
               onPressed: _cancelling ? null : _giveUp,
-              style: TextButton.styleFrom(foregroundColor: AppColors.danger600),
+              style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
               child: Text(_cancelling ? 'Cancelando…' : 'Desistir da consulta'),
             ),
           ],
@@ -318,7 +318,7 @@ class _PixQr extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border.all(color: AppColors.gray200),
+          border: Border.all(color: context.colors.gray200),
           borderRadius: BorderRadius.circular(AppRadius.card),
         ),
         child: bytes != null
