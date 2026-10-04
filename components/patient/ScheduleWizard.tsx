@@ -229,13 +229,18 @@ export function ScheduleWizard() {
 
           {error && <Alert variant="error" onClose={() => setError(null)}>{error}</Alert>}
 
+          <DayStrip
+            from={minDateStr}
+            value={selectedDate}
+            onChange={(v) => { setSelectedDate(v); setSelectedSlot(null); }}
+          />
+
           <Input
-            label="Data da consulta"
+            label="Ou escolha outra data"
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             min={minDateStr}
-            required
           />
 
           {selectedDate && (
@@ -261,7 +266,7 @@ export function ScheduleWizard() {
                       disabled={!s.available}
                       onClick={() => setSelectedSlot(s)}
                       aria-label={s.available ? `Horário ${s.time}` : `Horário ${s.time}, indisponível`}
-                      className={`rounded-lg border py-2 text-sm font-medium transition-colors ${
+                      className={`min-h-11 rounded-lg border py-2 text-sm font-medium transition-colors ${
                         !s.available
                           ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300 line-through"
                           : selectedSlot?.startsAt === s.startsAt
@@ -311,7 +316,7 @@ export function ScheduleWizard() {
       {error && <Alert variant="error">{error}</Alert>}
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : doctors.length === 0 ? (
@@ -320,7 +325,7 @@ export function ScheduleWizard() {
           <p className="mt-2 text-sm">Nenhum médico encontrado</p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {doctors.map((doc) => (
             <DoctorCard
               key={doc.id}
@@ -336,6 +341,49 @@ export function ScheduleWizard() {
 }
 
 // ─── Step header ──────────────────────────────────────────────────────────────
+
+// Próximos 14 dias em chips (um toque, sem abrir o calendário do sistema).
+// Datas em "YYYY-MM-DD" no fuso de São Paulo, somadas em UTC para não variar
+// com o fuso do aparelho.
+const WEEKDAY = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const MONTH   = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+function DayStrip({ from, value, onChange }: { from: string; value: string; onChange: (v: string) => void }) {
+  const [y, m, d] = from.split("-").map(Number);
+  const days = Array.from({ length: 14 }, (_, i) => {
+    const dt = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + i));
+    return { iso: dt.toISOString().slice(0, 10), wd: WEEKDAY[dt.getUTCDay()], day: dt.getUTCDate(), mon: MONTH[dt.getUTCMonth()] };
+  });
+
+  return (
+    <div>
+      <p className="label">Data da consulta</p>
+      <div className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]" role="listbox" aria-label="Próximos dias">
+        {days.map((x, i) => {
+          const on = x.iso === value;
+          return (
+            <button
+              key={x.iso}
+              type="button"
+              role="option"
+              aria-selected={on}
+              aria-label={`${x.wd}, ${x.day} de ${x.mon}`}
+              onClick={() => onChange(x.iso)}
+              className={`flex w-14 flex-none snap-start flex-col items-center rounded-xl border py-2 transition-colors ${
+                on ? "border-brand-500 bg-gradient-to-b from-brand-500 to-teal-500 text-white shadow-md shadow-brand-500/25"
+                   : "border-gray-200 bg-white text-gray-700 hover:border-brand-300"
+              }`}
+            >
+              <span className={`text-[11px] font-medium ${on ? "text-white/85" : "text-gray-500"}`}>{i === 0 ? "Hoje" : x.wd}</span>
+              <span className="text-lg font-semibold leading-tight">{x.day}</span>
+              <span className={`text-[10px] ${on ? "text-white/80" : "text-gray-400"}`}>{x.mon}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function StepHeader({
   step, total, label, onBack,

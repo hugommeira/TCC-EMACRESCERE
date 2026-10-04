@@ -36,7 +36,7 @@ export default async function DoctorProfilePage() {
         description={`${profile.specialty}${profile.subSpecialty ? ` · ${profile.subSpecialty}` : ""}`}
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Coluna principal */}
         <div className="space-y-6 lg:col-span-2">
           <SectionCard title="Informações profissionais" description="Editáveis com auto-save">

@@ -98,15 +98,18 @@ export function Benefits() {
           <Reveal
             as="li"
             variant="clip"
-            className="relative min-h-[380px] overflow-hidden rounded-3xl md:col-span-2 lg:col-span-1 lg:row-span-3"
+            className="relative min-h-[220px] overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-700 to-teal-700 md:col-span-2 lg:col-span-1 lg:row-span-3 lg:min-h-[380px] lg:bg-none"
           >
+            {/* A foto só no desktop: na coluna alta aparece o notebook; no
+                celular o recorte curto escondia o notebook atrás do texto. */}
+            <div aria-hidden className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl lg:hidden" />
             <Photo
               src={PHOTOS.videoCall}
               alt="Médica em videochamada pelo notebook"
-              sizes="(min-width: 1024px) 33vw, 100vw"
-              className="absolute inset-0"
+              sizes="(min-width: 1024px) 33vw, 1px"
+              className="absolute inset-0 hidden lg:block"
             />
-            <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brand-950/90 via-brand-950/20 to-transparent" />
+            <div aria-hidden className="absolute inset-0 hidden bg-gradient-to-t from-brand-950/90 via-brand-950/20 to-transparent lg:block" />
             <div className="absolute inset-x-0 bottom-0 p-7">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur">
                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand-300" />

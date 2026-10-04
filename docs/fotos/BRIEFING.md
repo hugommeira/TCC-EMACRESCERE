@@ -42,8 +42,7 @@ URL; **troque por arquivo local** (seção 5).
 
 | Chave | Onde aparece | Formato e enquadramento |
 |---|---|---|
-| `heroMobile` | Topo da landing **no celular** | Vertical (4:5 ou 3:4). Pessoa usando o celular em casa, rosto no terço de cima (o corte usa `object-[center_25%]`). |
-| `videoCall` | "Benefícios", coluna da foto | Vertical. Paciente em consulta por vídeo no notebook/celular, de casa. |
+| `videoCall` | "Benefícios", coluna da foto (**só no desktop**: no celular e no tablet vira um cartão verde) | Vertical. Paciente em consulta por vídeo no notebook/celular, de casa. O aparelho precisa aparecer no terço de cima/meio: embaixo fica o texto. |
 | `food` | "Para quem é" | Horizontal. Refeição colorida e caseira, sem cara de dieta da moda. |
 | `doctorDesk` | "Para médicos" (cartão escuro, metade direita) | Horizontal. Médico(a) atendendo por vídeo. **Assunto à direita**: a esquerda recebe um degradê escuro. O selo 3D fica no canto de baixo à direita, então deixe esse canto sem rosto. |
 | `login` | Painel esquerdo do login (desktop) | Vertical/quadrada. Vida ativa e leve (caminhada, parque, casa iluminada). Fica com 50% de opacidade sob um degradê verde, então prefira foto com bom contraste e **assunto à direita** (o texto fica à esquerda; o logo 3D no topo esquerdo). |
@@ -57,7 +56,7 @@ URL; **troque por arquivo local** (seção 5).
 ## 5. Como entregar
 
 1. Baixe o **original** (tamanho máximo) e guarde a página da foto e o autor.
-2. Gere a versão do site: lado maior **2400 px** (heroMobile: 1600 px),
+2. Gere a versão do site: lado maior **2400 px**,
    JPEG qualidade 82 (o `next/image` já serve WebP/AVIF para o navegador).
    Ex.: `magick original.jpg -resize 2400x2400\> -quality 82 -strip saida.jpg`
 3. Salve em `public/photos/<chave>.jpg` (ex.: `public/photos/login.jpg`).
@@ -82,7 +81,6 @@ final em KB. O agente da nuvem lê aqui antes de mexer em fotos.
 
 | Chave | Link | Autor | Licença | KB |
 |---|---|---|---|---|
-| `heroMobile` | https://www.pexels.com/photo/7330711/ | MART PRODUCTION | Pexels License (uso comercial, sem atribuição obrigatória) | 177 |
 | `videoCall` | https://www.pexels.com/photo/4474047/ | Ketut Subiyanto | Pexels License (uso comercial, sem atribuição obrigatória) | 439 |
 | `food` | https://www.pexels.com/photo/724300/ | Cats Coming | Pexels License (uso comercial, sem atribuição obrigatória) | 402 |
 | `doctorDesk` | https://www.pexels.com/photo/8376291/ | Tima Miroshnichenko | Pexels License (uso comercial, sem atribuição obrigatória) | 254 |
@@ -92,3 +90,5 @@ final em KB. O agente da nuvem lê aqui antes de mexer em fotos.
 | `password` | https://www.pexels.com/photo/27176011/ | Helena Lopes | Pexels License (uso comercial, sem atribuição obrigatória) | 332 |
 
 Notas: originais todos com lado maior ≥ 4000 px. `videoCall` foi cortada em 3:4. `login` ficou acima de 500 KB (708) de propósito, para manter a textura do mar sem artefatos. Foram descartadas fotos com marca visível (logo Apple em `7195308`), relógio na parede (`7195424`), frascos de remédio no fundo (`8376152`, `8376339`, `8376227`); `registerDoctor` voltou à foto anterior (`7195379`) a pedido do dono e máscara/doente (`4031710`, `7195087`).
+
+**04/10/2026:** o topo da landing no celular deixou de ter foto (usa o celular 3D, `public/3d/posters/phone-app.webp`); `heroMobile` foi removida a pedido do dono. A foto `videoCall` não aparece mais no celular/tablet (o recorte escondia o notebook).

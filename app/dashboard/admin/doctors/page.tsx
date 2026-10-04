@@ -61,7 +61,7 @@ export default async function AdminDoctorsPage() {
         {pending.length === 0 ? (
           <p className="py-6 text-center text-sm text-gray-400">Nenhum cadastro pendente.</p>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {pending.map((d) => <DoctorApprovalCard key={d.id} doctor={d} />)}
           </div>
         )}
@@ -71,7 +71,7 @@ export default async function AdminDoctorsPage() {
         {approved.length === 0 ? (
           <EmptyState title="Nenhum médico credenciado" description="Aprove os cadastros pendentes acima." />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {approved.map((d) => <DoctorApprovalCard key={d.id} doctor={d} />)}
           </div>
         )}
@@ -79,7 +79,7 @@ export default async function AdminDoctorsPage() {
 
       {rejected.length > 0 && (
         <SectionCard title="Reprovados" className="mt-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {rejected.map((d) => <DoctorApprovalCard key={d.id} doctor={d} />)}
           </div>
         </SectionCard>

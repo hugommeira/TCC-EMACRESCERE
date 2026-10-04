@@ -117,7 +117,7 @@ function ScheduledConsultationView({ c }: { c: ScheduledProps }) {
 
   const summary = (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
+      <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-xs uppercase tracking-wider text-slate-400">Data e horário</dt>
           <dd className="mt-0.5 font-semibold text-slate-900">{when}</dd>

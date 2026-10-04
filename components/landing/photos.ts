@@ -3,8 +3,8 @@
 // (https://www.pexels.com/license/). Créditos completos em docs/fotos/BRIEFING.md.
 
 export const PHOTOS = {
-  // Topo no celular (foto vertical). pexels.com/photo/7330711 — MART PRODUCTION
-  heroMobile: "/photos/heroMobile.jpg",
+  // O topo no celular usa o celular 3D (public/3d/posters/phone-app.webp),
+  // não foto: a anterior (heroMobile) saiu a pedido do Hugo em 04/10/2026.
   // pexels.com/photo/4474047 — Ketut Subiyanto
   videoCall:  "/photos/videoCall.jpg",
   // pexels.com/photo/724300 — Cats Coming

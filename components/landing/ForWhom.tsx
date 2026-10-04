@@ -39,7 +39,7 @@ export function ForWhom() {
               src={PHOTOS.food}
               alt="Tigelas com salada e legumes frescos"
               sizes="(min-width: 1024px) 40vw, 100vw"
-              className="relative aspect-[4/5] w-full"
+              className="relative aspect-[4/5] w-full md:aspect-[16/10] lg:aspect-[4/5]"
             />
             <div
               aria-hidden

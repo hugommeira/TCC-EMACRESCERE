@@ -49,6 +49,9 @@ export const viewport: Viewport = {
   themeColor: "#10b981",
   width:      "device-width",
   initialScale: 1,
+  // Deixa o site usar a tela toda no iPhone; a barra de abas compensa a área
+  // do gesto com env(safe-area-inset-bottom).
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

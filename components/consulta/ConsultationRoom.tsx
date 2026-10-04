@@ -144,18 +144,18 @@ export function ConsultationRoom(p: Props) {
     (Date.now() - new Date(p.claimedAt).getTime()) / 1000 > 180;
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50">
+    <div className="flex h-dvh flex-col bg-slate-50 pb-[env(safe-area-inset-bottom)]">
       {/* Top bar */}
-      <header className="flex flex-none items-center justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-brand-50/60 via-white to-teal-50/40 px-3 py-2.5 shadow-sm sm:px-6 sm:py-3">
+      <header className="flex flex-none items-center justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-brand-50/60 via-white to-teal-50/40 px-3 py-2.5 shadow-sm sm:px-6 sm:py-3 max-lg:landscape:py-1.5">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
             Consulta {status === "IN_PROGRESS" ? "em andamento" : "encerrada"}
           </p>
           <h1 className="truncate font-display text-base font-semibold text-slate-900 sm:text-lg">
             {p.isDoctor ? p.patientName : (p.doctorInfo?.name ?? "Médico")}
           </h1>
           {!p.isDoctor && p.doctorInfo && (
-            <p className="hidden truncate text-xs text-slate-500 sm:block">
+            <p className="hidden truncate text-xs text-slate-500 sm:block max-lg:landscape:hidden">
               {p.doctorInfo.specialty} · CRM {p.doctorInfo.crm}
             </p>
           )}
@@ -217,39 +217,26 @@ export function ConsultationRoom(p: Props) {
         </div>
       </header>
 
-      {/* MOBILE LAYOUT: vídeo no topo, tabs em baixo */}
-      <div className="flex flex-1 flex-col overflow-hidden lg:hidden">
-        <div className="flex-none bg-slate-900 p-2">
+      {/* Um layout só, com UM VideoRoom. Antes havia um bloco para celular e
+          outro para desktop, escondidos por CSS: os dois montavam o vídeo e
+          entravam na sala com a mesma identidade (o LiveKit derruba a conexão
+          anterior). Celular em pé: vídeo no topo e abas embaixo. Celular
+          deitado e desktop: vídeo à esquerda e abas à direita. */}
+      <div className="flex flex-1 flex-col overflow-hidden max-lg:landscape:flex-row lg:flex-row">
+        <div className="flex-none bg-slate-900 p-2 max-lg:landscape:w-[55%] max-lg:landscape:p-1.5 lg:w-3/5 lg:bg-transparent lg:p-4">
           {status === "IN_PROGRESS" ? (
-            <div className="aspect-video w-full overflow-hidden rounded-xl">
+            <div className="aspect-video w-full overflow-hidden rounded-xl max-lg:landscape:aspect-auto max-lg:landscape:h-full lg:aspect-auto lg:h-full lg:rounded-2xl">
               <VideoRoom consultationId={p.consultationId} />
             </div>
           ) : (
-            <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-slate-800 text-sm text-slate-400">
-              Vídeo encerrado
-            </div>
-          )}
-        </div>
-        <aside className="flex flex-1 flex-col overflow-hidden bg-white">
-          <Tabs tab={tab} setTab={setTab} isDoctor={p.isDoctor} />
-          <TabContent p={p} tab={tab} status={status} />
-        </aside>
-      </div>
-
-      {/* DESKTOP LAYOUT: vídeo à esquerda, tabs à direita */}
-      <div className="hidden flex-1 overflow-hidden lg:flex">
-        <div className="w-3/5 flex-none p-4">
-          {status === "IN_PROGRESS" ? (
-            <VideoRoom consultationId={p.consultationId} />
-          ) : (
-            <div className="flex h-full items-center justify-center rounded-2xl bg-slate-100 text-sm text-slate-500">
+            <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-slate-800 text-sm text-slate-400 max-lg:landscape:aspect-auto max-lg:landscape:h-full lg:aspect-auto lg:h-full lg:rounded-2xl lg:bg-slate-100 lg:text-slate-500">
               Vídeo encerrado
             </div>
           )}
         </div>
         {/* min-w-0: sem ele o painel cresce até a largura do conteúdo (a aba
             Peso tem gráfico e tabela) e empurra abas e cartões pra fora da tela */}
-        <aside className="flex min-w-0 flex-1 flex-col overflow-hidden border-l border-slate-200 bg-white">
+        <aside className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white max-lg:landscape:border-l lg:border-l lg:border-slate-200">
           <Tabs tab={tab} setTab={setTab} isDoctor={p.isDoctor} />
           <TabContent p={p} tab={tab} status={status} />
         </aside>
@@ -356,7 +343,7 @@ function PatientPresence({ lastSeen }: { lastSeen: string | null }) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200">
         <span className="h-1.5 w-1.5 rounded-full bg-slate-400" aria-hidden />
-        Aguardando paciente
+        <span className="sr-only sm:not-sr-only">Aguardando paciente</span>
       </span>
     );
   }
@@ -368,7 +355,7 @@ function PatientPresence({ lastSeen }: { lastSeen: string | null }) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
         </span>
-        Paciente online
+        <span className="sr-only sm:not-sr-only">Paciente online</span>
       </span>
     );
   }
@@ -376,14 +363,14 @@ function PatientPresence({ lastSeen }: { lastSeen: string | null }) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 ring-1 ring-amber-200">
         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
-        Paciente ausente {secs}s
+        <span className="sr-only sm:not-sr-only">Paciente ausente {secs}s</span>
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2 py-1 text-[10px] font-medium text-rose-700 ring-1 ring-rose-200">
       <span className="h-1.5 w-1.5 rounded-full bg-rose-500" aria-hidden />
-      Paciente offline {secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}min`}
+      <span className="sr-only sm:not-sr-only">Paciente offline {secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}min`}</span>
     </span>
   );
 }
@@ -423,6 +410,9 @@ function ConsultationTimer({
 
   return (
     <span
+      // O servidor e o aparelho calculam o tempo em segundos diferentes: sem
+      // isto o React descartava a página inteira e redesenhava (pesado no celular).
+      suppressHydrationWarning
       title={isLive ? "Tempo de consulta em andamento" : "Duração total"}
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-mono font-medium ring-1 ring-inset ${
         isLive

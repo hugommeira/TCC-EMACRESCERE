@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { Sidebar }      from "@/components/layout/Sidebar";
 import { TopBar }       from "@/components/layout/TopBar";
+import { BottomNav }    from "@/components/layout/BottomNav";
 import { QUEUE_ENABLED } from "@/lib/constants";
 
 // ─── Nav items para paciente ──────────────────────────────────────────────────
@@ -9,6 +10,7 @@ import { QUEUE_ENABLED } from "@/lib/constants";
 // a "Agendar consulta". O item da fila continua aqui, só não é exibido.
 const queueNavItem = {
   label: "Atendimento agora",
+  short: "Agora",
   href:  "/dashboard/patient/queue",
   icon:  (
     <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -19,6 +21,7 @@ const queueNavItem = {
 
 const scheduleNavItem = {
   label: "Agendar consulta",
+  short: "Agendar",
   href:  "/dashboard/patient/schedule",
   icon:  (
     <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -30,6 +33,7 @@ const scheduleNavItem = {
 const patientNav = [
   {
     label: "Início",
+    short: "Início",
     href:  "/dashboard/patient",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -40,6 +44,7 @@ const patientNav = [
   QUEUE_ENABLED ? queueNavItem : scheduleNavItem,
   {
     label: "Peso e IMC",
+    short: "Peso",
     href:  "/dashboard/patient/peso",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -49,6 +54,7 @@ const patientNav = [
   },
   {
     label: "Minhas consultas",
+    short: "Consultas",
     href:  "/dashboard/patient/consultations",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -58,6 +64,7 @@ const patientNav = [
   },
   {
     label: "Perfil",
+    short: "Perfil",
     href:  "/dashboard/patient/profile",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -75,7 +82,7 @@ export default async function PatientLayout({
   const session = await requireRole("PATIENT");
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-dvh overflow-hidden bg-gray-50">
       <Sidebar
         role={session.user.role}
         userName={session.user.name}
@@ -88,12 +95,15 @@ export default async function PatientLayout({
           userImage={session.user.image}
           items={patientNav}
           role={session.user.role}
+          mobileNav="tabs"
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
           {children}
         </main>
       </div>
+
+      <BottomNav items={patientNav} role={session.user.role} />
     </div>
   );
 }
