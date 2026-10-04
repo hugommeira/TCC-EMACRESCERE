@@ -64,6 +64,14 @@ class AppColors {
     stops: [0, 0.6, 1],
   );
 
+  /// Degradê do header das abas no redesenho (prancheta "Início").
+  static const heroGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [brand700, brand600, teal500],
+    stops: [0, 0.52, 1],
+  );
+
   /// O mesmo degradê, mais fundo, para o tema escuro (o claro ofuscava ao
   /// lado do fundo quase preto).
   static const brandGradientDeep = LinearGradient(
@@ -156,7 +164,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     isDark: false,
     surface: AppColors.surface,
     card: Colors.white,
-    headerGradient: AppColors.brandGradient,
+    headerGradient: AppColors.heroGradient,
     softGradient: AppColors.brandGradientSoft,
     brand50: AppColors.brand50,
     brand100: AppColors.brand100,
@@ -278,10 +286,238 @@ class AppPalette extends ThemeExtension<AppPalette> {
   }
 }
 
+
+/// Tokens do redesenho (canvas "Emacrescere App — Redesign"), com os mesmos
+/// nomes das variáveis CSS das pranchetas (--title, --muted, --chip...).
+/// As telas novas usam estes; a [AppPalette] continua para o resto do app.
+@immutable
+class DesignTokens extends ThemeExtension<DesignTokens> {
+  const DesignTokens({
+    required this.bg,
+    required this.card,
+    required this.line,
+    required this.line2,
+    required this.soft,
+    required this.tint,
+    required this.chip,
+    required this.chipFg,
+    required this.title,
+    required this.text,
+    required this.muted,
+    required this.body,
+    required this.link,
+    required this.feature,
+    required this.navBg,
+    required this.navFg,
+    required this.navOnBg,
+    required this.navOnFg,
+    required this.shadow,
+    required this.track,
+    required this.grid,
+    required this.axis,
+    required this.dash,
+    required this.plot,
+    required this.dotFill,
+    required this.segOn,
+    required this.busy,
+    required this.busyFg,
+    required this.sel,
+    required this.selFg,
+    required this.dotOff,
+    required this.blobA,
+    required this.blobB,
+    required this.glow,
+    required this.ring,
+    required this.receiptHero,
+    required this.bubble,
+  });
+
+  final Color bg, card, line, line2, soft, tint, chip, chipFg;
+  final Color title, text, muted, body, link, feature;
+  final Color navBg, navFg, navOnBg, navOnFg, shadow;
+  final Color track, grid, axis, dash, plot, dotFill, segOn;
+  final Color busy, busyFg, sel, selFg, dotOff;
+  final Color blobA, blobB, glow, ring, bubble;
+  final Gradient receiptHero;
+
+  static const light = DesignTokens(
+    bg: Color(0xFFF4FBF8),
+    card: Color(0xFFFFFFFF),
+    line: Color(0xFFD1FAE5),
+    line2: Color(0xFFA7F3D0),
+    soft: Color(0xFFF4FBF8),
+    tint: Color(0xFFECFDF5),
+    chip: Color(0xFFD1FAE5),
+    chipFg: Color(0xFF047857),
+    title: Color(0xFF064E3B),
+    text: Color(0xFF065F46),
+    muted: Color(0xFF4B5563),
+    body: Color(0xFF374151),
+    link: Color(0xFF047857),
+    feature: Color(0xFF064E3B),
+    navBg: Color(0xE0FFFFFF),
+    navFg: Color(0xFF6B7280),
+    navOnBg: Color(0xFFD1FAE5),
+    navOnFg: Color(0xFF047857),
+    shadow: Color(0x73065F46),
+    track: Color(0xFFECFDF5),
+    grid: Color(0xFFECFDF5),
+    axis: Color(0xFF6B7280),
+    dash: Color(0xFFA7F3D0),
+    plot: Color(0xFF047857),
+    dotFill: Color(0xFFFFFFFF),
+    segOn: Color(0xFFFFFFFF),
+    busy: Color(0xFFE5E7EB),
+    busyFg: Color(0xFF6B7280),
+    sel: Color(0xFF064E3B),
+    selFg: Color(0xFFFFFFFF),
+    dotOff: Color(0xFFA7F3D0),
+    blobA: Color(0xF2A7F3D0),
+    blobB: Color(0x472DD4BF),
+    glow: Color(0x5910B981),
+    ring: Color(0x5910B981),
+    bubble: Color(0xFFFFFFFF),
+    receiptHero: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF064E3B), Color(0xFF065F46), Color(0xFF047857)],
+      stops: [0, 0.55, 1],
+    ),
+  );
+
+  static const dark = DesignTokens(
+    bg: Color(0xFF0B1F19),
+    card: Color(0xFF10302A),
+    line: Color(0xFF1B4A3E),
+    line2: Color(0xFF1F6B55),
+    soft: Color(0xFF0F2A23),
+    tint: Color(0xFF123A2F),
+    chip: Color(0xFF163D33),
+    chipFg: Color(0xFF6EE7B7),
+    title: Color(0xFFFFFFFF),
+    text: Color(0xFFECFDF5),
+    muted: Color(0xFFA7F3D0),
+    body: Color(0xFFD1FAE5),
+    link: Color(0xFF6EE7B7),
+    feature: Color(0xFF133F33),
+    navBg: Color(0xE610302A),
+    navFg: Color(0xFF9CA3AF),
+    navOnBg: Color(0x2E10B981),
+    navOnFg: Color(0xFF6EE7B7),
+    shadow: Color(0x99000000),
+    track: Color(0xFF163D33),
+    grid: Color(0xFF1B4A3E),
+    axis: Color(0xFFA7F3D0),
+    dash: Color(0xFF1F6B55),
+    plot: Color(0xFF6EE7B7),
+    dotFill: Color(0xFF10302A),
+    segOn: Color(0xFF1F5A4A),
+    busy: Color(0xFF16241F),
+    busyFg: Color(0xFF6B7F78),
+    sel: Color(0xFF6EE7B7),
+    selFg: Color(0xFF052E22),
+    dotOff: Color(0xFF1F6B55),
+    blobA: Color(0x4D10B981),
+    blobB: Color(0x2E2DD4BF),
+    glow: Color(0x4D34D399),
+    ring: Color(0x596EE7B7),
+    bubble: Color(0xFF123A2F),
+    receiptHero: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF0F2A23), Color(0xFF123A2F), Color(0xFF065F46)],
+      stops: [0, 0.55, 1],
+    ),
+  );
+
+  @override
+  DesignTokens copyWith() => this;
+
+  @override
+  DesignTokens lerp(ThemeExtension<DesignTokens>? other, double t) {
+    if (other is! DesignTokens) return this;
+    Color c(Color a, Color b) => Color.lerp(a, b, t)!;
+    return DesignTokens(
+      bg: c(bg, other.bg),
+      card: c(card, other.card),
+      line: c(line, other.line),
+      line2: c(line2, other.line2),
+      soft: c(soft, other.soft),
+      tint: c(tint, other.tint),
+      chip: c(chip, other.chip),
+      chipFg: c(chipFg, other.chipFg),
+      title: c(title, other.title),
+      text: c(text, other.text),
+      muted: c(muted, other.muted),
+      body: c(body, other.body),
+      link: c(link, other.link),
+      feature: c(feature, other.feature),
+      navBg: c(navBg, other.navBg),
+      navFg: c(navFg, other.navFg),
+      navOnBg: c(navOnBg, other.navOnBg),
+      navOnFg: c(navOnFg, other.navOnFg),
+      shadow: c(shadow, other.shadow),
+      track: c(track, other.track),
+      grid: c(grid, other.grid),
+      axis: c(axis, other.axis),
+      dash: c(dash, other.dash),
+      plot: c(plot, other.plot),
+      dotFill: c(dotFill, other.dotFill),
+      segOn: c(segOn, other.segOn),
+      busy: c(busy, other.busy),
+      busyFg: c(busyFg, other.busyFg),
+      sel: c(sel, other.sel),
+      selFg: c(selFg, other.selFg),
+      dotOff: c(dotOff, other.dotOff),
+      blobA: c(blobA, other.blobA),
+      blobB: c(blobB, other.blobB),
+      glow: c(glow, other.glow),
+      ring: c(ring, other.ring),
+      bubble: c(bubble, other.bubble),
+      receiptHero: t < 0.5 ? receiptHero : other.receiptHero,
+    );
+  }
+}
+
+/// Estilos de texto do redesenho.
+class AppType {
+  AppType._();
+
+  static const display = 'Fraunces';
+  static const sans = 'Inter';
+
+  /// Título em Fraunces 700 (os números grandes e títulos das pranchetas).
+  static TextStyle title(double size, Color color, {double height = 1.08, FontWeight weight = FontWeight.w700}) =>
+      TextStyle(
+        fontFamily: display,
+        fontWeight: weight,
+        fontSize: size,
+        height: height,
+        letterSpacing: -0.02 * size,
+        color: color,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
+
+  static TextStyle sansStyle(double size, Color color, {FontWeight weight = FontWeight.w400, double? height}) =>
+      TextStyle(fontFamily: sans, fontSize: size, fontWeight: weight, color: color, height: height);
+
+  /// Rótulo em caixa alta com espaçamento (ex.: "PRÓXIMA CONSULTA").
+  static TextStyle eyebrow(Color color, {double size = 12}) => TextStyle(
+        fontFamily: sans,
+        fontSize: size,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.08 * size,
+        color: color,
+      );
+}
+
 extension AppPaletteContext on BuildContext {
   /// Cores do tema atual (claro ou escuro). Ler por aqui faz o widget
   /// reconstruir quando o tema troca.
   AppPalette get colors => Theme.of(this).extension<AppPalette>() ?? AppPalette.light;
+
+  /// Tokens exatos do redesenho.
+  DesignTokens get ds => Theme.of(this).extension<DesignTokens>() ?? DesignTokens.light;
 }
 
 class AppRadius {
@@ -351,7 +587,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,
-      extensions: [p],
+      extensions: [p, p.isDark ? DesignTokens.dark : DesignTokens.light],
+      fontFamily: AppType.sans,
       scaffoldBackgroundColor: p.surface,
       canvasColor: p.surface,
       textTheme: textTheme,

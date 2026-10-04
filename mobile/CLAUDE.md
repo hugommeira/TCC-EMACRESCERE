@@ -167,6 +167,29 @@ degradê esmeralda, letreiro verde-escuro). Tudo mora em
 - Para trocar: botão sol/lua no header verde (`ThemeToggleButton`) ou o
   cartão "Tema escuro" no Perfil (`ThemeSettingCard`).
 
+### Telas do redesenho (2026-10-04) — idênticas ao canvas
+O canvas "Emacrescere App — Redesign" (artifact no claude.ai) é a referência
+visual. Seis telas seguem as pranchetas: boas-vindas/onboarding
+(`widgets/welcome_carousel.dart`), Início da paciente
+(`home/dashboard_screen.dart`), Peso (`tracking/tracking_screen.dart`),
+Agendar (`consultations/schedule/schedule_screen.dart`), Consulta e receita
+(`consultations/consultation_detail_screen.dart`, abas Resumo/Receita/Chat)
+e Início da médica (`doctor/doctor_consultations_screen.dart`).
+- Cores dessas telas: `context.ds` (`DesignTokens`, os mesmos nomes das
+  variáveis CSS das pranchetas). Fontes: Fraunces (títulos/números,
+  `AppType.title`) e Inter (texto), embutidas em `assets/fonts/` (OFL).
+- Componentes em `lib/widgets/ui.dart`: `ThemeToggle`, `DsCard`,
+  `PillSegmented`, `ShineButton`, `GlassNavBar` (barra flutuante; os shells
+  usam `extendBody: true`, então o conteúdo soma
+  `MediaQuery.paddingOf(context).bottom` no fim da lista), `IconTile`,
+  `DsChip`, `InitialsTile`, `DriftBlob`, `PulseDot`.
+- Diferenças conscientes da prancheta: o seletor Peso/IMC do gráfico e o
+  "1 ano" saíram (a prancheta tem só 30 dias/3 meses/6 meses/Tudo); altura e
+  meta abrem tocando no cartão do anel; apagar pesagem é toque longo ou
+  arrastar a linha; o sino do Início abre o Chat e só pulsa com consulta em
+  até 24 h (não há notificações no app); "Validar" abre `/prescricao/<id>`
+  no site, o mesmo link do PDF.
+
 ### Movimento e 3D (2026-10-04) — `lib/widgets/motion.dart`
 - `assets/3d/*.webp` são os renders dos modelos 3D do site
   (`public/3d/posters/*@1x.webp`); o app não carrega `.glb`.

@@ -86,6 +86,27 @@ flutter:
     - .env
     - assets/logo/
     - assets/3d/
+
+  # Fontes do redesenho (as mesmas do site): Fraunces nos títulos, Inter no
+  # texto. Embutidas para funcionar offline. Licença SIL OFL 1.1 (arquivos
+  # OFL-*.txt na mesma pasta).
+  fonts:
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-600.ttf
+          weight: 600
+        - asset: assets/fonts/Fraunces-700.ttf
+          weight: 700
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-400.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-500.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-600.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-700.ttf
+          weight: 700
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

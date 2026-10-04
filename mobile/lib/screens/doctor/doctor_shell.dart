@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../constants.dart';
-import '../../theme/app_theme.dart';
+import '../../widgets/ui.dart';
 import '../consultations/agenda/agenda_screen.dart';
 import 'doctor_consultations_screen.dart';
 import 'doctor_profile_screen.dart';
@@ -65,27 +65,11 @@ class _DoctorShellState extends State<DoctorShell> {
         DoctorTab.profile => const DoctorProfileScreen(),
       };
 
-  NavigationDestination _destinationFor(DoctorTab tab) => switch (tab) {
-        DoctorTab.queue => const NavigationDestination(
-            icon: Icon(Icons.groups_outlined),
-            selectedIcon: Icon(Icons.groups_rounded),
-            label: 'Fila',
-          ),
-        DoctorTab.consultations => const NavigationDestination(
-            icon: Icon(Icons.medical_services_outlined),
-            selectedIcon: Icon(Icons.medical_services_rounded),
-            label: 'Consultas',
-          ),
-        DoctorTab.agenda => const NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month_rounded),
-            label: 'Agenda',
-          ),
-        DoctorTab.profile => const NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Perfil',
-          ),
+  GlassNavItem _destinationFor(DoctorTab tab) => switch (tab) {
+        DoctorTab.queue => const GlassNavItem(icon: Icons.groups_outlined, label: 'Fila'),
+        DoctorTab.consultations => const GlassNavItem(icon: Icons.calendar_month_outlined, label: 'Consultas'),
+        DoctorTab.agenda => const GlassNavItem(icon: Icons.schedule_rounded, label: 'Agenda'),
+        DoctorTab.profile => const GlassNavItem(icon: Icons.person_outline_rounded, label: 'Perfil'),
       };
 
   @override
@@ -93,22 +77,15 @@ class _DoctorShellState extends State<DoctorShell> {
     return DoctorTabScope(
       select: _select,
       child: Scaffold(
+        extendBody: true,
         body: IndexedStack(
           index: _currentIndex,
           children: [for (final tab in _visibleTabs) _screenFor(tab)],
         ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: context.colors.brand100)),
-          ),
-          child: NavigationBar(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (index) => setState(() => _currentIndex = index),
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            destinations: [
-              for (final tab in _visibleTabs) _destinationFor(tab),
-            ],
-          ),
+        bottomNavigationBar: GlassNavBar(
+          index: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          items: [for (final tab in _visibleTabs) _destinationFor(tab)],
         ),
       ),
     );

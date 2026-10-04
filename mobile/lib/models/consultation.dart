@@ -66,6 +66,7 @@ class Consultation {
     this.roomToken,
     this.prescriptionId,
     this.prescriptionStatus,
+    this.prescriptionIssuedAt,
     this.payment,
   });
 
@@ -88,6 +89,9 @@ class Consultation {
   final String? roomToken;
   final String? prescriptionId;
   final String? prescriptionStatus;
+
+  /// Quando o médico assinou a receita (prescription.issuedAt).
+  final DateTime? prescriptionIssuedAt;
   final PaymentInfo? payment;
 
   /// Consulta on-demand criada mas ainda sem pagamento confirmado — o
@@ -129,6 +133,7 @@ class Consultation {
       roomToken: json['roomToken'] as String?,
       prescriptionId: prescription?['id'] as String?,
       prescriptionStatus: prescription?['status'] as String?,
+      prescriptionIssuedAt: _parseDate(prescription?['issuedAt']),
       payment: json['payment'] != null
           ? PaymentInfo.fromJson(json['payment'] as Map<String, dynamic>)
           : null,

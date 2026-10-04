@@ -47,10 +47,13 @@ class Rise extends StatelessWidget {
 /// Coração-folha 3D flutuando, com brilho atrás e duas órbitas em
 /// perspectiva (a tela de boas-vindas do redesenho).
 class FloatingLogo3D extends StatefulWidget {
-  const FloatingLogo3D({super.key, this.size = 220, this.orbits = true});
+  const FloatingLogo3D({super.key, this.size = 220, this.orbits = true, this.glow = true});
 
   final double size;
   final bool orbits;
+
+  /// Brilho que respira atrás do símbolo.
+  final bool glow;
 
   @override
   State<FloatingLogo3D> createState() => _FloatingLogo3DState();
@@ -90,8 +93,8 @@ class _FloatingLogo3DState extends State<FloatingLogo3D> with TickerProviderStat
     final size = widget.size;
     final colors = context.colors;
     return SizedBox(
-      width: size * 1.35,
-      height: size * 1.25,
+      width: widget.orbits || widget.glow ? size * 1.35 : size,
+      height: widget.orbits || widget.glow ? size * 1.25 : size,
       child: AnimatedBuilder(
         animation: Listenable.merge([_float, _orbit]),
         builder: (context, child) {
@@ -99,20 +102,20 @@ class _FloatingLogo3DState extends State<FloatingLogo3D> with TickerProviderStat
           return Stack(
             alignment: Alignment.center,
             children: [
-              // Brilho que respira atrás do símbolo.
-              Container(
-                width: size * (1.0 + 0.1 * f),
-                height: size * (1.0 + 0.1 * f),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.brand500.withValues(alpha: colors.isDark ? 0.30 : 0.32),
-                      AppColors.brand500.withValues(alpha: 0),
-                    ],
+              if (widget.glow)
+                Container(
+                  width: size * (1.0 + 0.1 * f),
+                  height: size * (1.0 + 0.1 * f),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.brand500.withValues(alpha: colors.isDark ? 0.30 : 0.32),
+                        AppColors.brand500.withValues(alpha: 0),
+                      ],
+                    ),
                   ),
                 ),
-              ),
               if (widget.orbits)
                 CustomPaint(
                   size: Size(size * 1.3, size * 0.5),

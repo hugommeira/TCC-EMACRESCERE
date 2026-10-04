@@ -72,11 +72,13 @@ class CurvedHeaderScaffold extends StatelessWidget {
                   child: Rise(child: overlapCard),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(
+                  // Embaixo: espaço da barra de navegação flutuante (vem no
+                  // MediaQuery quando o shell usa extendBody).
+                  padding: EdgeInsets.fromLTRB(
                     _horizontalPadding,
                     16,
                     _horizontalPadding,
-                    24,
+                    24 + MediaQuery.paddingOf(context).bottom,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -104,7 +106,7 @@ class CurvedHeaderScaffold extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: context.colors.gray50,
+        backgroundColor: context.ds.bg,
         body: body,
       ),
     );

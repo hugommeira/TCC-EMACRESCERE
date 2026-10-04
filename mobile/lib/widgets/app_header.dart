@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
-import '../theme/theme_controller.dart';
-import 'brand_mark.dart';
+import 'motion.dart';
+import 'ui.dart';
 
 /// Header das abas: degradê da marca, avatar + saudação, e o símbolo do
 /// logo em marca d'água no canto. Curva embaixo pra o card sobreposto.
@@ -59,13 +59,11 @@ class GreenHeader extends StatelessWidget {
           children: [
             // Marca d'água: símbolo grande, translúcido, sangrando pela
             // direita.
+            // Coração-folha 3D flutuando no canto, como no redesenho.
             Positioned(
-              right: -28,
-              top: statusBar - 12,
-              child: Opacity(
-                opacity: 0.14,
-                child: BrandMark(size: height - statusBar + 24),
-              ),
+              right: -18,
+              top: statusBar + 6,
+              child: const Opacity(opacity: 0.9, child: FloatingLogo3D(size: 104, orbits: false, glow: false)),
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(20, statusBar + topPadding, 20, 0),
@@ -106,19 +104,12 @@ class GreenHeader extends StatelessWidget {
                             ),
                             Text(
                               firstName.isEmpty ? '...' : firstName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                height: 1.2,
-                                letterSpacing: -0.3,
-                              ),
+                              style: AppType.title(24, Colors.white, height: 1.15),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                      const ThemeToggleButton(),
                       if (onTrailingTap != null) ...[
                         const SizedBox(width: 8),
                         Material(
@@ -128,13 +119,15 @@ class GreenHeader extends StatelessWidget {
                             onTap: onTrailingTap,
                             customBorder: const CircleBorder(),
                             child: SizedBox(
-                              width: 40,
-                              height: 40,
+                              width: 44,
+                              height: 44,
                               child: Icon(trailingIcon, color: Colors.white, size: 20),
                             ),
                           ),
                         ),
                       ],
+                      const SizedBox(width: 8),
+                      const ThemeToggle(onHero: true),
                     ],
                   ),
                 ),
@@ -143,59 +136,6 @@ class GreenHeader extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Botão sol/lua do header: alterna entre tema claro e escuro do perfil
-/// atual (a escolha fica salva no aparelho). O ícone gira ao trocar.
-class ThemeToggleButton extends StatelessWidget {
-  const ThemeToggleButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final themes = ThemeController.instance;
-    return ListenableBuilder(
-      listenable: themes,
-      builder: (context, _) {
-        final dark = themes.isDark;
-        return Tooltip(
-          message: dark ? 'Tema claro' : 'Tema escuro',
-          excludeFromSemantics: true,
-          child: Semantics(
-            container: true,
-            button: true,
-            label: dark ? 'Mudar para o tema claro' : 'Mudar para o tema escuro',
-            excludeSemantics: true,
-            child: Material(
-              color: Colors.white.withValues(alpha: 0.18),
-              shape: const CircleBorder(),
-              child: InkWell(
-                onTap: themes.toggle,
-                customBorder: const CircleBorder(),
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 420),
-                    switchInCurve: Curves.easeOutBack,
-                    transitionBuilder: (child, animation) => RotationTransition(
-                      turns: Tween<double>(begin: -0.35, end: 0).animate(animation),
-                      child: ScaleTransition(scale: animation, child: child),
-                    ),
-                    child: Icon(
-                      dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                      key: ValueKey(dark),
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

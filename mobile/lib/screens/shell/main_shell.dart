@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_theme.dart';
+import '../../widgets/ui.dart';
 import '../consultations/chat/chat_tab_screen.dart';
 import '../consultations/consultations_screen.dart';
 import '../home/dashboard_screen.dart';
@@ -62,43 +62,20 @@ class _MainShellState extends State<MainShell> {
       select: _select,
       current: ShellTab.values[_currentIndex],
       child: Scaffold(
+        // A barra flutua sobre o conteúdo (vidro); o body já recebe a altura
+        // dela no MediaQuery.padding.bottom.
+        extendBody: true,
         body: IndexedStack(index: _currentIndex, children: _tabs),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: context.colors.brand100)),
-          ),
-          child: NavigationBar(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (index) => setState(() => _currentIndex = index),
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home_rounded),
-                label: 'Início',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.monitor_weight_outlined),
-                selectedIcon: Icon(Icons.monitor_weight_rounded),
-                label: 'Peso',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.medical_services_outlined),
-                selectedIcon: Icon(Icons.medical_services_rounded),
-                label: 'Consultas',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.chat_bubble_outline_rounded),
-                selectedIcon: Icon(Icons.chat_bubble_rounded),
-                label: 'Chat',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline_rounded),
-                selectedIcon: Icon(Icons.person_rounded),
-                label: 'Perfil',
-              ),
-            ],
-          ),
+        bottomNavigationBar: GlassNavBar(
+          index: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          items: const [
+            GlassNavItem(icon: Icons.home_outlined, label: 'Início'),
+            GlassNavItem(icon: Icons.monitor_weight_outlined, label: 'Peso'),
+            GlassNavItem(icon: Icons.calendar_month_outlined, label: 'Consultas'),
+            GlassNavItem(icon: Icons.chat_bubble_outline_rounded, label: 'Chat'),
+            GlassNavItem(icon: Icons.person_outline_rounded, label: 'Perfil'),
+          ],
         ),
       ),
     );
