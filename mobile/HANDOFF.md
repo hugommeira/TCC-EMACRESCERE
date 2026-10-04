@@ -193,6 +193,59 @@ ocupada por outro processo na máquina).
 **Testes**: `flutter test` (app, widget tests de layout) / `npm test` (site, Vitest, 27
 testes em lógica pura — formatadores, validação de CPF, rate limiter).
 
+## Versão web (iPhone)
+
+O app não tem versão iOS nativa. No iPhone ele roda como app web, servido pelo
+próprio site em **https://tcc-emacrescere.vercel.app/app/**.
+
+**Instalar no iPhone:** abrir o endereço no **Safari** → botão **Compartilhar** →
+**Adicionar à Tela de Início**. Abre em tela cheia, com o ícone e o nome
+"Emacrescere" (`apple-mobile-web-app-capable` e `apple-touch-icon` em
+`mobile/web/index.html`).
+
+**Como funciona:** os arquivos do build ficam em `public/app/` do site. O
+`middleware.ts` libera o prefixo `/app` (e `/app.apk` continua liberado à parte) e
+o `next.config.mjs` reescreve `/app` e `/app/` para `/app/index.html`. Como o app
+está na mesma origem do site, o `ApiClient` usa a origem da página para a API e
+para os links (`siteUrl`): sem CORS, sem proxy, e o cookie do NextAuth é
+first-party. Em `localhost`/`127.0.0.1` continua o proxy do `tool/dev_web.dart`.
+
+**Build** (dentro de `mobile/`) e cópia para o site:
+```bash
+flutter build web --release --no-web-resources-cdn --base-href /app/
+```
+Depois, apagar o conteúdo antigo de `public/app/` (na raiz do repositório) e
+copiar para lá tudo o que está em `mobile/build/web/`. No PowerShell, a partir
+de `mobile/`:
+```powershell
+if (Test-Path ..\public\app) { Remove-Item -Recurse -Force ..\public\app }
+Copy-Item -Recurse build\web ..\public\app
+```
+- `--no-web-resources-cdn` é obrigatório: sem ele o CanvasKit vem do gstatic, que
+  o CSP do site bloqueia, e a página fica em branco.
+- `--base-href /app/` é obrigatório: os arquivos são procurados a partir de `/app/`.
+- **Nunca** use `--dart-define=DEMO_API=true` no build de `/app/`. Esse define gera
+  o app de demonstração, com dados falsos e sem servidor; em `/app/` vai sempre o
+  app real.
+- Conferir que não há nenhum `.env` dentro de `public/app/` antes do commit.
+
+**`public/app/` NÃO se atualiza sozinha.** Ela é uma cópia do build, não é gerada
+no deploy. Toda mudança no app (`mobile/`) precisa de um novo build, uma nova cópia
+e um novo commit em `public/app/`. Sem isso, o iPhone continua com a versão
+antiga. Esse commit toca fora de `mobile/`, então dispara o deploy da Vercel
+(só os commits que mexem apenas em `mobile/` são ignorados).
+
+**Limitações na versão web:**
+- O PDF da receita não baixa (o download só existe no app nativo). A receita
+  pode ser validada pelo link `/prescricao/<id>` do site.
+- Nas prévias da Vercel as gravações (login, agendar...) são recusadas: o
+  `allowedOrigins` do servidor só aceita a produção. É esperado.
+
+**Sem `.env`:** o app não precisa mais do `mobile/.env` (ele saiu dos assets do
+`pubspec.yaml`). O endereço padrão da API já vem no código (`ApiClient`,
+produção); no celular dá para trocar com `--dart-define=API_BASE_URL=...`, e na
+web vale a origem da página.
+
 ## Convenções e decisões de identidade visual
 
 - Nome do produto: sempre **"Emacrescere"** (nunca "Emaerescere" — typo que já existiu e foi
