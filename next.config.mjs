@@ -71,6 +71,14 @@ const nextConfig = {
     ],
   },
   poweredByHeader: false,
+  // App web (Flutter) em public/app/: o Next não serve o index.html de uma
+  // pasta sozinho.
+  async rewrites() {
+    return [
+      { source: "/app", destination: "/app/index.html" },
+      { source: "/app/", destination: "/app/index.html" },
+    ];
+  },
   async headers() {
     return [
       {

@@ -22,6 +22,7 @@ const PUBLIC_ROUTES = [
   "/termos",
   "/privacidade",
   "/app.apk",      // APK do app (QR code da landing)
+  "/app",          // app web (Flutter) em /app/: index, .wasm, .bin, fontes, NOTICES
   "/qr-app.svg",
 ];
 
