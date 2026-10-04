@@ -77,7 +77,7 @@ export default async function PatientDashboardPage() {
       </header>
 
       {/* Destaques */}
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
         <div className="animate-rise lg:col-span-3" style={{ animationDelay: "150ms" }}>
           <NextConsultation
             c={next && {
@@ -109,7 +109,7 @@ export default async function PatientDashboardPage() {
       </div>
 
       {/* Receita e atalhos */}
-      <div className="mt-5 grid gap-5 lg:grid-cols-5">
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-5">
         <section
           aria-labelledby="ultima-receita"
           className="animate-rise rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-7 lg:col-span-3"
@@ -188,7 +188,7 @@ export default async function PatientDashboardPage() {
               Ver todas
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {others.map((c) => (
               <ConsultationCard key={c.id} consultation={c} role="patient" />
             ))}

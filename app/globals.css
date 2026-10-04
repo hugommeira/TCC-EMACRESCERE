@@ -174,9 +174,10 @@
 /* ─── Tabelas responsivas ────────────────────────────────────────────────────
    Abaixo de md (768px) a tabela vira uma lista de cartões: cada <tr> é um
    cartão e cada <td> mostra o nome da coluna (data-label) ao lado do valor.
-   A primeira célula é o "título" do cartão e fica sem rótulo. Acima de md
-   nada muda — continua tabela normal com scroll horizontal se precisar.   */
-@media (max-width: 767px) {
+   A primeira célula é o "título" do cartão e fica sem rótulo. Vale até o
+   tablet (abaixo de lg, 1024px); no tablet os cartões ficam em 2 colunas.
+   Do desktop para cima continua tabela normal.                           */
+@media (max-width: 1023px) {
   .table-responsive table,
   .table-responsive tbody,
   .table-responsive tr {
@@ -234,6 +235,26 @@
   }
 }
 
+@media (min-width: 768px) and (max-width: 1023px) {
+  .table-responsive tbody {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 0 !important;
+  }
+  .table-responsive tr,
+  .table-responsive tr:last-child {
+    border: 1px solid theme("colors.slate.200");
+    border-radius: 0.75rem;
+    background: white;
+  }
+  /* Linha de detalhes (colspan) ocupa as duas colunas. */
+  .table-responsive tr:has(> td[colspan]) {
+    grid-column: 1 / -1;
+  }
+}
+
 /* ─── Movimento reduzido ───────────────────────────────────────────────────── */
 /* Quem pede menos movimento no sistema recebe o conteúdo já no lugar final. */
 @media (prefers-reduced-motion: reduce) {
@@ -251,4 +272,20 @@
     transform: none;
     clip-path: none;
   }
+}
+
+/* Celular: campo com letra menor que 16px faz o iPhone dar zoom ao tocar.
+   (Seletor de elemento ganha das classes text-sm/text-xs.) */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Toque: sem o atraso/realce cinza do toque no iOS e Android. */
+a, button, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }

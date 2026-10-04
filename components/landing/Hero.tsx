@@ -31,7 +31,7 @@ export function Hero() {
 function MobileHero() {
   return (
     <section className="relative lg:hidden">
-      <div className="relative h-[56vh] min-h-[360px] max-h-[540px] w-full animate-scale-in overflow-hidden">
+      <div className="relative h-[56vh] min-h-[360px] max-h-[540px] w-full md:max-h-[600px] animate-scale-in overflow-hidden">
         <Photo
           src={PHOTOS.heroMobile}
           alt="Mulher sorrindo usando o celular"
@@ -45,7 +45,7 @@ function MobileHero() {
           className="absolute inset-0 bg-gradient-to-b from-slate-900/25 via-slate-900/0 to-white"
         />
         <span
-          className="absolute bottom-5 left-4 inline-flex animate-rise items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur"
+          className="absolute bottom-5 left-4 md:left-[calc(50%-19rem)] inline-flex animate-rise items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur"
           style={d(500)}
         >
           <LiveDot />
@@ -53,7 +53,7 @@ function MobileHero() {
         </span>
       </div>
 
-      <div className="px-4 pb-14">
+      <div className="px-4 pb-14 md:mx-auto md:max-w-2xl md:px-8">
         <h1
           className="animate-rise font-display text-[2rem] font-semibold leading-[1.1] tracking-tight text-slate-900 sm:text-4xl"
           style={d(150)}
@@ -68,7 +68,7 @@ function MobileHero() {
           sai assinada digitalmente por ele.
         </p>
 
-        <div className="mt-7 flex animate-rise flex-col gap-3" style={d(370)}>
+        <div className="mt-7 flex animate-rise flex-col gap-3 sm:flex-row" style={d(370)}>
           <Link href="/auth/register" className={`${PRIMARY_CTA} min-h-[52px] px-7 text-base`}>
             Começar minha jornada
             <Arrow />

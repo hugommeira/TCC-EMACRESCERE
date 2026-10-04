@@ -39,7 +39,7 @@ export default async function DoctorConsultationDetailPage({ params }: Props) {
         <span className="text-gray-900">Detalhes</span>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {/* Patient info */}
           <Card>

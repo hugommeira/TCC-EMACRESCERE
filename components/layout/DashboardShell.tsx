@@ -61,6 +61,7 @@ interface StatCardProps {
   icon?:    React.ReactNode;
   trend?:   { value: string; up?: boolean };
   href?:    string;
+  className?: string;
 }
 
 export function StatCard({
@@ -71,6 +72,7 @@ export function StatCard({
   icon,
   trend,
   href,
+  className,
 }: StatCardProps) {
   const t = TONE_MAP[tone];
   const Wrapper: React.ElementType = href ? "a" : "div";
@@ -83,6 +85,7 @@ export function StatCard({
         "group rounded-2xl border border-slate-200 p-4 transition-all duration-200 sm:p-5",
         t.bg,
         href ? "cursor-pointer hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md" : "",
+        className,
       )}
     >
       <div className="flex items-start justify-between gap-3">

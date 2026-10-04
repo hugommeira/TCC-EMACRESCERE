@@ -115,7 +115,7 @@ export default async function DoctorDashboardPage() {
         Split: a plataforma retém uma comissão sobre cada consulta paga.
         Configurável via env DOCTOR_REVENUE_PCT (default 70%).
       */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Hoje"        value={String(todayTotal)} tone="brand"  icon={ICONS.calendar} />
         <StatCard label="Pendentes"   value={String(pending)}    tone="amber"  icon={ICONS.hourglass} />
         <StatCard label="Concluídas"  value={String(completed)}  tone="teal"   icon={ICONS.check} />
@@ -128,6 +128,8 @@ export default async function DoctorDashboardPage() {
           return (
             <StatCard
               label="Receita líquida"
+              // Valor em reais não cabe em meia largura no celular.
+              className="col-span-2 sm:col-span-1"
               value={formatCurrency(net)}
               tone="indigo"
               icon={ICONS.cash}
@@ -149,7 +151,7 @@ export default async function DoctorDashboardPage() {
               Ao vivo agora
             </h2>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {activeNow.map((c) => (
               <ConsultationCard key={c.id} consultation={c} role="doctor" />
             ))}
@@ -181,7 +183,7 @@ export default async function DoctorDashboardPage() {
             description="Sua agenda está livre. Novas consultas aparecerão aqui assim que forem marcadas."
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {nextUp.map((c) => (
               <ConsultationCard key={c.id} consultation={c} role="doctor" />
             ))}

@@ -1,12 +1,21 @@
 import Link from "next/link";
+import type { Route } from "next";
 
-export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
+export function Logo({
+  variant = "dark",
+  href = "/",
+  label = "Emacrescere - voltar ao topo",
+}: {
+  variant?: "dark" | "light";
+  href?: Route;
+  label?: string;
+}) {
   const color = variant === "dark" ? "text-brand-700" : "text-brand-300";
   return (
     <Link
-      href="/"
+      href={href}
       className="group inline-flex min-h-[44px] items-center gap-2"
-      aria-label="Emacrescere - voltar ao topo"
+      aria-label={label}
     >
       <span
         aria-hidden

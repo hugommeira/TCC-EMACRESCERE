@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma }       from "@/lib/prisma";
 import { Sidebar }      from "@/components/layout/Sidebar";
 import { TopBar }       from "@/components/layout/TopBar";
+import { BottomNav }    from "@/components/layout/BottomNav";
 import { QUEUE_ENABLED } from "@/lib/constants";
 
 // O item "Fila de espera" continua na lista, mas é filtrado no fim enquanto a
@@ -9,6 +10,7 @@ import { QUEUE_ENABLED } from "@/lib/constants";
 const allDoctorNav = [
   {
     label: "Início",
+    short: "Início",
     href:  "/dashboard/doctor",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -18,6 +20,7 @@ const allDoctorNav = [
   },
   {
     label: "Fila de espera",
+    short: "Fila",
     href:  "/dashboard/doctor/queue",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -27,6 +30,7 @@ const allDoctorNav = [
   },
   {
     label: "Consultas",
+    short: "Consultas",
     href:  "/dashboard/doctor/consultations",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -36,6 +40,7 @@ const allDoctorNav = [
   },
   {
     label: "Certificado digital",
+    short: "Certificado",
     href:  "/dashboard/doctor/certificate",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -45,6 +50,7 @@ const allDoctorNav = [
   },
   {
     label: "Meu perfil",
+    short: "Perfil",
     href:  "/dashboard/doctor/profile",
     icon:  (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -74,7 +80,7 @@ export default async function DoctorLayout({
   const approval = profile?.approvalStatus ?? "APPROVED";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-dvh overflow-hidden bg-gray-50">
       <Sidebar
         role={session.user.role}
         userName={session.user.name}
@@ -87,6 +93,7 @@ export default async function DoctorLayout({
           userImage={session.user.image}
           items={doctorNav}
           role={session.user.role}
+          mobileNav="tabs"
         />
         {approval !== "APPROVED" && (
           <div
@@ -106,8 +113,10 @@ export default async function DoctorLayout({
             </p>
           </div>
         )}
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
       </div>
+
+      <BottomNav items={doctorNav} role={session.user.role} />
     </div>
   );
 }

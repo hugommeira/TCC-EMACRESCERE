@@ -178,7 +178,7 @@ export function RegisterForm({ variant = "patient" }: { variant?: "patient" | "d
         required
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="CPF"
           name="cpf"
@@ -205,7 +205,7 @@ export function RegisterForm({ variant = "patient" }: { variant?: "patient" | "d
 
       {isDoctor && (
         <>
-          <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_7rem]">
             <Field
               label="CRM"
               name="crm"
