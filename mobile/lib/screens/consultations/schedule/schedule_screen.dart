@@ -534,10 +534,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         ),
         const SizedBox(height: 10),
         if (_slotsLoading)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: CircularProgressIndicator()),
-          )
+          // Mesma altura da grade de horários: a tela não pula ao trocar de dia.
+          const SizedBox(height: 108, child: Center(child: CircularProgressIndicator()))
         else if (_slotsError != null)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -710,50 +708,33 @@ class _DayChip extends StatelessWidget {
       selected: selected,
       label: '$label ${day.day}',
       excludeSemantics: true,
-      child: PressScale(
-        scale: 0.95,
-        child: GestureDetector(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              color: selected ? null : ds.card,
-              gradient: selected
-                  ? const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.brand700, AppColors.brand500],
-                    )
-                  : null,
-              border: selected ? null : Border.all(color: ds.line),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.brand700.withValues(alpha: 0.8),
-                        blurRadius: 24,
-                        offset: const Offset(0, 14),
-                        spreadRadius: -14,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: AppType.sans,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: fg.withValues(alpha: 0.8),
-                  ),
+      // Só a cor muda, num esmaecimento curto. (A versão anterior animava
+      // degradê, sombra e escala juntos e piscava ao trocar de dia.)
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            color: selected ? AppColors.brand700 : ds.card,
+            border: Border.all(color: selected ? AppColors.brand700 : ds.line),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppType.sans,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: fg.withValues(alpha: 0.8),
                 ),
-                const SizedBox(height: 4),
-                Text('${day.day}', style: AppType.title(22, fg, height: 1)),
-              ],
-            ),
+              ),
+              const SizedBox(height: 4),
+              Text('${day.day}', style: AppType.title(22, fg, height: 1)),
+            ],
           ),
         ),
       ),
