@@ -63,7 +63,7 @@ class GreenHeader extends StatelessWidget {
             Positioned(
               right: -18,
               top: statusBar + 6,
-              child: const Opacity(opacity: 0.9, child: FloatingLogo3D(size: 104, orbits: false, glow: false)),
+              child: const Opacity(opacity: 0.9, child: FloatingLogo3D(size: 104, groundShadow: false, glow: false)),
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(20, statusBar + topPadding, 20, 0),

@@ -193,7 +193,7 @@ e Início da médica (`doctor/doctor_consultations_screen.dart`).
 ### Movimento e 3D (2026-10-04) — `lib/widgets/motion.dart`
 - `assets/3d/*.webp` são os renders dos modelos 3D do site
   (`public/3d/posters/*@1x.webp`); o app não carrega `.glb`.
-- `FloatingLogo3D` (coração-folha flutuando com órbitas: boas-vindas e
+- `FloatingLogo3D` (coração-folha flutuando com sombra no chão: boas-vindas e
   onboarding), `Seal3D` (selo girando: receita assinada no detalhe da
   consulta) e `Rise` (entrada dos blocos, aplicada no
   `CurvedHeaderScaffold`). Todos param quando o sistema pede menos

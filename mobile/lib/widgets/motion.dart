@@ -44,13 +44,16 @@ class Rise extends StatelessWidget {
   }
 }
 
-/// Coração-folha 3D flutuando, com brilho atrás e duas órbitas em
-/// perspectiva (a tela de boas-vindas do redesenho).
+/// Coração-folha 3D flutuando, com um brilho suave atrás e a sombra no
+/// "chão" que encolhe quando ele sobe (a tela de boas-vindas). Nos headers
+/// vai só o símbolo flutuando ([glow] e [groundShadow] desligados).
 class FloatingLogo3D extends StatefulWidget {
-  const FloatingLogo3D({super.key, this.size = 220, this.orbits = true, this.glow = true});
+  const FloatingLogo3D({super.key, this.size = 220, this.groundShadow = true, this.glow = true});
 
   final double size;
-  final bool orbits;
+
+  /// Sombra elíptica embaixo do símbolo, acompanhando a flutuação.
+  final bool groundShadow;
 
   /// Brilho que respira atrás do símbolo.
   final bool glow;
@@ -59,14 +62,10 @@ class FloatingLogo3D extends StatefulWidget {
   State<FloatingLogo3D> createState() => _FloatingLogo3DState();
 }
 
-class _FloatingLogo3DState extends State<FloatingLogo3D> with TickerProviderStateMixin {
+class _FloatingLogo3DState extends State<FloatingLogo3D> with SingleTickerProviderStateMixin {
   late final AnimationController _float = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 6),
-  );
-  late final AnimationController _orbit = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 18),
   );
 
   @override
@@ -74,61 +73,73 @@ class _FloatingLogo3DState extends State<FloatingLogo3D> with TickerProviderStat
     super.didChangeDependencies();
     if (reduceMotion(context)) {
       _float.stop();
-      _orbit.stop();
-    } else {
-      if (!_float.isAnimating) _float.repeat(reverse: true);
-      if (!_orbit.isAnimating) _orbit.repeat();
+    } else if (!_float.isAnimating) {
+      _float.repeat(reverse: true);
     }
   }
 
   @override
   void dispose() {
     _float.dispose();
-    _orbit.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final size = widget.size;
-    final colors = context.colors;
+    final dark = context.colors.isDark;
+    final framed = widget.groundShadow || widget.glow;
     return SizedBox(
-      width: widget.orbits || widget.glow ? size * 1.35 : size,
-      height: widget.orbits || widget.glow ? size * 1.25 : size,
+      width: framed ? size * 1.35 : size,
+      height: framed ? size * 1.25 : size,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_float, _orbit]),
+        animation: _float,
         builder: (context, child) {
-          final f = Curves.easeInOut.transform(_float.value);
+          final f = Curves.easeInOut.transform(_float.value); // 0 = baixo, 1 = alto
           return Stack(
             alignment: Alignment.center,
             children: [
               if (widget.glow)
                 Container(
-                  width: size * (1.0 + 0.1 * f),
-                  height: size * (1.0 + 0.1 * f),
+                  width: size * (1.0 + 0.06 * f),
+                  height: size * (1.0 + 0.06 * f),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.brand500.withValues(alpha: colors.isDark ? 0.30 : 0.32),
+                        AppColors.brand500.withValues(alpha: dark ? 0.26 : 0.24),
                         AppColors.brand500.withValues(alpha: 0),
                       ],
                     ),
                   ),
                 ),
-              if (widget.orbits)
-                CustomPaint(
-                  size: Size(size * 1.3, size * 0.5),
-                  painter: _OrbitPainter(
-                    t: _orbit.value,
-                    ring: (colors.isDark ? AppColors.brand300 : AppColors.brand500).withValues(
-                      alpha: 0.35,
+              if (widget.groundShadow)
+                Positioned(
+                  bottom: size * 0.04,
+                  // Um círculo com degradê radial esticado na horizontal vira
+                  // a elipse da sombra; ela encolhe e clareia quando o símbolo sobe.
+                  child: Transform.scale(
+                    scaleX: 4.2 * (1 - 0.18 * f),
+                    child: Container(
+                      width: size * 0.16,
+                      height: size * 0.16,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            (dark ? Colors.black : AppColors.brand900).withValues(
+                              alpha: (dark ? 0.55 : 0.28) * (1 - 0.4 * f),
+                            ),
+                            (dark ? Colors.black : AppColors.brand900).withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               Transform.translate(
                 offset: Offset(0, -14 * f + 7),
-                child: Transform.rotate(angle: (f - 0.5) * 0.1, child: child),
+                child: Transform.rotate(angle: (f - 0.5) * 0.08, child: child),
               ),
             ],
           );
@@ -143,40 +154,6 @@ class _FloatingLogo3DState extends State<FloatingLogo3D> with TickerProviderStat
       ),
     );
   }
-}
-
-/// Duas elipses (círculos vistos de lado) com um ponto verde-folha e um
-/// teal correndo por elas.
-class _OrbitPainter extends CustomPainter {
-  _OrbitPainter({required this.t, required this.ring});
-
-  final double t;
-  final Color ring;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = size.center(Offset.zero);
-    final outer = Rect.fromCenter(center: c, width: size.width, height: size.height);
-    final inner = Rect.fromCenter(center: c, width: size.width * 0.78, height: size.height * 0.72);
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = ring;
-    canvas.drawOval(outer, stroke);
-    canvas.drawOval(inner, stroke..strokeWidth = 1);
-
-    Offset on(Rect r, double a) =>
-        Offset(r.center.dx + r.width / 2 * math.cos(a), r.center.dy + r.height / 2 * math.sin(a));
-    final a = t * 2 * math.pi;
-    final leaf = on(outer, a);
-    final teal = on(inner, -a * 1.4 + 2);
-    canvas.drawCircle(leaf, 9, Paint()..color = AppColors.leaf.withValues(alpha: 0.35));
-    canvas.drawCircle(leaf, 5.5, Paint()..color = AppColors.leaf);
-    canvas.drawCircle(teal, 4.5, Paint()..color = AppColors.teal400);
-  }
-
-  @override
-  bool shouldRepaint(_OrbitPainter old) => old.t != t || old.ring != ring;
 }
 
 /// Selo 3D de receita assinada, girando devagar em perspectiva, com um

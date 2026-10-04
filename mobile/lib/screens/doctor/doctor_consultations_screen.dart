@@ -119,7 +119,7 @@ class _DoctorConsultationsScreenState extends State<DoctorConsultationsScreen> {
             top: statusBar + 40,
             child: Opacity(
               opacity: dark ? 0.55 : 0.35,
-              child: const FloatingLogo3D(size: 140, orbits: false, glow: false),
+              child: const FloatingLogo3D(size: 140, groundShadow: false, glow: false),
             ),
           ),
           RefreshIndicator(

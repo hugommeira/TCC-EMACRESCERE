@@ -257,7 +257,7 @@ class _Hero extends StatelessWidget {
             Positioned(
               right: -18,
               top: statusBar + 26,
-              child: const Opacity(opacity: 0.9, child: FloatingLogo3D(size: 150, orbits: false, glow: false)),
+              child: const Opacity(opacity: 0.9, child: FloatingLogo3D(size: 150, groundShadow: false, glow: false)),
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(24, statusBar + 26, 24, 0),
