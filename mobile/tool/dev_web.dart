@@ -7,7 +7,7 @@
 // Solução: este script sobe duas coisas —
 //   1. `flutter run -d web-server` em http://localhost:5000  (o app)
 //   2. um proxy de API em http://localhost:8080 que repassa /api/* pra
-//      API real (API_BASE_URL do .env) e ADICIONA os cabeçalhos CORS pra
+//      API real (API_BASE_URL do .env; sem ele, produção) e ADICIONA os cabeçalhos CORS pra
 //      origem do app.
 //
 // Por que não servir o app pelo proxy também (mesma origem)? Porque o
@@ -92,12 +92,12 @@ Future<void> main(List<String> args) async {
   }
 }
 
+// Mesmo padrão do ApiClient: o .env é opcional (não é versionado).
+const _defaultApiBaseUrl = 'https://tcc-emacrescere.vercel.app';
+
 String _readApiBaseUrl() {
   final env = File('.env');
-  if (!env.existsSync()) {
-    stderr.writeln('[dev_web] .env não encontrado — rode a partir da raiz do projeto.');
-    exit(1);
-  }
+  if (!env.existsSync()) return _defaultApiBaseUrl;
   for (final line in env.readAsLinesSync()) {
     final trimmed = line.trim();
     if (trimmed.startsWith('API_BASE_URL=')) {
@@ -105,8 +105,7 @@ String _readApiBaseUrl() {
       if (value.isNotEmpty) return value;
     }
   }
-  stderr.writeln('[dev_web] API_BASE_URL não definida no .env');
-  exit(1);
+  return _defaultApiBaseUrl;
 }
 
 Future<void> _handle(HttpRequest request) async {

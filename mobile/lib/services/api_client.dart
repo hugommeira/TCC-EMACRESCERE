@@ -2,7 +2,6 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../constants.dart';
@@ -14,15 +13,34 @@ class ApiClient {
   static Dio? _dio;
   static PersistCookieJar? _cookieJar;
 
-  /// Usado pela tela de debug de login (kDebugMode only).
-  static String get baseUrlForDebug =>
-      _dio?.options.baseUrl ?? dotenv.env['API_BASE_URL'] ?? '';
+  /// URL do site em produção. É pública (está no README), então vale como
+  /// padrão: o `.env` não é versionado e o build não pode depender dele.
+  /// Outro servidor: `--dart-define=API_BASE_URL=https://...`.
+  static const _apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://tcc-emacrescere.vercel.app',
+  );
 
-  /// URL pública do site (páginas web: esqueci a senha, comprar plano...).
-  /// Diferente de [baseUrlForDebug] na web, onde a API é acessada pela
-  /// origem da própria página (proxy de dev) mas os links pro site devem
-  /// abrir a URL real.
-  static String get siteUrl => dotenv.env['API_BASE_URL'] ?? '';
+  /// Proxy de API do `tool/dev_web.dart` (só no Chrome, em localhost).
+  static const _webProxyUrl = String.fromEnvironment(
+    'WEB_API_PROXY_URL',
+    defaultValue: 'http://localhost:8080',
+  );
+
+  /// Na web: true quando a página roda no `tool/dev_web.dart` (localhost),
+  /// false quando é a versão publicada dentro do site (/app/).
+  static bool get _webDev =>
+      Uri.base.host == 'localhost' || Uri.base.host == '127.0.0.1';
+
+  /// Usado pela tela de debug de login (kDebugMode only).
+  static String get baseUrlForDebug => _dio?.options.baseUrl ?? _apiBaseUrl;
+
+  /// URL pública do site (páginas web: esqueci a senha, validar receita...).
+  /// Na web publicada é a origem da própria página (o app mora em /app/ do
+  /// site). No dev web a API passa pelo proxy local, mas os links pro site
+  /// abrem a URL real.
+  static String get siteUrl =>
+      kIsWeb && !_webDev ? Uri.base.origin : _stripSlash(_apiBaseUrl);
 
   static String _stripSlash(String url) =>
       url.endsWith('/') ? url.substring(0, url.length - 1) : url;
@@ -31,19 +49,18 @@ class ApiClient {
     final existing = _dio;
     if (existing != null) return existing;
 
-    // Na web o navegador não deixa falar direto com a Vercel (o backend não
-    // manda CORS e o cookie seria cross-site), então a API passa pelo proxy
-    // local de tool/dev_web.dart, que adiciona CORS. localhost:<porta do
-    // app> -> localhost:8080 é same-site, então o cookie do NextAuth
-    // funciona. Nativo fala direto com a URL do .env.
+    // Na web publicada o app é servido pelo próprio site (/app/), então a
+    // API é a mesma origem da página: sem CORS e o cookie do NextAuth é
+    // first-party. No dev web (localhost) o navegador não deixa falar direto
+    // com a Vercel (o backend não manda CORS e o cookie seria cross-site),
+    // então a API passa pelo proxy local de tool/dev_web.dart, que adiciona
+    // CORS. localhost:<porta do app> -> localhost:8080 é same-site, então o
+    // cookie funciona. Nativo fala direto com a URL do site.
     final baseUrl = kDemoApi
         ? 'http://demo.invalid'
         : kIsWeb
-            ? (dotenv.env['WEB_API_PROXY_URL'] ?? 'http://localhost:8080')
-            : dotenv.env['API_BASE_URL'];
-    if (baseUrl == null || baseUrl.isEmpty) {
-      throw StateError('API_BASE_URL não definida no .env');
-    }
+            ? (_webDev ? _webProxyUrl : Uri.base.origin)
+            : _stripSlash(_apiBaseUrl);
 
     final dio = Dio(BaseOptions(
       baseUrl: baseUrl,

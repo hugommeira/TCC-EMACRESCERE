@@ -14,10 +14,14 @@ repositório), que também é o backend de tudo.
 - `C:\Users\jujuj\emacrescere_app` é arquivo morto local (o histórico do app
   até as frentes A, B e C, commit `0ef4978`). Não editar, não apagar, não
   sincronizar. Não existe mais subtree nem o remote `flutter-mobile`.
-- O `.env` (com a `API_BASE_URL`) não é versionado e o `pubspec.yaml` o
-  declara como asset: num clone novo, sem ele, `flutter analyze` avisa e
-  `flutter test` nem compila. Crie `mobile/.env` com
-  `API_BASE_URL=https://tcc-emacrescere.vercel.app` antes de rodar.
+- O app não precisa de `.env` (desde 2026-10-04 ele não é mais asset do
+  `pubspec.yaml`). A `API_BASE_URL` padrão é a produção,
+  `https://tcc-emacrescere.vercel.app`, fixada em `ApiClient`
+  (`String.fromEnvironment`); outro servidor: `--dart-define=API_BASE_URL=...`.
+  Na web a API é a origem da página (ou o proxy de dev em localhost). O
+  `tool/dev_web.dart` ainda lê `API_BASE_URL` de um `mobile/.env` se ele
+  existir (git-ignorado). O pacote `flutter_dotenv` ficou no `pubspec.yaml`
+  sem uso, a remover.
 
 ## Stack do app
 - Flutter (Dart)
@@ -223,8 +227,9 @@ e Início da médica (`doctor/doctor_consultations_screen.dart`).
   tela preta (abriu antes de compilar), só recarregar a página.
 - Dados locais (peso, onboarding visto) ficam no `localStorage` da origem
   `localhost:5000` — não são os mesmos do celular.
-- `API_BASE_URL` já configurada em `.env` (git-ignorado), apontando pro
-  backend em produção: `https://tcc-emacrescere.vercel.app`
+- `API_BASE_URL` padrão é o backend em produção
+  (`https://tcc-emacrescere.vercel.app`), sem `.env`; para outro servidor,
+  `--dart-define=API_BASE_URL=...`
 - Testes automatizados: `flutter test` — widget tests de layout das telas
   de fila/pagamento (`test/queue_screens_test.dart`) e do cadastro/
   credenciamento do médico (`test/doctor_screens_test.dart`) e dos temas
@@ -247,7 +252,8 @@ cookie de sessão aceito em `/api/auth/session`).
 Rodando nativo (Android/iOS/desktop) isso funciona sem problema. Rodando no
 Chrome/Edge (Flutter Web) direto contra a Vercel, o navegador bloqueia:
 o backend não manda cabeçalhos CORS e o cookie é cross-site. Por isso na
-web o `ApiClient` aponta pro proxy local `http://localhost:8080`
+web em localhost (ou 127.0.0.1) o `ApiClient` aponta pro proxy local
+`http://localhost:8080`
 (`tool/dev_web.dart`), que adiciona CORS; como `localhost:5000` (app) e
 `localhost:8080` (proxy) são o mesmo *site* pro navegador, o cookie
 `SameSite=Lax` do NextAuth é enviado e aceito. (Servir o app pelo proxy,
@@ -260,6 +266,9 @@ Diferenças de comportamento na web, todas guardadas por `kIsWeb`:
 - Download de PDF da prescrição não funciona (só nativo).
 - Links pro site (esqueci a senha etc.) usam `ApiClient.siteUrl`, a URL
   real da Vercel, não a origem do proxy.
+- Fora de localhost (a versão publicada em `/app/` do site) a API e o
+  `siteUrl` são a origem da própria página: mesma origem, sem CORS e sem
+  proxy.
 
 ## Aprendizados do QA de 2026-09-12 (não esquecer)
 - O backend exige `Origin`/`Referer` em toda mutação (`lib/security.ts`,

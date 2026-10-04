@@ -176,8 +176,8 @@ Senha de **todos**: `Demo@12345`.
 **Site** (`TCC-EMACRESCERE`): `npm install`, configurar `.env.local` (ver `.env.example`),
 `npm run prisma:push`, `npm run dev`.
 
-**App** (`mobile/`), sem celular físico — **no Chrome** (antes, crie `mobile/.env` com a
-`API_BASE_URL`; ele não é versionado e sem ele o app nem compila):
+**App** (`mobile/`), sem celular físico — **no Chrome** (não precisa de `.env`: a API padrão é
+a produção; um `mobile/.env` com `API_BASE_URL`, git-ignorado, só muda o destino do proxy):
 ```bash
 dart run tool/dev_web.dart
 ```
@@ -188,7 +188,7 @@ cai em `5000` só no fallback manual — foi corrigido recentemente porque `5000
 ocupada por outro processo na máquina).
 
 **App num Android físico**: `flutter run -d <device-id>` — aponta direto pra produção
-(`API_BASE_URL` no `.env`, git-ignorado).
+(`API_BASE_URL` padrão no `ApiClient`; outro servidor: `--dart-define=API_BASE_URL=...`).
 
 **Testes**: `flutter test` (app, widget tests de layout) / `npm test` (site, Vitest, 27
 testes em lógica pura — formatadores, validação de CPF, rate limiter).
