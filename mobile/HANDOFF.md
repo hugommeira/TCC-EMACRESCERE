@@ -37,12 +37,17 @@ resto daquela época e não é usado.
   (`VERCEL_ENV=preview`) ele só faz `prisma generate` + `next build` e não toca o banco
   (commit `a11379b`). Rodado localmente, o `VERCEL_ENV` fica vazio e ele **altera** o
   banco de produção — por isso não se roda `npm run build` local.
-- O `vercel.json` tem um `ignoreCommand` que decide se o build roda:
-  - fora da `main`, só builda se a mensagem do commit tiver `[preview]`;
-  - push cujo último commit toca só `mobile/` **não** builda o site;
-  - mensagem com `[build]` **sempre** builda, em qualquer branch — use em commit vazio
-    de redeploy (ex.: depois de trocar variável de ambiente no painel), que de outro jeito
-    seria pulado por não mudar nada fora de `mobile/`.
+- O `vercel.json` tem um `ignoreCommand` que decide se o build roda (a Vercel olha só o
+  **último** commit do push):
+  - mensagem com `[build]` **sempre** builda, em qualquer branch;
+  - na `main`, builda quando o commit muda algo **fora** de `mobile/`; commit que toca só
+    `mobile/` — ou commit vazio — **não** builda. Para um redeploy na `main` (ex.: depois
+    de trocar variável de ambiente no painel), use commit vazio com `[build]`;
+  - fora da `main`, só builda com `[preview]` na mensagem, **inclusive em commit vazio**
+    (`git commit --allow-empty -m "<texto> [preview]"` e push). Sem a marca, a prévia é
+    pulada mesmo que o commit mexa no site;
+  - se a Vercel não tiver o commit anterior (clone raso), a comparação falha e o build
+    **roda** — o erro é sempre para o lado de construir.
 
 Atenção: a pasta `app/` do site **não** é o aplicativo — é a pasta de rotas do Next.js
 (App Router: páginas + API).
