@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Photo } from "./Photo";
-import { PHOTOS } from "./photos";
+import Image from "next/image";
 import { Scene3D } from "@/components/three/Scene3D";
 
 // Atraso de cada peça da sequência de entrada (ms).
@@ -31,19 +30,33 @@ export function Hero() {
 function MobileHero() {
   return (
     <section className="relative lg:hidden">
-      <div className="relative h-[56vh] min-h-[360px] max-h-[540px] w-full md:max-h-[600px] animate-scale-in overflow-hidden">
-        <Photo
-          src={PHOTOS.heroMobile}
-          alt="Mulher sorrindo usando o celular"
-          priority
-          // hidden on desktop: ask for the smallest candidate there
-          sizes="(min-width: 1024px) 1px, 100vw"
-          className="absolute inset-0 [&_img]:object-[center_25%]"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-slate-900/25 via-slate-900/0 to-white"
-        />
+      {/* O celular 3D (mesmo do desktop, aqui como imagem leve) no lugar da
+          foto: mostra o app de verdade e não depende de recorte de foto. */}
+      <div className="relative h-[58vh] min-h-[400px] max-h-[560px] w-full overflow-hidden bg-gradient-to-b from-brand-50 via-teal-50/50 to-white md:max-h-[620px]">
+        <div aria-hidden className="absolute -left-16 top-16 h-64 w-64 rounded-full bg-brand-300/30 blur-3xl" />
+        <div aria-hidden className="absolute -right-10 top-40 h-56 w-56 rounded-full bg-teal-300/25 blur-3xl" />
+        <div className="absolute inset-x-0 bottom-14 top-16 animate-scale-in" style={d(100)}>
+          <div className="relative h-full w-full animate-float">
+            <Image
+              src="/3d/posters/phone-app.webp"
+              alt="Celular com o app Emacrescere numa consulta por vídeo"
+              fill
+              priority
+              // some no desktop (lá entra o 3D): pede o menor tamanho
+              sizes="(min-width: 1024px) 1px, 60vw"
+              className="object-contain drop-shadow-2xl"
+            />
+          </div>
+        </div>
+        <span
+          className="absolute right-4 top-28 inline-flex animate-rise items-center gap-1.5 rounded-xl bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-800 shadow-lg shadow-slate-900/10 ring-1 ring-slate-200 md:right-[calc(50%-17rem)]"
+          style={d(900)}
+        >
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-brand-600" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+          CRM verificado
+        </span>
         <span
           className="absolute bottom-5 left-4 md:left-[calc(50%-19rem)] inline-flex animate-rise items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur"
           style={d(500)}
