@@ -78,6 +78,21 @@ npx next lint --dir components --dir app
 npx vitest run
 ```
 
+## Login com Google/Facebook nas prévias da Vercel
+
+O botão só aparece quando o build tem `GOOGLE_CLIENT_ID` e
+`GOOGLE_CLIENT_SECRET` (idem `FACEBOOK_*`). Para funcionar numa prévia:
+
+1. Vercel → Settings → Environment Variables: as chaves marcadas também em
+   **Preview** (feito em 04/10/2026 para o Google).
+2. Google Cloud Console → Credenciais → cliente OAuth → URIs de
+   redirecionamento: o endereço **fixo da branch** (`tcc-emacrescere-git-…
+   .vercel.app`) + `/api/auth/callback/google`. O endereço com código
+   aleatório muda a cada deploy e o Google recusa.
+3. `NEXTAUTH_URL` não pode estar em Preview apontando para o domínio de
+   produção (o login voltaria para o site oficial).
+4. Prévia só builda com `[preview]` na mensagem do commit (`vercel.json`).
+
 ## 3D e Blender (próxima frente visual)
 
 > **Briefing completo dos assets 3D em [`docs/3d/`](./3d/BRIEFING.md)**
