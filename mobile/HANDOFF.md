@@ -112,9 +112,11 @@ webhooks/asaas
   receita total, pagamentos pendentes).
 - App: 5 abas do paciente (Início, Peso, Consultas, Chat, Perfil) + interface completa do
   médico (Fila, Consultas, Agenda, Perfil) desde 2026-09-11.
-- Landing do site com seção "App Android": QR code real (`public/qr-app.svg`, gerado com o
-  pacote Dart `qr`) apontando pra `/app.apk` (build arm64 real, ~19 MB, hospedado no próprio
-  site, headers corretos pro Android instalar direto).
+- Landing do site com seção "App Android e iPhone" (`/#app`), com dois QR codes reais:
+  `public/qr-app.svg` (gerado com o pacote Dart `qr`) apontando pra `/app.apk` (build arm64
+  real, ~19 MB, hospedado no próprio site, headers corretos pro Android instalar direto), e
+  `public/qr-app-iphone.svg` (gerado com `npx qrcode`) apontando pra `/app/`, a versão web
+  que o iPhone instala pelo Safari.
 - Dados de demonstração: `prisma/seed-demo.ts` roda no build de **produção** da Vercel
   (idempotente; prévias não rodam seed nem `db push` — ver "Deploy na Vercel").
   Cria médicos em cada situação de credenciamento (aprovado, pendente com CRM ativo, pendente
@@ -214,12 +216,17 @@ first-party. Em `localhost`/`127.0.0.1` continua o proxy do `tool/dev_web.dart`.
 ```bash
 flutter build web --release --no-web-resources-cdn --base-href /app/
 ```
-Depois, apagar o conteúdo antigo de `public/app/` (na raiz do repositório) e
-copiar para lá tudo o que está em `mobile/build/web/`. No PowerShell, a partir
-de `mobile/`:
+Rode no PowerShell, não no Git Bash: o Git Bash troca `/app/` por
+`C:/Program Files/Git/app/` e o Flutter recusa o `--base-href`.
+
+Depois, apagar o conteúdo antigo de `public/app/` (na raiz do repositório),
+copiar para lá tudo o que está em `mobile/build/web/` e apagar os `*.symbols`
+(só servem para depuração e somam uns 8 MB). No PowerShell, a partir de
+`mobile/`:
 ```powershell
 if (Test-Path ..\public\app) { Remove-Item -Recurse -Force ..\public\app }
 Copy-Item -Recurse build\web ..\public\app
+Get-ChildItem -Recurse ..\public\app -Filter *.symbols | Remove-Item
 ```
 - `--no-web-resources-cdn` é obrigatório: sem ele o CanvasKit vem do gstatic, que
   o CSP do site bloqueia, e a página fica em branco.
@@ -235,11 +242,20 @@ e um novo commit em `public/app/`. Sem isso, o iPhone continua com a versão
 antiga. Esse commit toca fora de `mobile/`, então dispara o deploy da Vercel
 (só os commits que mexem apenas em `mobile/` são ignorados).
 
+**Gere a versão web só quando juntar várias mudanças**, não a cada uma: cada
+build copiado para `public/app/` soma uns 44 MB ao histórico do Git.
+
 **Limitações na versão web:**
 - O PDF da receita não baixa (o download só existe no app nativo). A receita
   pode ser validada pelo link `/prescricao/<id>` do site.
-- Nas prévias da Vercel as gravações (login, agendar...) são recusadas: o
-  `allowedOrigins` do servidor só aceita a produção. É esperado.
+- As prévias da Vercel têm a proteção de deploy ligada: abrir `/app/` numa
+  prévia redireciona para o login da Vercel (`vercel.com/sso-api`), e só entra
+  quem está logado na conta do Hugo. Esse é o obstáculo real para testar numa
+  prévia. O login do app (`/api/auth/[...nextauth]`) não usa o `checkOrigin`:
+  pelo código, o login deve funcionar nas prévias (não foi testado, porque a
+  proteção da Vercel bloqueou o acesso). Agendar, registrar peso e as outras
+  gravações dão 403 na prévia, porque o `checkOrigin` só aceita a produção. É
+  esperado.
 
 **Sem `.env`:** o app não precisa mais do `mobile/.env` (ele saiu dos assets do
 `pubspec.yaml`). O endereço padrão da API já vem no código (`ApiClient`,
@@ -322,7 +338,8 @@ web vale a origem da página.
 ## Onde encontrar mais detalhes
 
 - `TCC-EMACRESCERE/README.md` — setup, variáveis de ambiente completas, credenciais, deploy,
-  seção "App Android" (como gerar um novo APK).
+  seção "App: Android (APK) e iPhone (web) + QR codes" (como gerar um novo APK, instalar no
+  iPhone e gerar os QR codes).
 - `TCC-EMACRESCERE/PROJETO-STATUS.md` — log detalhado sessão a sessão da migração de infra e
   correções de segurança (histórico mais antigo, até 2026-08-30).
 - `TCC-EMACRESCERE/mobile/CLAUDE.md` — escopo do app, contrato de API por tela, identidade visual,
