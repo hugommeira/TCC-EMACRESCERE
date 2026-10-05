@@ -7,9 +7,9 @@
 ## O que é o projeto
 
 **Emacrescere** — TCC (Escola Técnica Pandiá Calógeras, Técnico de Informática, Equipe 6,
-aluno responsável Hugo Meira Maia). Plataforma de telemedicina *on-demand* pra
-acompanhamento de tratamento de emagrecimento: paciente entra numa fila ou agenda com um
-médico específico, paga (Pix/cartão/boleto via Asaas), conversa por chat/vídeo, recebe
+aluno responsável Hugo Meira Maia). Plataforma de telemedicina **com consulta agendada** pra
+acompanhamento de tratamento de emagrecimento (a fila on-demand foi descartada): paciente
+agenda com um médico específico, paga (Pix/cartão/boleto via Asaas), conversa por chat/vídeo, recebe
 prontuário e receita digital assinada.
 
 Três perfis: **PACIENTE** e **MÉDICO** (app Flutter + site), **ADMIN** ("farmácia", só no
@@ -54,8 +54,9 @@ Atenção: a pasta `app/` do site **não** é o aplicativo — é a pasta de rot
 
 ## Stack e arquitetura
 
-- **Auth**: NextAuth v5, Credentials provider, sessão JWT (30 dias), + login social Facebook
-  (pendente configurar `FACEBOOK_CLIENT_ID/SECRET` — bloqueado por verificação de conta Meta).
+- **Auth**: NextAuth v5, Credentials provider, sessão JWT (30 dias), + login social **Google**
+  (ativo no site desde 03/10/2026; o app não tem esse botão) e Facebook (pronto no código,
+  pendente `FACEBOOK_CLIENT_ID/SECRET` — bloqueado por verificação de conta Meta).
   App autentica via cookie de sessão do NextAuth (não bearer token).
 - **Banco**: PostgreSQL na NeonDB (`sa-east-1`), Prisma ORM, schema em
   `TCC-EMACRESCERE/prisma/schema.prisma` (530 linhas) — models principais: `User`,
@@ -102,7 +103,8 @@ webhooks/asaas
 - Cadastro/login (paciente e médico) com credenciamento de médico (CRM verificado de forma
   **simulada** — regra: 4-7 dígitos + UF válida; final "000" = não encontrado, "999" = suspenso).
   Admin aprova/reprova em `/dashboard/admin/doctors`.
-- Fila on-demand (paga) e agendamento com médico específico (não cobra nesse fluxo hoje).
+- Agendamento com médico específico, com pagamento (site e app). A fila on-demand está
+  desligada nos dois lados (`QUEUE_ENABLED` / `kQueueEnabled`).
 - Chat texto entre paciente e médico (polling, tanto no app quanto no site).
 - Prontuário (diagnóstico/conduta/observações) editável pelo médico, com auto-save.
 - Emissão de receita digital assinada (site, com certificado do médico) e visualização/PDF
@@ -134,9 +136,9 @@ webhooks/asaas
 
 ## Pendências que só o Hugo resolve (fora do meu acesso)
 
-- `PAYMENT_MOCK` está com o valor de produção configurado na Vercel — pra demonstrar a fila
-  on-demand de ponta a ponta sem pagar de verdade, teria que ativar o mock lá (painel da
-  Vercel, que eu não acesso).
+- `PAYMENT_MOCK` está com o valor de produção (`false`) na Vercel — pra demonstrar o
+  pagamento sem confirmar a cobrança no painel do Asaas Sandbox, teria que ativar o mock lá
+  (painel da Vercel, que eu não acesso).
 - Login social Facebook: cadastro de app developer na Meta travado (SMS de verificação não
   chega).
 - `robots.txt`/`sitemap.xml`, imagem de Open Graph, monitoramento de erro em produção: nunca

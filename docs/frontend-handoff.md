@@ -1,21 +1,23 @@
 # Front-end — guia de continuação
 
-Para quem (pessoa ou Claude Code local) for continuar a evolução do front-end
-a partir da branch `claude/vigilant-thompson-mjo9k9`. O diagnóstico completo
-está em [`frontend-diagnostico.md`](./frontend-diagnostico.md).
+Para quem (pessoa ou Claude Code local) for continuar a evolução do front-end.
+O trabalho feito na branch `claude/vigilant-thompson-mjo9k9` já está na `main` e
+no ar (03/10/2026); trabalho novo começa de uma branch nova a partir da `main`.
+O diagnóstico completo está em [`frontend-diagnostico.md`](./frontend-diagnostico.md).
 
 ## Como trazer para a sua máquina
 
 ```bash
 git fetch origin
-git checkout claude/vigilant-thompson-mjo9k9
+git checkout main && git pull
+git checkout -b <nome-da-branch>
 npm install
 npx prisma generate   # o schema de peso/IMC exige client novo
 npm run dev
 ```
 
-A branch já contém a `main` atual (registro de peso/IMC e as correções de
-build). Para publicar: abrir um pull request desta branch para a `main`.
+Para publicar: enviar a branch (com `[preview]` no último commit, se quiser uma
+prévia na Vercel) e pedir ao Hugo o merge na `main` — o merge publica o site.
 
 **Nunca rode `prisma db push --accept-data-loss`.** Se o build reclamar de
 perda de dados, é sinal de que uma branch com schema mais antigo está sendo
@@ -58,17 +60,23 @@ comparada com o banco; o certo é atualizar a branch com a `main`.
    da área profissional. Reaproveitar o padrão de `NextConsultation`.
 2. **Demais telas do paciente** (consultas, receitas, perfil): mesmo padrão de
    cartões `rounded-3xl` + `ring-slate-200` do novo início.
-3. **Layout dos dashboards** (`components/layout/*`): sidebar e topbar ainda
-   em `gray-*`; alinhar à paleta `slate`/`ink` e ao degradê da marca.
+3. ~~**Layout dos dashboards**: alinhar sidebar e topbar à paleta `slate`/`ink`~~
+   — feito (`components/layout/*` não usa mais `gray-*`). Em 05/10 os menus do
+   topo (notificações e conta) passaram a ficar acima do conteúdo: o `<header>`
+   tem `backdrop-blur`, que cria uma camada própria, então ele precisa de
+   `relative z-40`; no celular, o painel de notificações se posiciona pela largura
+   do cabeçalho, não pelo sino.
 4. **Tokens semânticos** e um `buttonVariants()` compartilhado para `<Link>`,
    eliminando as classes longas repetidas de botão.
 5. Dívida técnica: os 60 erros de TypeScript pré-existentes escondidos por
    `ignoreBuildErrors` (ver diagnóstico).
 
-A branch `redesign-frontend` (prévia de design system do Hugo, não juntada)
-tem ideias aproveitadas no início do paciente; ela parte de uma versão antiga
-da `main` e depende de `lucide-react` e de tokens novos, então convém portar
-ideias, não fazer merge direto.
+O redesign anterior do Hugo ("Consultório", 30/09) não foi juntado: a branch
+`redesign-frontend` saiu do GitHub, e o trabalho ficou guardado só na máquina
+do Hugo (branch local `guardado/redesign-consultorio` e stash). Algumas ideias
+foram aproveitadas no início do paciente. Ele parte de uma versão antiga da
+`main` e depende de `lucide-react` e de tokens novos: convém portar ideias, não
+fazer merge.
 
 ## Como validar antes de enviar
 
@@ -93,7 +101,7 @@ O botão só aparece quando o build tem `GOOGLE_CLIENT_ID` e
    produção (o login voltaria para o site oficial).
 4. Prévia só builda com `[preview]` na mensagem do commit (`vercel.json`).
 
-## 3D e Blender (próxima frente visual)
+## 3D e Blender (feito: 3 assets no ar)
 
 > **Briefing completo dos assets 3D em [`docs/3d/`](./3d/BRIEFING.md)**
 > (especificação de cada peça, exportação, orçamento de peso, andamento e o

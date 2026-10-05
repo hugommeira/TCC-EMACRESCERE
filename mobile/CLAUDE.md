@@ -1,8 +1,8 @@
 # CLAUDE.md — Emacrescere App (Paciente)
 
 ## Sobre o projeto
-Emacrescere é uma plataforma de telemedicina on-demand para acompanhamento de
-tratamento de emagrecimento. Esta pasta (`mobile/`) é o APP MOBILE, com as
+Emacrescere é uma plataforma de telemedicina com consulta agendada para
+acompanhamento de tratamento de emagrecimento. Esta pasta (`mobile/`) é o APP MOBILE, com as
 interfaces de PACIENTE e de MÉDICO (a do médico entrou em 2026-09-11). O
 administrador ("farmácia") usa apenas o site web (Next.js, a raiz deste mesmo
 repositório), que também é o backend de tudo.
@@ -285,9 +285,9 @@ Diferenças de comportamento na web, todas guardadas por `kIsWeb`:
   (Vercel) interpreta ISO sem fuso como UTC.
 - Médico no app: `DoctorRoomScreen` serve pra qualquer status; consulta
   agendada tem "Iniciar" (PATCH /status IN_PROGRESS — só o médico pode).
-- Fila on-demand em produção: Asaas sandbox está configurado, mas o
-  PAYMENT_MOCK está desligado — o Pix real aparece, a confirmação não
-  chega sem pagar. A paciente do seed (maria) tem CPF inválido e o Asaas
+- Pagamento em produção: Asaas sandbox está configurado, mas o
+  PAYMENT_MOCK está desligado — o Pix de sandbox aparece, e a confirmação só
+  chega quando a cobrança é confirmada no painel do Asaas Sandbox. A paciente do seed (maria) tem CPF inválido e o Asaas
   recusa; use um paciente com CPF válido.
 - Dados de demonstração: `prisma/seed-demo.ts` no site (roda no build).
   Usuários `*@demo.emacrescere.app`, senha `Demo@12345`. Na aba Peso há

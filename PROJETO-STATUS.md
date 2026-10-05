@@ -1,107 +1,164 @@
 # Status do projeto — Emacrescere
 
-> ## ⚠️ Aviso: não aplicar o `site_agendamento.patch` no site
->
-> A mudança de escopo "atendimento só por agendamento; fila on-demand fora"
-> **já foi feita no site**, na branch `escopo-agendamento` (commits `83ff90f`
-> em diante, set/2026). Ela substitui o `site_agendamento.patch` gerado em
-> outra máquina em cima do `214b37a`.
->
-> **Não rode `git am site_agendamento.patch` no site**: o patch mexe nos mesmos
-> arquivos e vai conflitar. Antes de aplicar qualquer coisa relacionada a ele
-> (inclusive o `aplicar_agendamento_app.py` no app Flutter), fale com o Hugo.
->
-> Como ficou no site: a fila continua no código — nada foi apagado e não há
-> migration. Uma chave única, `QUEUE_ENABLED` em `lib/constants.ts`, esconde
-> os pontos de entrada da interface. Para religar a fila, troque `false` por
-> `true`.
->
-> O app Flutter (`mobile/`) **ainda não foi alterado** e continua mostrando a
-> fila.
+> Atualizado em **05/10/2026**. Documento de contexto para retomar o trabalho
+> (nova máquina, nova sessão do Claude, novo integrante). Não contém segredos:
+> valores reais ficam só no `.env.local` e no painel da Vercel.
 
-> Documento de contexto para retomar o trabalho rapidamente (nova máquina, nova sessão do Claude Code, ou novo integrante da equipe). Não contém segredos — valores reais ficam só no `.env.local` (nunca commitado).
+TCC "Emacrescere" — Escola Técnica Pandiá Calógeras, Técnico de Informática,
+Equipe 6. Plataforma de telessaúde para acompanhamento médico do emagrecimento,
+com atendimento **só por consulta agendada**. **Banca: 03/11/2026.**
 
-## Contexto
+- Site: https://tcc-emacrescere.vercel.app (produção no commit `77c7307`)
+- App web (iPhone): https://tcc-emacrescere.vercel.app/app/
+- Repositório: https://github.com/hugommeira/TCC-EMACRESCERE
 
-TCC "Emacrescere" (Escola Técnica Pandiá Calógeras, curso Técnico de Informática, Equipe 6) — plataforma de telemedicina para tratamento de emagrecimento, com atendimento por consulta agendada (a fila on-demand virou trabalho futuro — ver aviso no topo). Stack: Next.js 14 (App Router), TypeScript strict, Prisma + PostgreSQL (Neon), NextAuth v5, TailwindCSS.
+## Quem cuida de quê
 
-## Migração de infraestrutura (concluída)
-
-O projeto originalmente vivia nas contas do orientador (`github.com/valmeidavr/TCC-ETPC`, Neon e Vercel dele). Foi migrado para contas próprias do aluno Hugo Meira Maia:
-
-- **Repositório**: `github.com/hugommeira/TCC-EMACRESCERE` — histórico limpo (não é o histórico completo do time; esse continua preservado no repositório do orientador e no clone local `TCC-ETPC`, caso seja necessário para a documentação do TCC).
-- **Banco de dados**: projeto próprio no Neon (região `sa-east-1`), schema aplicado via `prisma db push`, seed rodado (`prisma/seed.ts` + `prisma/seed-medications.ts` — 300 medicamentos ANVISA).
-- **Deploy**: Vercel, projeto `tcc-emacrescere`, região `gru1` (São Paulo), branch `main` com auto-deploy a cada push.
-  - URL: `https://tcc-emacrescere.vercel.app`
-
-## Funcionalidades implementadas nesta sessão
-
-- **Recuperação de senha por e-mail**: `/auth/forgot-password` → `/auth/reset-password`, reaproveitando o model `VerificationToken` do Prisma (token hash SHA-256, expira em 15min), envio via Resend, mensagens anti-enumeration, rate limiting, timing normalizado (piso de 500ms na resposta).
-- **Login com Facebook (OAuth)**: provider adicionado ao NextAuth, vínculo automático a conta existente pelo e-mail, criação de `PatientProfile` para novos cadastros via Facebook. Ainda precisa das credenciais do Meta for Developers (ver pendências).
-- **Login por e-mail**: já existia no projeto original, validado.
-
-## Correções de segurança/infra encontradas e resolvidas
-
-- Credencial real do Neon (do orientador) estava commitada em `.env.example` desde o primeiro commit — removida, trocada por placeholder.
-- `.eslintrc.json` estava quebrado desde o início (`next/typescript` não existe na versão instalada do `eslint-config-next`, e faltava o pacote `@typescript-eslint/eslint-plugin`) — `npm run lint` nunca tinha funcionado. Corrigido.
-- Next.js atualizado `14.2.4 → 14.2.35` (mesma linha, sem breaking changes) + `npm audit fix` — eliminou as 4 vulnerabilidades críticas, incluindo bypass de autorização no middleware (CVE-2025-29927). Restam 6 altas + 1 baixa que só um upgrade major pra Next 16 resolveria (não feito, é breaking change).
-- `.gitignore` não cobria `*.pfx`/`*.p12` (certificados digitais dos médicos) — corrigido.
-- `NEXT_PUBLIC_LIVEKIT_URL` era usada em `next.config.mjs` (CSP) mas não estava documentada em `.env.example` — adicionada, junto com as demais variáveis que faltavam (Asaas, S3, PFX).
-- Branding "TeleMed" hardcoded em `app/layout.tsx` (metadata/SEO) e `components/prescription/PrescriptionView.tsx` não respeitava `NEXT_PUBLIC_APP_NAME` — corrigido para usar a constante `APP_NAME` (`lib/constants.ts`), agora consistente como "Emacrescere".
-
-## Verificação pós-migração (2026-08-22)
-
-Nova máquina, ambiente reinstalado e validado do zero:
-
-- `.env.example` tinha sido apagado do disco (não commitado assim, só arquivo local ausente) — restaurado via `git restore`.
-- `prisma generate` falhava com `EPERM` por causa de um `next dev` órfão de outra sessão ainda rodando e travando o binário do Prisma Client — processo encerrado, geração ok.
-- `npm run typecheck`, `npm run build` e conexão com o Neon (300 medicamentos + seed de usuários) confirmados OK, sem regressão.
-- `npm run lint` (corrigido em sessão anterior) revelou 3 erros reais nunca vistos antes (import não usado, `let`→`const`, import de tipo sem `import type`) — corrigidos.
-- Scripts `prisma:push/migrate/studio/seed` não funcionavam via `npm run` porque a Prisma CLI só carrega `.env`, não `.env.local` — corrigido com `dotenv-cli`.
-- `npm audit fix` (sem `--force`) eliminou a vulnerabilidade do `brace-expansion`. Restam 5 altas + 1 baixa (Next.js/glob/postcss), todas só resolvidas com upgrade major pra Next 16 — mantido como está (breaking change, decisão já registrada).
-- Identidade git (`user.name`/`user.email`) não estava configurada na máquina nova — configurada localmente no repo (não global).
-- **LiveKit configurado**: projeto criado no LiveKit Cloud, as 4 variáveis (`LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEXT_PUBLIC_LIVEKIT_URL`) adicionadas no `.env.local` e no painel da Vercel (Production/Preview/Development), redeploy feito e confirmado "Ready". Geração de token JWT testada localmente com sucesso.
-
-## Sessão 2026-08-22/23 — responsividade, marca, favicon e Asaas
-
-- **Responsividade mobile**: não existia navegação nenhuma no dashboard abaixo de 1024px (Sidebar `hidden` até `lg:`, sem alternativa). Criado `components/layout/NavLinks.tsx` (lista de navegação compartilhada) + drawer mobile no `TopBar.tsx` (hambúrguer + painel lateral). Corrigido também um bug real só visível testando no navegador: o `backdrop-blur` do `<header>` cria um "containing block" que prendia o drawer `fixed` dentro da altura do próprio header — resolvido movendo o drawer pra fora do `<header>`. Mais 13 ajustes pontuais de grid/texto que quebravam em 375-414px (ScheduleWizard, Hero, StatCards, CheckoutForm, VideoRoom/ControlBar, ConsultationDetailsModal, profile, ConsultationRoom tabs, PrescriptionPanel/View).
-- **Typo de marca corrigido**: "Emaerescere" → "Emacrescere", 37 ocorrências em 17 arquivos (textos, metadados de PDF, e-mails, prefixo de chave S3 + a regex que o valida).
-- **Favicon/logo da marca**: ícone (coração+folha+pessoa) extraído da identidade visual enviada pelo usuário, vetorizado e normalizado pro mesmo `viewBox 24x24` do `Logo.tsx` — substitui o ícone genérico no cabeçalho/sidebar. Gerados `favicon.ico` (16/32/48, cantos levemente arredondados a pedido), `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `manifest.json`, tudo referenciado em `app/layout.tsx`. Bug real encontrado: `middleware.ts` só liberava `favicon.ico` sem login — os outros 4 arquivos novos eram redirecionados pra `/auth/login` em produção; corrigido o `matcher`.
-- **Asaas configurado e testado de ponta a ponta**: conta sandbox própria, `ASAAS_API_KEY`/`ASAAS_WEBHOOK_TOKEN` no `.env.local` + Vercel, `PAYMENT_MOCK=false`. Webhook criado apontando pra `/api/webhooks/asaas` (categoria "Cobranças", eventos PAYMENT_CONFIRMED/RECEIVED e afins, token no header `asaas-access-token`). **Bug real encontrado e corrigido**: `services/external/asaas.ts` e `lib/s3.ts` usavam `process.env.X ?? "padrão"` — mas variável setada como string vazia (exatamente o que acontece quando se "deixa em branco pra usar o padrão", como documentado no `.env.example`) não aciona fallback de `??` (só null/undefined aciona), quebrando a URL da API. Trocado pra `||`. Cobrança de teste via boleto gerada com sucesso no sandbox (boleto real, linha digitável, valor e vencimento corretos). **Pix resolvido em seguida**: bastava cadastrar uma chave Pix no painel da conta Asaas (Configurações → Pix) — depois disso, cobrança Pix, QR code e código copia-e-cola passaram a funcionar normalmente.
-- **Descoberto app mobile em Flutter** (`mobile/`): adicionado ao repositório via subtree squash-merge por outra sessão/pessoa durante este período — não foi trabalho desta sessão, só integrado ao dar `git pull` antes de subir os fixes acima. Tem tela de login (via NextAuth), onboarding, dashboard, acompanhamento de peso. Vale investigar esse app numa sessão futura pra entender o estado dele e como se relaciona com o backend Next.js.
-
-## Sessão 2026-08-30 — análise técnica + 3 correções priorizadas
-
-Feita uma análise do código (segurança, dívida técnica, SEO, observabilidade) sem alterar nada — resultado num relatório à parte. Dela, 3 itens foram atacados nesta sessão, cada um com commit e push próprios:
-
-- **Checkbox de aceite de Termos/Privacidade no cadastro**: só existia um texto passivo linkando `/termos` e `/privacidade`, sem exigir nenhuma ação. Agora é checkbox obrigatório, validado em `registerSchema` (client + servidor), com o consentimento registrado com timestamp no `AuditLog.after` (sem precisar de migração no banco).
-- **Rate limit + bug de acesso em `/api/prescription/validate`**: rota pública (farmácias validam receita pelo hash) não tinha rate limit — adicionado (20/min por IP). No processo, achado um bug mais sério: essa rota **não estava na lista de rotas públicas do `middleware.ts`**, então qualquer visitante sem login era redirecionado pro `/auth/login` em vez de receber a validação — quebrando exatamente o link que o PDF da receita imprime pra farmácias acessarem. Corrigido adicionando a rota ao `PUBLIC_ROUTES`.
-- **Testes automatizados (0 → 27 testes)**: primeiro suite de testes do projeto, com Vitest. Escopo deliberadamente restrito a lógica pura sem banco/rede (formatadores e validação de CPF em `lib/utils.ts`, `registerSchema`/`loginSchema` em `lib/validations/auth.ts`, rate limiter em `lib/security.ts`) pra minimizar risco. Detalhes de setup: `vitest@2` (não a major mais nova, por compatibilidade com `@types/node ^20`); alias de `"server-only"` pra um stub em `test/stubs/` (esse import só resolve via alias interno do webpack do Next, o Vite não conhece); `npm test` roda só `vitest run` (sem `--ui`, então a CVE crítica do servidor de UI do Vitest não se aplica).
-
-Pendências que ficaram só documentadas (não atacadas ainda): sem `robots.txt`/`sitemap.xml`, sem imagem de Open Graph, sem monitoramento de erro em produção, 52 erros de TS represados.
-
-## Dívida técnica pré-existente (não introduzida nesta sessão, não corrigida)
-
-- `next.config.mjs` tem `typescript.ignoreBuildErrors: true` e `eslint.ignoreDuringBuilds: true`, com TODO do próprio time original: "~30 erros pré-existentes de TS... remover antes do go-live final". Há ~52 erros de `exactOptionalPropertyTypes` espalhados por ~19 arquivos (não relacionados a auth). Rodar `npm run typecheck` pra ver a lista.
-
-## Variáveis de ambiente (valores reais só no `.env.local`, nunca no git)
-
-| Variável | Status |
+| Pessoa | Responsabilidade |
 |---|---|
-| `DATABASE_URL` | ✅ configurada (Neon próprio) |
-| `NEXTAUTH_SECRET` | ✅ gerada |
-| `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` | ✅ `https://tcc-emacrescere.vercel.app` em prod |
-| `RESEND_API_KEY` | ✅ configurada e testada (envio real confirmado) — **modo sandbox mantido de propósito** (decisão abaixo) |
-| `PFX_ENCRYPTION_KEY` | ✅ gerada |
-| `FACEBOOK_CLIENT_ID` / `SECRET` | ⏳ pendente — **bloqueado**: cadastro de conta developer na Meta travado (SMS de verificação não chega, mesmo com formato `+55` e sem VPN). Tentar de novo mais tarde ou com outro número. |
-| `LIVEKIT_*` | ✅ configurada (projeto próprio no LiveKit Cloud, `.env.local` + Vercel) — geração de token testada, deploy em produção OK |
-| `ASAAS_*` | ✅ configurada e **100% funcional** (conta sandbox própria, `.env.local` + Vercel) — `PAYMENT_MOCK=false`. Boleto, cartão e **Pix** testados de ponta a ponta (cobrança real, QR code e copia-e-cola gerados no sandbox). Pix precisou de chave cadastrada no painel Asaas pra sair do bloqueio "conta precisa estar aprovada". Webhook configurado apontando pra `/api/webhooks/asaas`, evento "Cobranças" (PAYMENT_CONFIRMED/RECEIVED e afins) |
-| `S3_*` (Contabo) | ⏳ pendente — precisa criar bucket no Contabo Object Storage |
+| Hugo Meira Maia | site (todo o repositório fora de `mobile/`), GitHub, Vercel, Neon e serviços; **faz os merges na `main`** (merge publica o site) |
+| Julia | app Flutter (`mobile/`); envia o trabalho em branches para o Hugo juntar |
 
-Ver `.env.example` para a lista completa comentada.
+## Situação em 05/10/2026
 
-## Pendências de decisão do usuário
+Tudo o que foi desenvolvido está na `main` e publicado. Todas as branches
+remotas e todas as prévias da Vercel correspondem a commits que já estão na
+`main` (não há trabalho preso em prévia).
 
-- Domínio customizado na Vercel: **decidido que não** (sem custo, ficando no `.vercel.app` gratuito).
-- Histórico de commits completo vs. limpo no repo próprio: **decidido manter o limpo** (histórico completo preservado no repo do orientador).
-- Resend em modo sandbox (`onboarding@resend.dev`, só entrega pro e-mail dono da conta) vs. verificar domínio próprio: **decidido manter sandbox** — é um TCC, não produção com usuários reais; sandbox já cobre a demonstração do fluxo de "esqueci minha senha" na defesa. Verificar domínio fica como opção futura caso o projeto vire produto real.
+Verificado em 05/10/2026: 62 testes passando; `tsc` com os mesmos 60 erros
+antigos; páginas principais sem violações de acessibilidade (axe, WCAG 2.2 AA)
+na página inicial, login, cadastro e painel do paciente.
+
+### O que está no ar
+
+- **Página inicial** redesenhada (fotos próprias, modelos 3D, seção do app com
+  Android e iPhone e QR codes).
+- **Cadastro e login:** e-mail/senha, **Google (ativo)**, Facebook (pronto, sem
+  credenciais); recuperação de senha por e-mail (Resend sandbox).
+- **Agendamento** com horários reais da agenda do médico, pagamento (Pix,
+  cartão, boleto — Asaas sandbox) e cancelamento com estorno pela política.
+- **Consulta:** sala com vídeo (LiveKit), chat, prontuário com salvamento
+  automático, aba de peso; notas internas do médico nunca chegam ao paciente.
+- **Receita digital** emitida na plataforma, assinada com o certificado do
+  médico, PDF e validação pública em `/prescricao/{id}`.
+- **Peso e IMC** (`WeightRecord`): página do paciente e aba na sala. O IMC é
+  calculado na leitura (`lib/bmi.ts`), não é coluna.
+- **Admin:** aprovação de médicos, consultas, pagamentos, receitas,
+  certificados, auditoria.
+- **App** (`mobile/`): paciente e médico; Android por APK, iPhone pela versão web
+  em `/app/`. O app também agenda com pagamento e não mostra a fila.
+
+## Serviços e variáveis de ambiente
+
+| Serviço / variável | Status |
+|---|---|
+| Neon (`DATABASE_URL`) | ✅ banco único, **é o de produção** (`sa-east-1`) |
+| Vercel | ✅ projeto `tcc-emacrescere`, região `gru1`, deploy automático na `main` |
+| `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL` | ✅ |
+| Google (`GOOGLE_CLIENT_ID/SECRET`) | ✅ ativo em produção (e em Preview desde 04/10); app do Google em modo Teste |
+| Facebook (`FACEBOOK_CLIENT_ID/SECRET`) | ⏳ bloqueado: cadastro de desenvolvedor na Meta não passa da verificação por SMS |
+| Asaas (`ASAAS_*`, `PAYMENT_MOCK=false`) | ✅ sandbox; Pix, boleto e cartão testados de ponta a ponta; webhook em `/api/webhooks/asaas` |
+| LiveKit (`LIVEKIT_*`, `NEXT_PUBLIC_LIVEKIT_URL`) | ✅ projeto próprio no LiveKit Cloud |
+| Resend (`RESEND_API_KEY`, `EMAIL_FROM`) | ✅ em **sandbox** de propósito (só entrega para o dono da conta) |
+| `PFX_ENCRYPTION_KEY` | ✅ cifra os certificados dos médicos |
+| S3 / Contabo (`S3_*`) | ⏳ não configurado: arquivos ficam no banco (`stored_files`), sem prejuízo de função |
+
+## Regras de trabalho (resumo — detalhes no `CLAUDE.md` e no `README.md`)
+
+- Nunca `npm run build` local (altera o banco de produção); nunca
+  `prisma db push --accept-data-loss`; teste que grava dado desfaz o que gravou.
+- Nunca `git push --force` nem `git reset --hard`; nenhum `.env*` no histórico.
+- Merge na `main` só com o Hugo. Antes de enviar: `tsc` sem passar de 60,
+  `vitest` verde, eslint nos arquivos alterados.
+- Vercel: só o **último commit** do push conta; `[build]` força, `[preview]`
+  gera prévia fora da `main`, commit só em `mobile/` não builda o site. Ao juntar
+  várias branches, o merge que mexe no site vai por último.
+
+## Pendências
+
+**Antes da banca**
+
+1. Testar o login com Google com um e-mail de usuário de teste e decidir se o
+   app do Google é publicado (sai do modo Teste) antes da banca.
+2. Testar o QR code do iPhone num aparelho real (aba privada do Safari).
+3. Documento do TCC: tirar o IMC do MER e do diagrama de classes (o sistema
+   calcula o IMC na hora). A Julia se ofereceu para refazer os diagramas.
+4. Ensaiar o roteiro (`docs/roteiro-demonstracao.md`). Evitar o médico
+   `medico.teste@emacrescere.test` (conta de teste que ficou aprovada).
+5. Calendário sugerido: congelar funcionalidades em 20/10 e, depois disso, só
+   correções e preparação da demonstração.
+
+**Depois, se houver tempo**
+
+- Credenciais do Facebook (Meta).
+- Contraste do botão verde padrão (branco sobre `brand-600`, 3,8:1), usado por
+  exemplo em "Selecionar" no cartão do médico.
+- Propostas da auditoria (`docs/auditoria-seguranca.md`): CPF cifrado, log de
+  leitura do prontuário, limite de login por IP, validade menor da sessão.
+- 60 erros antigos de TypeScript (escondidos por `ignoreBuildErrors`).
+- `robots.txt`, `sitemap.xml`, imagem de Open Graph, monitoramento de erros.
+- O build web do app ocupa ~43 MB no git (inclui arquivos `.symbols`); cada build
+  novo commitado soma isso ao histórico.
+- `images.pexels.com` ainda está liberado na CSP, embora as fotos agora sejam
+  locais (`public/photos/`).
+
+## Decisões registradas
+
+- **Escopo:** atendimento só por agendamento; a fila on-demand foi descartada
+  pelo grupo e ficou desligada (`QUEUE_ENABLED` no site, `kQueueEnabled` no app).
+- **Cancelamento:** reembolso integral com 24 h ou mais de antecedência; menos
+  de 24 h ou falta, sem reembolso; médico cancela, integral.
+- **Receita:** emitida na plataforma com o certificado do médico; nos médicos de
+  demonstração, certificado de teste (sem validade jurídica, declarado).
+- **IMC** calculado a partir do peso e da altura; corrigir a altura corrige o
+  histórico inteiro.
+- **iPhone:** sem App Store; versão web do app em `/app/`, instalada pelo Safari.
+- **Domínio próprio:** não (fica no `.vercel.app` gratuito).
+- **Histórico do git:** o repositório próprio tem histórico limpo; o completo
+  está no repositório do orientador (`valmeidavr/TCC-ETPC`).
+- **Resend em sandbox:** suficiente para demonstrar a recuperação de senha.
+- **Redesign "Consultório"** (30/09): descartado por enquanto; guardado na branch
+  local `guardado/redesign-consultorio` e no stash, recuperável.
+
+## Histórico
+
+**Agosto/2026 — migração e base**
+
+- Projeto migrado das contas do orientador para contas próprias (GitHub, Neon,
+  Vercel). Credencial real do Neon que estava no `.env.example` foi removida.
+- Recuperação de senha por e-mail (token SHA-256, 15 min, uso único, sem
+  enumeração de contas) e código do login com Facebook.
+- Next.js 14.2.4 → 14.2.35 (corrige o bypass de middleware CVE-2025-29927);
+  ESLint consertado; `.gitignore` passou a cobrir `*.pfx`/`*.p12`.
+- LiveKit e Asaas configurados e testados; responsividade do painel no celular;
+  marca "Emacrescere" corrigida em todo o código; favicon e ícones.
+- 30/08: aceite obrigatório de Termos/Privacidade no cadastro; rate limit e rota
+  pública corrigida na validação de receita; primeira suíte de testes (Vitest).
+
+**Setembro/2026 — escopo e fluxo completo**
+
+- 12/09: auditoria de segurança dos itens 8–10 (diagnóstico, sem código).
+- 29/09: escopo "só agendamento" (`83ff90f`), promessas que a plataforma não
+  cumpre removidas, horários reais da agenda do médico, valor decidido no
+  servidor, retornos de demonstração sempre no futuro.
+- 30/09: arquivos no banco quando não há S3; receita de ponta a ponta (emissão,
+  PDF, validação pública); cancelamento com estorno; cadastro de médico pelo
+  site; roteiro da banca.
+
+**Outubro/2026 — segurança, design, peso, Google e app**
+
+- 02/10: revisão de segurança independente — fila SSE exige médico aprovado,
+  notas internas do médico não chegam ao paciente, `callbackUrl` só aceita
+  caminho interno (`1d1dc85`); textos falsos da página inicial corrigidos;
+  registro de **peso e IMC** (`12c3ebe`); login com Facebook pronto para receber
+  credenciais (`522bbcb`).
+- 03/10: trava das prévias (não alteram o banco); **login com Google**
+  (`08ac7e8`); página inicial, autenticação e início do paciente redesenhados,
+  com fotos próprias e **modelos 3D** (`2b31403`).
+- 04/10: o app passa a viver em `mobile/` (`33993fa`), regra de build por
+  `[build]`/`[preview]`/`mobile/` (`4d285a9`), redesenho do app (`7a656cf`), **app
+  web em `/app/`** (`fa8fb8d`) e seção da página inicial com o caminho do iPhone
+  (`6bc59b5`).
+- 05/10: build novo do app web (onboarding não trava; `77d45bf`) e correção dos
+  menus de notificações e conta que ficavam por baixo do conteúdo no celular
+  (`77c7307`).

@@ -1,5 +1,17 @@
 # Handoff do Claude Code local para o da nuvem
 
+> **Situação em 05/10/2026** (este handoff é de 03/10 e fica como registro):
+> - A branch `claude/vigilant-thompson-mjo9k9` já foi juntada à `main` e está
+>   no ar; trabalho novo começa de uma branch nova a partir da `main`.
+> - A conferência visual das telas com foto foi feita em 03/10 (página inicial,
+>   login e cadastro, em desktop e celular), sem estouro de largura.
+> - O "tsc em 86" vinha das dependências do 3D não instaladas naquela máquina;
+>   com `npm install` o número volta aos 60 de sempre.
+> - A regra de prévias mudou: veja a tabela do `ignoreCommand` no `README.md`
+>   (hoje `[preview]` funciona inclusive em commit vazio, e `[build]` força).
+> - Continuam abertos: confirmar o autor da foto `registerDoctor` e tirar
+>   `images.pexels.com` do CSP/`remotePatterns` se nada mais usar o CDN.
+
 Branch de trabalho: `claude/vigilant-thompson-mjo9k9`. Os dois agentes dão push
 nela: sempre `git pull --rebase origin claude/vigilant-thompson-mjo9k9` antes
 de enviar.
