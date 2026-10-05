@@ -112,9 +112,11 @@ webhooks/asaas
   receita total, pagamentos pendentes).
 - App: 5 abas do paciente (Início, Peso, Consultas, Chat, Perfil) + interface completa do
   médico (Fila, Consultas, Agenda, Perfil) desde 2026-09-11.
-- Landing do site com seção "App Android": QR code real (`public/qr-app.svg`, gerado com o
-  pacote Dart `qr`) apontando pra `/app.apk` (build arm64 real, ~19 MB, hospedado no próprio
-  site, headers corretos pro Android instalar direto).
+- Landing do site com seção "App Android e iPhone" (`/#app`), com dois QR codes reais:
+  `public/qr-app.svg` (gerado com o pacote Dart `qr`) apontando pra `/app.apk` (build arm64
+  real, ~19 MB, hospedado no próprio site, headers corretos pro Android instalar direto), e
+  `public/qr-app-iphone.svg` (gerado com `npx qrcode`) apontando pra `/app/`, a versão web
+  que o iPhone instala pelo Safari.
 - Dados de demonstração: `prisma/seed-demo.ts` roda no build de **produção** da Vercel
   (idempotente; prévias não rodam seed nem `db push` — ver "Deploy na Vercel").
   Cria médicos em cada situação de credenciamento (aprovado, pendente com CRM ativo, pendente
@@ -336,7 +338,8 @@ web vale a origem da página.
 ## Onde encontrar mais detalhes
 
 - `TCC-EMACRESCERE/README.md` — setup, variáveis de ambiente completas, credenciais, deploy,
-  seção "App Android" (como gerar um novo APK).
+  seção "App: Android (APK) e iPhone (web) + QR codes" (como gerar um novo APK, instalar no
+  iPhone e gerar os QR codes).
 - `TCC-EMACRESCERE/PROJETO-STATUS.md` — log detalhado sessão a sessão da migração de infra e
   correções de segurança (histórico mais antigo, até 2026-08-30).
 - `TCC-EMACRESCERE/mobile/CLAUDE.md` — escopo do app, contrato de API por tela, identidade visual,
