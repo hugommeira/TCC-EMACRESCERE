@@ -1,5 +1,6 @@
 import { Header } from "./Header";
 import { Footer } from "./Footer";
+import { BackToTop } from "./BackToTop";
 
 interface LegalLayoutProps {
   title:    string;
@@ -36,6 +37,7 @@ export function LegalLayout({ title, subtitle, updated, children }: LegalLayoutP
       </article>
 
       <Footer />
+      <BackToTop />
     </main>
   );
 }
