@@ -41,29 +41,6 @@ export function ForWhom() {
               sizes="(min-width: 1024px) 40vw, 100vw"
               className="relative aspect-[4/5] w-full md:aspect-[16/10] lg:aspect-[4/5]"
             />
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-slate-900/45 via-transparent"
-            />
-
-            <div className="absolute bottom-6 left-6 right-6 rounded-2xl bg-white/95 p-4 shadow-lg backdrop-blur">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand-50 text-brand-600">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M12 2v6M12 22v-6M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5" />
-                    <circle cx="12" cy="12" r="4" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">
-                    Acompanhamento médico
-                  </p>
-                  <p className="text-xs text-slate-600">
-                    Plano individualizado para você
-                  </p>
-                </div>
-              </div>
-            </div>
           </Reveal>
         </div>
 
