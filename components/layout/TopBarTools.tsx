@@ -125,8 +125,10 @@ export function NotificationsMenu() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  // No celular o painel se posiciona pelo cabeçalho (largura da tela menos as
+  // margens); alinhado pelo sino, com 320 px, ele saía pela esquerda da tela.
   return (
-    <div className="relative" ref={ref}>
+    <div className="sm:relative" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -149,15 +151,15 @@ export function NotificationsMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl"
+          className="absolute inset-x-4 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:inset-x-auto sm:right-0 sm:top-auto sm:w-80"
         >
           <div className="border-b border-slate-100 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
             Pendências
           </div>
           {!loaded ? (
-            <p className="px-4 py-6 text-center text-sm text-slate-400">Carregando…</p>
+            <p className="px-4 py-6 text-center text-sm text-slate-500">Carregando…</p>
           ) : items.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-slate-400">Nada pendente por agora.</p>
+            <p className="px-4 py-6 text-center text-sm text-slate-500">Nada pendente por agora.</p>
           ) : (
             <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto">
               {items.map((n) => (

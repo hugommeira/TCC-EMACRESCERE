@@ -62,7 +62,10 @@ export function TopBar({ userName, userImage, title, items, role, mobileNav = "d
 
   return (
     <>
-    <header className="flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6">
+    {/* relative z-40: o backdrop-blur cria uma camada própria; sem z-index o
+        conteúdo da página (que vem depois) era desenhado por cima dos menus
+        de notificações e de conta. */}
+    <header className="relative z-40 flex h-16 flex-none items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         {mobileNav === "tabs" && role && HOME[role] && (
           <span className="md:hidden">
@@ -117,7 +120,7 @@ export function TopBar({ userName, userImage, title, items, role, mobileNav = "d
           {open && (
             <div
               role="menu"
-              className="absolute right-0 mt-2 w-56 origin-top-right overflow-hidden rounded-xl bg-white py-1 shadow-lg ring-1 ring-slate-200"
+              className="absolute right-0 z-50 mt-2 w-56 max-w-[calc(100vw-2rem)] origin-top-right overflow-hidden rounded-xl bg-white py-1 shadow-lg ring-1 ring-slate-200"
             >
               <div className="border-b border-slate-100 px-4 py-3">
                 <p className="text-sm font-medium text-slate-900">{userName}</p>
