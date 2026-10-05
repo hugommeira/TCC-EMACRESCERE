@@ -214,12 +214,17 @@ first-party. Em `localhost`/`127.0.0.1` continua o proxy do `tool/dev_web.dart`.
 ```bash
 flutter build web --release --no-web-resources-cdn --base-href /app/
 ```
-Depois, apagar o conteúdo antigo de `public/app/` (na raiz do repositório) e
-copiar para lá tudo o que está em `mobile/build/web/`. No PowerShell, a partir
-de `mobile/`:
+Rode no PowerShell, não no Git Bash: o Git Bash troca `/app/` por
+`C:/Program Files/Git/app/` e o Flutter recusa o `--base-href`.
+
+Depois, apagar o conteúdo antigo de `public/app/` (na raiz do repositório),
+copiar para lá tudo o que está em `mobile/build/web/` e apagar os `*.symbols`
+(só servem para depuração e somam uns 8 MB). No PowerShell, a partir de
+`mobile/`:
 ```powershell
 if (Test-Path ..\public\app) { Remove-Item -Recurse -Force ..\public\app }
 Copy-Item -Recurse build\web ..\public\app
+Get-ChildItem -Recurse ..\public\app -Filter *.symbols | Remove-Item
 ```
 - `--no-web-resources-cdn` é obrigatório: sem ele o CanvasKit vem do gstatic, que
   o CSP do site bloqueia, e a página fica em branco.
@@ -235,11 +240,20 @@ e um novo commit em `public/app/`. Sem isso, o iPhone continua com a versão
 antiga. Esse commit toca fora de `mobile/`, então dispara o deploy da Vercel
 (só os commits que mexem apenas em `mobile/` são ignorados).
 
+**Gere a versão web só quando juntar várias mudanças**, não a cada uma: cada
+build copiado para `public/app/` soma uns 44 MB ao histórico do Git.
+
 **Limitações na versão web:**
 - O PDF da receita não baixa (o download só existe no app nativo). A receita
   pode ser validada pelo link `/prescricao/<id>` do site.
-- Nas prévias da Vercel as gravações (login, agendar...) são recusadas: o
-  `allowedOrigins` do servidor só aceita a produção. É esperado.
+- As prévias da Vercel têm a proteção de deploy ligada: abrir `/app/` numa
+  prévia redireciona para o login da Vercel (`vercel.com/sso-api`), e só entra
+  quem está logado na conta do Hugo. Esse é o obstáculo real para testar numa
+  prévia. O login do app (`/api/auth/[...nextauth]`) não usa o `checkOrigin`:
+  pelo código, o login deve funcionar nas prévias (não foi testado, porque a
+  proteção da Vercel bloqueou o acesso). Agendar, registrar peso e as outras
+  gravações dão 403 na prévia, porque o `checkOrigin` só aceita a produção. É
+  esperado.
 
 **Sem `.env`:** o app não precisa mais do `mobile/.env` (ele saiu dos assets do
 `pubspec.yaml`). O endereço padrão da API já vem no código (`ApiClient`,
