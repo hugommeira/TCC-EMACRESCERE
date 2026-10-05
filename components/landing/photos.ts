@@ -5,8 +5,8 @@
 export const PHOTOS = {
   // O topo no celular usa o celular 3D (public/3d/posters/phone-app.webp),
   // não foto: a anterior (heroMobile) saiu a pedido do Hugo em 04/10/2026.
-  // pexels.com/photo/4474047 — Ketut Subiyanto
-  videoCall:  "/photos/videoCall.jpg",
+  // pexels.com/photo/8512178 — Artem Podrez (trocada em 05/10/2026)
+  videoCall:  "/photos/videoConsulta.jpg",
   // pexels.com/photo/724300 — Cats Coming
   food:       "/photos/food.jpg",
   // pexels.com/photo/8376291 — Tima Miroshnichenko

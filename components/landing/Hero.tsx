@@ -100,7 +100,7 @@ function MobileHero() {
         >
           <StatCompact value="24 h" label="Cancela grátis" />
           <StatCompact value="CRM"  label="Verificado" />
-          <StatCompact value="LGPD" label="Protegido" />
+          <StatCompact value="Vídeo" label="De onde estiver" />
         </dl>
 
         <p className="mt-5 text-xs leading-relaxed text-slate-500">
@@ -179,7 +179,7 @@ function DesktopHero() {
           <dl className="mt-12 grid max-w-lg animate-rise grid-cols-3 gap-x-6" style={d(560)}>
             <Stat value="24 h" label="Pra cancelar sem custo" />
             <Stat value="CRM"  label="Verificado de cada médico" />
-            <Stat value="LGPD" label="Dados protegidos" />
+            <Stat value="Vídeo" label="Consulta de onde você estiver" />
           </dl>
 
           <p className="mt-6 max-w-xl text-[11px] leading-relaxed text-slate-500">

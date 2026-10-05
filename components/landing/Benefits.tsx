@@ -88,8 +88,8 @@ export function Benefits() {
             Segurança e praticidade em cada etapa
           </h2>
           <p className="mt-4 text-lg text-slate-600">
-            Plataforma de telessaúde com médicos de CRM conferido pela equipe e
-            tecnologia em conformidade com a LGPD.
+            Médicos com CRM conferido pela equipe, consulta por vídeo no horário
+            que você escolher e todo o seu histórico num lugar só.
           </p>
         </div>
 
@@ -105,8 +105,11 @@ export function Benefits() {
             <div aria-hidden className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl lg:hidden" />
             <Photo
               src={PHOTOS.videoCall}
-              alt="Médica em videochamada pelo notebook"
+              alt="Paciente em consulta por vídeo pelo notebook"
               sizes="(min-width: 1024px) 33vw, 1px"
+              // a coluna é mais estreita que a foto: puxa para a direita para
+              // não cortar a pessoa na tela do notebook
+              style={{ objectPosition: "85% center" }}
               className="absolute inset-0 hidden lg:block"
             />
             <div aria-hidden className="absolute inset-0 hidden bg-gradient-to-t from-brand-950/90 via-brand-950/20 to-transparent lg:block" />
