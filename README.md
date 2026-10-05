@@ -220,11 +220,16 @@ Cliente                     Servidor
 - [ ] `feature/admin-dashboard` – Gestão completa da plataforma
 - [ ] `feature/landing` – Landing page completa
 
-## App Android (APK + QR code)
+## App: Android (APK) e iPhone (web) + QR codes
 
-A landing (`/#app`) mostra um QR code real que aponta para
-`https://tcc-emacrescere.vercel.app/app.apk` (arquivo em `public/app.apk`,
-build arm64 do app Flutter, ~19 MB). Para publicar uma versão nova:
+A seção do app na landing (`/#app`) mostra os dois caminhos lado a lado, cada
+um com o seu QR code real.
+
+### Android
+
+O QR aponta para `https://tcc-emacrescere.vercel.app/app.apk` (arquivo em
+`public/app.apk`, build arm64 do app Flutter, ~19 MB). Para publicar uma versão
+nova:
 
 ```bash
 # dentro de mobile/ (o app vive neste repositório; precisa do mobile/.env)
@@ -235,3 +240,28 @@ cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../public/app.apk
 Commit + push e a Vercel serve o arquivo (headers em `vercel.json`). O SVG do
 QR (`public/qr-app.svg`) só precisa ser gerado de novo se a URL do site mudar
 (foi gerado com o pacote Dart `qr`, conteúdo = URL acima).
+
+### iPhone
+
+Não há app na App Store: no iPhone roda a versão web do próprio app, servida
+pelo site em **`https://tcc-emacrescere.vercel.app/app/`** (arquivos em
+`public/app/`; build e cópia descritos em `mobile/HANDOFF.md`, seção "Versão web
+(iPhone)").
+
+Para instalar no iPhone:
+
+1. Abrir `tcc-emacrescere.vercel.app/app` no **Safari**.
+2. Tocar em **Compartilhar** (o quadrado com a seta para cima).
+3. Tocar em **Adicionar à Tela de Início** e depois em **Adicionar**.
+4. Abrir pelo ícone (tela cheia) e entrar com a mesma conta do site.
+
+O QR do iPhone (`public/qr-app-iphone.svg`, conteúdo
+`https://tcc-emacrescere.vercel.app/app/`) foi gerado sem acrescentar
+dependência ao projeto, nas mesmas cores do QR do Android:
+
+```bash
+npx --yes qrcode@1.5.4 -t svg -d 0f3d2eff -l ffffffff -m 2 \
+  -o public/qr-app-iphone.svg "https://tcc-emacrescere.vercel.app/app/"
+```
+
+Também só precisa ser gerado de novo se a URL do site mudar.
