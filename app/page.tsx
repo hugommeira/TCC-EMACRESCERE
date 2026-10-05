@@ -14,6 +14,7 @@ import { CtaFinal }     from "@/components/landing/CtaFinal";
 import { DownloadApp }  from "@/components/landing/DownloadApp";
 import { Footer }       from "@/components/landing/Footer";
 import { MobileCtaBar } from "@/components/landing/MobileCtaBar";
+import { BackToTop }    from "@/components/landing/BackToTop";
 import { CONSULTATION_FEE_REAIS } from "@/services/api/queue";
 import { formatCurrency } from "@/lib/utils";
 
@@ -46,6 +47,7 @@ export default async function RootPage() {
       <CtaFinal />
       <Footer />
       <MobileCtaBar priceLabel={formatCurrency(CONSULTATION_FEE_REAIS)} />
+      <BackToTop aboveMobileBar />
     </main>
   );
 }
