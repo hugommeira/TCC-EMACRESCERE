@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -98,8 +100,12 @@ class _WelcomeCarouselState extends State<WelcomeCarousel> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, box) {
-                // Em telas baixas o 3D encolhe antes de apertar o texto.
-                final hero = (box.maxHeight * 0.45).clamp(200.0, 380.0);
+                // Em telas baixas o 3D encolhe antes de apertar o texto. O
+                // "- 440" reserva o cabeçalho, o texto do slide e o botão: no
+                // Safari do iPhone (barras do navegador comem a altura) o
+                // texto cortava com 45% fixos.
+                final hero =
+                    math.min(box.maxHeight * 0.45, box.maxHeight - 440).clamp(150.0, 380.0);
                 return Column(
                   children: [
                     Padding(
@@ -205,7 +211,9 @@ class _SlideText extends StatelessWidget {
   Widget build(BuildContext context) {
     final ds = context.ds;
     return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
+      // Se ainda faltar altura (fonte grande do sistema), o texto rola em
+      // vez de ser cortado.
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
