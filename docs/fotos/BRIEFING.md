@@ -94,3 +94,5 @@ Notas: originais todos com lado maior ≥ 4000 px. `videoCall` foi cortada em 3:
 **04/10/2026:** o topo da landing no celular deixou de ter foto (usa o celular 3D, `public/3d/posters/phone-app.webp`); `heroMobile` foi removida a pedido do dono. A foto `videoCall` não aparece mais no celular/tablet (o recorte escondia o notebook).
 
 **05/10/2026:** `videoCall` trocada e salva como `videoConsulta.jpg` (nome novo para não pegar cache de imagem; antes `4474047`, Ketut Subiyanto): a anterior não mostrava a chamada na tela. A nova mostra a paciente de costas e a outra pessoa no notebook. Descartadas na busca: fotos com máscara (`4031818`, `4031821`, `4225881`, `4225920`), com frasco de cápsulas (`7195112`) e com logo Apple aparente (`4049992`).
+
+**05/10/2026 (2):** o topo da landing no celular passou a ser só texto (título, botão e destaques na primeira tela); o celular 3D saiu de lá e continua só no desktop.
