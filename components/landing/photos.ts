@@ -3,8 +3,8 @@
 // (https://www.pexels.com/license/). Créditos completos em docs/fotos/BRIEFING.md.
 
 export const PHOTOS = {
-  // O topo no celular usa o celular 3D (public/3d/posters/phone-app.webp),
-  // não foto: a anterior (heroMobile) saiu a pedido do Hugo em 04/10/2026.
+  // O topo no celular é só texto desde 05/10/2026 (antes: foto heroMobile,
+  // depois o celular 3D); nenhuma foto é usada ali.
   // pexels.com/photo/8512178 — Artem Podrez (trocada em 05/10/2026)
   videoCall:  "/photos/videoConsulta.jpg",
   // pexels.com/photo/724300 — Cats Coming
