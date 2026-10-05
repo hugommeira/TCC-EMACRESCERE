@@ -81,7 +81,7 @@ final em KB. O agente da nuvem lê aqui antes de mexer em fotos.
 
 | Chave | Link | Autor | Licença | KB |
 |---|---|---|---|---|
-| `videoCall` | https://www.pexels.com/photo/4474047/ | Ketut Subiyanto | Pexels License (uso comercial, sem atribuição obrigatória) | 439 |
+| `videoCall` | https://www.pexels.com/photo/8512178/ | Artem Podrez | Pexels License (uso comercial, sem atribuição obrigatória) | 374 |
 | `food` | https://www.pexels.com/photo/724300/ | Cats Coming | Pexels License (uso comercial, sem atribuição obrigatória) | 402 |
 | `doctorDesk` | https://www.pexels.com/photo/8376291/ | Tima Miroshnichenko | Pexels License (uso comercial, sem atribuição obrigatória) | 254 |
 | `login` | https://www.pexels.com/photo/4939431/ | Nataliya Vaitkevich | Pexels License (uso comercial, sem atribuição obrigatória) | 708 |
@@ -92,3 +92,5 @@ final em KB. O agente da nuvem lê aqui antes de mexer em fotos.
 Notas: originais todos com lado maior ≥ 4000 px. `videoCall` foi cortada em 3:4. `login` ficou acima de 500 KB (708) de propósito, para manter a textura do mar sem artefatos. Foram descartadas fotos com marca visível (logo Apple em `7195308`), relógio na parede (`7195424`), frascos de remédio no fundo (`8376152`, `8376339`, `8376227`); `registerDoctor` voltou à foto anterior (`7195379`) a pedido do dono e máscara/doente (`4031710`, `7195087`).
 
 **04/10/2026:** o topo da landing no celular deixou de ter foto (usa o celular 3D, `public/3d/posters/phone-app.webp`); `heroMobile` foi removida a pedido do dono. A foto `videoCall` não aparece mais no celular/tablet (o recorte escondia o notebook).
+
+**05/10/2026:** `videoCall` trocada e salva como `videoConsulta.jpg` (nome novo para não pegar cache de imagem; antes `4474047`, Ketut Subiyanto): a anterior não mostrava a chamada na tela. A nova mostra a paciente de costas e a outra pessoa no notebook. Descartadas na busca: fotos com máscara (`4031818`, `4031821`, `4225881`, `4225920`), com frasco de cápsulas (`7195112`) e com logo Apple aparente (`4049992`).
