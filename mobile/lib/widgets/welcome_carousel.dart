@@ -100,12 +100,9 @@ class _WelcomeCarouselState extends State<WelcomeCarousel> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, box) {
-                // Em telas baixas o 3D encolhe antes de apertar o texto. O
-                // "- 440" reserva o cabeçalho, o texto do slide e o botão: no
-                // Safari do iPhone (barras do navegador comem a altura) o
-                // texto cortava com 45% fixos.
-                final hero =
-                    math.min(box.maxHeight * 0.45, box.maxHeight - 440).clamp(150.0, 380.0);
+                // Abaixo de 720 de altura (Safari do iPhone, com as barras do
+                // navegador) o título do slide diminui.
+                final titleSize = box.maxHeight < 720 ? 30.0 : 34.0;
                 return Column(
                   children: [
                     Padding(
@@ -131,16 +128,40 @@ class _WelcomeCarouselState extends State<WelcomeCarousel> {
                         ],
                       ),
                     ),
-                    SizedBox(
-                      height: hero,
-                      child: Center(child: FloatingLogo3D(size: hero * 0.66)),
-                    ),
                     Expanded(
-                      child: PageView.builder(
-                        controller: _controller,
-                        itemCount: welcomeSlides.length,
-                        onPageChanged: (i) => setState(() => _page = i),
-                        itemBuilder: (context, i) => _SlideText(slide: welcomeSlides[i]),
+                      child: LayoutBuilder(
+                        builder: (context, area) {
+                          // O texto do slide mais alto é medido antes e o 3D
+                          // fica com o que sobra (até 45% da tela): com 45%
+                          // fixos o texto cortava no Safari do iPhone.
+                          final textHeight = welcomeSlides
+                              .map(
+                                (s) => _SlideText.heightFor(context, s, area.maxWidth, titleSize),
+                              )
+                              .reduce(math.max);
+                          final hero = math
+                              .min(area.maxHeight - textHeight - 8, box.maxHeight * 0.45)
+                              .clamp(0.0, 380.0);
+                          return Column(
+                            children: [
+                              SizedBox(
+                                height: hero,
+                                child: hero < 90
+                                    ? null
+                                    : Center(child: FloatingLogo3D(size: hero * 0.66)),
+                              ),
+                              Expanded(
+                                child: PageView.builder(
+                                  controller: _controller,
+                                  itemCount: welcomeSlides.length,
+                                  onPageChanged: (i) => setState(() => _page = i),
+                                  itemBuilder: (context, i) =>
+                                      _SlideText(slide: welcomeSlides[i], titleSize: titleSize),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     Padding(
@@ -203,9 +224,49 @@ class _WelcomeCarouselState extends State<WelcomeCarousel> {
 }
 
 class _SlideText extends StatelessWidget {
-  const _SlideText({required this.slide});
+  const _SlideText({required this.slide, required this.titleSize});
 
   final WelcomeSlide slide;
+  final double titleSize;
+
+  static const _padX = 28.0;
+  static const _gap = 12.0;
+  static const _tagStyle = TextStyle(
+    fontFamily: AppType.sans,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.72,
+  );
+  static const _bodyStyle = TextStyle(fontFamily: AppType.sans, fontSize: 16, height: 1.5);
+
+  /// Altura que o slide ocupa nessa largura, com a escala de fonte do
+  /// sistema. Usada para o 3D encolher antes de o texto cortar.
+  static double heightFor(
+    BuildContext context,
+    WelcomeSlide slide,
+    double width,
+    double titleSize,
+  ) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final maxWidth = width - 2 * _padX;
+    double measure(String text, TextStyle style) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout(maxWidth: maxWidth);
+      final h = painter.height;
+      painter.dispose();
+      return h;
+    }
+
+    return measure(slide.tag.toUpperCase(), _tagStyle) +
+        12 + // padding vertical do chip
+        _gap +
+        measure(slide.title, AppType.title(titleSize, const Color(0xFF000000))) +
+        _gap +
+        measure(slide.text, _bodyStyle);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +275,7 @@ class _SlideText extends StatelessWidget {
       // Se ainda faltar altura (fonte grande do sistema), o texto rola em
       // vez de ser cortado.
       physics: const ClampingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+      padding: const EdgeInsets.symmetric(horizontal: _padX),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -223,22 +284,13 @@ class _SlideText extends StatelessWidget {
             decoration: BoxDecoration(color: ds.chip, borderRadius: BorderRadius.circular(999)),
             child: Text(
               slide.tag.toUpperCase(),
-              style: TextStyle(
-                fontFamily: AppType.sans,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.72,
-                color: context.colors.isDark ? ds.muted : ds.text,
-              ),
+              style: _tagStyle.copyWith(color: context.colors.isDark ? ds.muted : ds.text),
             ),
           ),
-          const SizedBox(height: 12),
-          Text(slide.title, style: AppType.title(34, ds.title)),
-          const SizedBox(height: 12),
-          Text(
-            slide.text,
-            style: TextStyle(fontFamily: AppType.sans, fontSize: 16, height: 1.5, color: ds.body),
-          ),
+          const SizedBox(height: _gap),
+          Text(slide.title, style: AppType.title(titleSize, ds.title)),
+          const SizedBox(height: _gap),
+          Text(slide.text, style: _bodyStyle.copyWith(color: ds.body)),
         ],
       ),
     );
