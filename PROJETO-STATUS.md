@@ -8,7 +8,7 @@ TCC "Emacrescere" — Escola Técnica Pandiá Calógeras, Técnico de Informáti
 Equipe 6. Plataforma de telessaúde para acompanhamento médico do emagrecimento,
 com atendimento **só por consulta agendada**. **Banca: 03/11/2026.**
 
-- Site: https://tcc-emacrescere.vercel.app (produção no commit `77c7307`)
+- Site: https://tcc-emacrescere.vercel.app (produção sempre no último commit da `main`)
 - App web (iPhone): https://tcc-emacrescere.vercel.app/app/
 - Repositório: https://github.com/hugommeira/TCC-EMACRESCERE
 
@@ -31,8 +31,9 @@ na página inicial, login, cadastro e painel do paciente.
 
 ### O que está no ar
 
-- **Página inicial** redesenhada (fotos próprias, modelos 3D, seção do app com
-  Android e iPhone e QR codes).
+- **Página inicial** redesenhada (fotos próprias, modelos 3D no desktop, seção
+  do app com Android e iPhone e QR codes, botão "Voltar ao topo"). No celular,
+  o topo é só texto, para o botão de cadastro caber na primeira tela.
 - **Cadastro e login:** e-mail/senha, **Google (ativo)**, Facebook (pronto, sem
   credenciais); recuperação de senha por e-mail (Resend sandbox).
 - **Agendamento** com horários reais da agenda do médico, pagamento (Pix,
@@ -161,4 +162,8 @@ na página inicial, login, cadastro e painel do paciente.
   (`6bc59b5`).
 - 05/10: build novo do app web (onboarding não trava; `77d45bf`) e correção dos
   menus de notificações e conta que ficavam por baixo do conteúdo no celular
-  (`77c7307`).
+  (`77c7307`); documentação revisada contra o código; na página inicial:
+  botão "Voltar ao topo", selo "Acompanhamento médico" tirado da foto de
+  comida, "LGPD" trocado por "consulta por vídeo" nos destaques (a LGPD fica no
+  FAQ e no rodapé), foto nova da consulta por vídeo e topo do celular só com
+  texto, sem o celular 3D.

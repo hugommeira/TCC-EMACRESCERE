@@ -144,12 +144,14 @@ Senha de todas: **`Demo@12345`**.
 
 - Tudo o que foi desenvolvido está na `main` e no ar; nenhuma prévia tem
   trabalho pendente.
-- No ar: página inicial redesenhada (fotos próprias, 3D, seção do app com
+- No ar: página inicial redesenhada (fotos próprias, 3D no desktop, seção do app com
   Android e iPhone e QR codes), login com Google, agendamento com pagamento,
   sala de consulta, receita assinada, peso e IMC, painel do admin, app web para
   iPhone.
-- Corrigido em 05/10: os menus de notificações e conta ficavam por baixo do
-  conteúdo no celular.
+- Feito em 05/10: menus de notificações e conta corrigidos no celular; botão
+  "Voltar ao topo"; destaques da página inicial falam em consulta por vídeo em
+  vez de LGPD (que fica no FAQ e no rodapé); foto nova da consulta por vídeo;
+  topo do celular só com texto (o celular 3D ficou só no desktop).
 
 ### Pendências
 
