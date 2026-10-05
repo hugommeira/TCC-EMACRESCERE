@@ -31,6 +31,8 @@ quebrar o que já funciona custa mais do que faltar funcionalidade.
   `emacrescere_app` (pasta local na máquina do Hugo) é só histórico: não
   editar e não sincronizar — não existe mais subtree. Regras do app em
   `mobile/CLAUDE.md`; o build da Vercel ignora commits que só tocam `mobile/`.
+- `/app/` no site é a **versão web do app** (build do Flutter em `public/app/`,
+  usada no iPhone). A pasta `app/` da raiz é a de rotas do Next.js, não o app.
 
 ## Banco, deploy e git (o que não se pode quebrar)
 
@@ -42,8 +44,17 @@ quebrar o que já funciona custa mais do que faltar funcionalidade.
 - A Vercel faz deploy automático a cada push na `main` (região gru1), então
   **merge/push na main publica o site**: só quando o dono do projeto pedir.
   Em prévias (`VERCEL_ENV=preview`) o script `build` do `package.json` pula
-  `db push` e seed. Não use `ignoreCommand` no `vercel.json` (já foi tentado e
-  cancelou também o deploy de produção).
+  `db push` e seed.
+- O `ignoreCommand` do `vercel.json` decide se o build roda, olhando só o
+  **último commit** do push: `[build]` na mensagem sempre builda; na `main`,
+  builda se o commit muda algo fora de `mobile/` (commit vazio ou só `mobile/`
+  é pulado); fora da `main`, só builda com `[preview]` (inclusive commit
+  vazio). Ao juntar várias branches na `main`, o merge que mexe no site vai por
+  último. Não troque a regra por `VERCEL_ENV`: ele chega vazio nessa etapa
+  (já cancelou um deploy de produção). Tabela completa no `README.md`.
+- Mesmo commit enviado para uma branch com `[preview]` e depois para a `main`:
+  o status "sucesso" do GitHub pode ser o da prévia. Antes de testar o site
+  público, confira o deploy de **Production** (API de deployments do GitHub).
 - Nunca `git push --force` nem `git reset --hard`. Nunca imprimir valores de
   chaves/senhas; antes de um push, conferir que nenhum `.env*` (fora o
   `.env.example`) entrou no histórico.
@@ -80,8 +91,9 @@ e-mail, em memória: reiniciar o dev server zera. Roteiro da banca em
   doctor,admin}` por papel. `lib/auth.ts` é Node-only: adapter Prisma, sessão
   JWT, Credentials (bcrypt, senha guardada em `Account.access_token`) e os
   provedores sociais. Facebook e Google só ligam se as variáveis
-  `*_CLIENT_ID`/`*_CLIENT_SECRET` existirem; só aceitam e-mail verificado e o
-  papel é sempre `PATIENT` (`lib/oauth-profile.ts`). O callback `jwt` revalida
+  `*_CLIENT_ID`/`*_CLIENT_SECRET` existirem (Google ativo em produção; Facebook
+  sem credenciais); e-mail obrigatório (no Google, só verificado) e papel sempre
+  `PATIENT` (`lib/oauth-profile.ts`). O callback `jwt` revalida
   `active` e `role` no banco a cada 60 s. `callbackUrl` só aceita caminho
   interno (`lib/redirect.ts`).
 - **Camadas.** `app/api/**` (route handlers) validam com zod em
@@ -91,7 +103,9 @@ e-mail, em memória: reiniciar o dev server zera. Roteiro da banca em
 - **Tempo real.** `lib/realtime.ts` junta um EventEmitter por processo com um
   único `LISTEN` do Postgres; as rotas SSE (`app/api/realtime/*`, `queue/sse`)
   assinam canais `consultation:<id>`, `patient:<id>`, `doctor:<id>`, `queue`.
-  Limite de conexões SSE por usuário. A fila SSE exige médico aprovado.
+  Limite de conexões SSE por usuário. A fila SSE exige médico aprovado. Em
+  produção (Neon + Vercel) o `NOTIFY` não chega de forma confiável, então chat,
+  status da sala e prontuário também consultam periodicamente (chat a cada 5 s).
 - **Consulta.** Vídeo por LiveKit (`lib/livekit.ts`, `app/api/livekit`), chat e
   notas na sala (`app/consulta`). As notas internas do médico nunca chegam ao
   paciente. Agendamento: `lib/scheduling.ts` (funções puras, fuso fixo -03:00,
@@ -103,6 +117,8 @@ e-mail, em memória: reiniciar o dev server zera. Roteiro da banca em
   validação pública em `app/api/prescription/validate` e `app/prescricao/[id]`.
 - **Peso e IMC.** Tabela `WeightRecord` (`/dashboard/patient/peso` e aba Peso na
   sala). O IMC não é coluna: é calculado em `lib/bmi.ts`.
+- **Arquivos** (certificados, PDFs, anexos): `lib/s3.ts` usa S3 se as `S3_*`
+  existirem; sem elas (situação atual) guarda no banco, tabela `stored_files`.
 - **Schema** em `prisma/schema.prisma` (modelo `User` com `Role`,
   `PatientProfile`, `DoctorProfile`, `Consultation`...). Alterações de schema
   vão para produção no deploy (`db push`): cuidado redobrado.
@@ -115,10 +131,12 @@ e-mail, em memória: reiniciar o dev server zera. Roteiro da banca em
   `docs/frontend-handoff.md`. Diagnóstico técnico: `docs/frontend-diagnostico.md`.
 - **Assets 3D / Blender:** `docs/3d/BRIEFING.md` (comece por ele), depois
   `ASSETS.md`, `EXPORT.md` e `STATUS.md`. Skills em `.claude/skills`. São 3
-  assets (`logo-heart`, `phone-app`, `seal-signature`); commits do trabalho 3D
-  só com `public/3d/`, `art/3d-src/` e `docs/3d/STATUS.md`, na branch
-  `3d-assets`.
+  assets (`logo-heart`, `phone-app`, `seal-signature`), todos entregues e na
+  `main` (a branch `3d-assets` já foi juntada). Trabalho 3D novo: branch nova a
+  partir da `main`, commits só com `public/3d/`, `art/3d-src/` e
+  `docs/3d/STATUS.md`.
 - **Fotos:** `docs/fotos/BRIEFING.md` (alta qualidade sempre; servir de
   `public/photos/`, com fonte e licença registradas).
-- `README.md` traz as contas e o roteiro da banca; `PROJETO-STATUS.md` está
-  desatualizado.
+- **Estado atual e pendências:** `PROJETO-STATUS.md`. Contas, setup, deploy e
+  tabela do `ignoreCommand`: `README.md`. Roteiro da banca:
+  `docs/roteiro-demonstracao.md`. Segurança/LGPD: `docs/auditoria-seguranca.md`.

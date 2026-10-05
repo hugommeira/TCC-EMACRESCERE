@@ -99,10 +99,12 @@ de CRM, os cards com ícone e o CTA final em degradê.
 - **Para quem**: foto em alta resolução que se revela ao rolar; o link
   quebrado `#contato` virou o cadastro de médicos.
 - **Para médicos** (bloco novo): a área profissional como experiência
-  própria (fila, prontuário, prescrição ANVISA, certificado A1).
+  própria (agenda, prontuário, prescrição ANVISA, certificado A1). A fila foi
+  tirada dos textos depois (atendimento só por agendamento).
 - **Cabeçalho**: link "Para médicos" e barra de progresso de leitura.
 - Fotos do Pexels (licença livre) centralizadas em
-  `components/landing/photos.ts`, com fallback de marca.
+  `components/landing/photos.ts`, com fallback de marca. Depois viraram
+  arquivos locais em `public/photos/` (ver `docs/fotos/BRIEFING.md`).
 - Primitivos: `components/landing/motion/Reveal.tsx` e
   `components/landing/Photo.tsx`. Animações só por CSS, sem biblioteca nova;
   com `prefers-reduced-motion` tudo nasce parado e visível.

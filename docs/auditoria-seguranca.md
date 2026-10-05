@@ -1,5 +1,23 @@
 # Auditoria de segurança e proteção de dados
 
+> **Situação em 05/10/2026.** As propostas deste documento (8c CPF cifrado, 8d
+> log de leitura do prontuário, 9b limite de login por IP, item 10 validade da
+> sessão) **ainda não foram implementadas** — continuam valendo como estão.
+>
+> Depois deste levantamento, uma revisão independente de todo o código (02/10)
+> achou e corrigiu três falhas (commit `1d1dc85`):
+> - a fila em tempo real (`/api/queue/sse`) não exigia médico **aprovado**: um
+>   médico recém-cadastrado (pendente) lia nome, alergias e queixa dos pacientes;
+> - as **notas internas** do médico chegavam ao paciente por quatro caminhos
+>   (duas rotas da API, a página da sala e o evento em tempo real);
+> - o `callbackUrl` do login aceitava endereço externo (redirecionamento para
+>   outro site); agora só aceita caminho interno (`lib/redirect.ts`).
+>
+> Os logins sociais (03/10) seguem regras próprias: papel sempre `PATIENT`,
+> e-mail obrigatório e, no Google, só e-mail verificado (`lib/oauth-profile.ts`).
+> Fica como risco aceito, por ser um TCC sem usuários reais: as contas de
+> demonstração têm senha pública (`Demo@12345`) e são recriadas a cada deploy.
+
 Levantamento do estado atual dos itens 8, 9 e 10 da revisão crítica.
 **Nada aqui foi implementado** — é diagnóstico e proposta, para revisão antes
 de mexer no backend.
