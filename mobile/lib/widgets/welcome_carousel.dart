@@ -14,8 +14,8 @@ class WelcomeSlide {
   final String text;
 }
 
-// Os textos só afirmam o que o app faz: consulta com hora marcada e chat
-// (vídeo não existe no app), receita assinada pelo médico.
+// Os textos só afirmam o que o app faz: consulta com hora marcada, vídeo e
+// chat na sala da consulta, receita assinada pelo médico.
 const welcomeSlides = [
   WelcomeSlide(
     tag: 'Peso e IMC',
@@ -27,7 +27,7 @@ const welcomeSlides = [
   WelcomeSlide(
     tag: 'Consulta marcada',
     title: 'Seu médico, no horário que você escolher',
-    text: 'Agende com hora marcada e converse com o médico pelo chat da consulta.',
+    text: 'Agende com hora marcada e fale com o médico por vídeo ou pelo chat da consulta.',
   ),
   WelcomeSlide(
     tag: 'Receita digital',

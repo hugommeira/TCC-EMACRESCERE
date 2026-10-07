@@ -73,7 +73,16 @@ analisador marcar como `dead_code` justamente o código que queremos preservar.
   "Simular pagamento" só funciona com PAYMENT_MOCK=true no servidor —
   em produção hoje está DESLIGADO (o /api/dev/simulate-payment responde 404).
 - Chat com o médico — feito (polling 5s; backend tem SSE se quiser trocar)
-- Videochamada com o médico (LiveKit) — NÃO feito; sala mostra banner
+- Videochamada com o médico (LiveKit) — feito em 2026-10-07, ainda sem
+  teste de chamada real. `lib/widgets/video_call_panel.dart` (faixa "Entrar
+  no vídeo" em cima do chat, nas salas da paciente e do médico) e
+  `lib/services/video_service.dart` (GET /api/livekit/token?consultationId,
+  o mesmo do site: só participante e só com a consulta IN_PROGRESS; 409
+  antes do "Iniciar"). Sala `consultation_<id>`, a mesma do site: uma ponta
+  no app e a outra no site se encontram. Só conecta com toque (a câmera não
+  liga sozinha; o Safari do iPhone só toca o som depois de um toque).
+  Pacote `livekit_client` (traz o `flutter_webrtc`); permissões de câmera e
+  microfone no `AndroidManifest.xml`. Não funciona no modo demonstração.
 - Visualizar/baixar prescrições digitais — feito (PDF só nativo)
 - Histórico de atendimentos — feito
 - Acompanhamento de peso/IMC — feito e NO SERVIDOR desde 03/10/2026.

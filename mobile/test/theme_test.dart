@@ -6,6 +6,7 @@ import 'package:emacrescere_app/theme/app_theme.dart';
 import 'package:emacrescere_app/theme/theme_controller.dart';
 import 'package:emacrescere_app/utils/formatters.dart';
 import 'package:emacrescere_app/widgets/theme_setting_card.dart';
+import 'package:emacrescere_app/widgets/welcome_carousel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -85,7 +86,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 800));
 
       expect(find.text('Acompanhe sua evolução, semana a semana'), findsOneWidget);
-      expect(find.textContaining('vídeo'), findsNothing);
+      // A consulta tem vídeo e chat; o slide 2 diz isso.
+      expect(welcomeSlides[1].text, contains('vídeo'));
       expect(tester.takeException(), isNull);
     });
 

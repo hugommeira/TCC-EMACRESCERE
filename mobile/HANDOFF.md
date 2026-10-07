@@ -64,9 +64,10 @@ Atenção: a pasta `app/` do site **não** é o aplicativo — é a pasta de rot
   `PrescriptionItem`, `Medication`, `MedicalCertificate`, `FollowUp`, `AuditLog`.
 - **Pagamentos**: Asaas (sandbox próprio, `PAYMENT_MOCK` controla se aceita simulação).
   Pix, cartão e boleto testados de ponta a ponta em produção.
-- **Vídeo**: LiveKit Cloud (projeto próprio, variáveis configuradas). App ainda não
-  implementou a chamada (mostra banner); site tem a sala mas depende do CSP liberar os hosts
-  regionais do LiveKit (`*.livekit.cloud` — já corrigido).
+- **Vídeo**: LiveKit Cloud (projeto próprio, variáveis configuradas). Site e app usam a
+  mesma sala (`consultation_<id>`), com o token de `GET /api/livekit/token`. O CSP do site
+  libera os hosts regionais do LiveKit (`*.livekit.cloud` — já corrigido). No app, ver
+  "Videochamada no app" abaixo.
 - **Chat**: originalmente SSE via `pg LISTEN/NOTIFY`, mas **não entrega de forma confiável em
   produção (Neon serverless + Vercel)** — hoje tudo tem fallback de polling (5s no chat, 8s na
   fila, 15s no status da sala).
@@ -127,12 +128,40 @@ webhooks/asaas
 
 ## O que NÃO funciona / está fora de escopo
 
-- **Videochamada no app**: não implementada (site tem a sala LiveKit, app só mostra banner).
 - **iOS**: fora de escopo (só Android nesta entrega).
 - **Cartão de crédito no app**: não implementado (exige campos completos do cartão no
   request; Pix/boleto sim).
 - **Plano de acompanhamento recorrente**: não existe no backend (só cobrança por consulta).
 - Upload de anexos/certificado: depende do S3 configurado (ver pendências).
+
+## Videochamada no app (2026-10-07)
+
+Feita no código, **ainda sem teste de chamada real** (precisa de duas pessoas com câmera).
+- Onde: `mobile/lib/widgets/video_call_panel.dart` (o painel) e
+  `mobile/lib/services/video_service.dart` (o token). Aparece em cima do chat na sala da
+  paciente e, para o médico, depois do "Iniciar".
+- Como funciona: a faixa "Entrar no vídeo" só conecta com um toque. Ao entrar, o vídeo da
+  outra pessoa fica grande e o próprio num quadrinho; botões de microfone, câmera, virar a
+  câmera (só no celular) e sair. Sem permissão de câmera ou microfone, o outro liga mesmo
+  assim e aparece um aviso.
+- Site e app na mesma sala: a médica pode atender pelo site e a paciente pelo app.
+- Não funciona no modo demonstração (`DEMO_API`).
+- No iPhone (versão web em `/app/`) o Safari pede câmera e microfone na primeira vez.
+
+**Roteiro de teste (produção, duas pessoas):**
+1. Paciente (ex.: `mariana.castro@email.com`) com uma consulta agendada e paga com a
+   médica `fernanda.costa@demo.emacrescere.app`.
+2. A médica abre a consulta (app ou site) e toca em **Iniciar**.
+3. A paciente abre a sala no app (Android ou iPhone) e toca em **Entrar no vídeo**; aceita
+   câmera e microfone.
+4. A médica entra no vídeo (no app, "Entrar no vídeo"; no site, a sala da consulta).
+5. Conferir: os dois se veem e se ouvem; microfone e câmera desligam e religam; virar a
+   câmera no Android; **Sair** e entrar de novo; o chat continua funcionando embaixo.
+6. A médica encerra a consulta.
+
+Numa prévia da Vercel o "Iniciar" dá 403 (o `checkOrigin` só aceita a produção); o token
+do vídeo é um GET e funciona, então dá para iniciar pelo site em produção e entrar pela
+prévia.
 
 ## Pendências que só o Hugo resolve (fora do meu acesso)
 
