@@ -57,6 +57,10 @@ dependencies:
   # Símbolo do logo em SVG (assets/logo/mark.svg)
   flutter_svg: ^2.0.10
 
+  # Videochamada na sala da consulta (o mesmo LiveKit do site; o token vem de
+  # GET /api/livekit/token). Traz o flutter_webrtc.
+  livekit_client: ^2.13.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
