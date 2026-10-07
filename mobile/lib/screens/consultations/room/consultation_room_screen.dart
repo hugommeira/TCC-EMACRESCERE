@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../models/consultation.dart';
 import '../../../services/consultation_service.dart';
-import '../../../theme/app_theme.dart';
 import '../../../utils/formatters.dart';
+import '../../../widgets/video_call_panel.dart';
 import '../chat/chat_screen.dart';
 
-/// Sala da consulta em andamento (IN_PROGRESS): chat real com o médico
-/// pelo roomToken da consulta. Videochamada (LiveKit, /api/livekit/token)
-/// ainda não está no app — o banner deixa isso claro em vez de fingir.
+/// Sala da consulta em andamento (IN_PROGRESS): videochamada (LiveKit, a
+/// mesma sala do site, [VideoCallPanel]) em cima do chat com o médico pelo
+/// roomToken da consulta.
 ///
 /// Substitui a antiga sala simulada (new_consultation/), que não batia
 /// no backend.
@@ -66,7 +66,7 @@ class _ConsultationRoomScreenState extends State<ConsultationRoomScreen> {
         } else {
           body = Column(
             children: [
-              const _VideoSoonBanner(),
+              VideoCallPanel(consultationId: consultation.id, otherLabel: 'o médico'),
               Expanded(
                 child: ChatScreen(roomToken: consultation.roomToken!, embedded: true),
               ),
@@ -91,31 +91,6 @@ class _ConsultationRoomScreenState extends State<ConsultationRoomScreen> {
           body: body,
         );
       },
-    );
-  }
-}
-
-class _VideoSoonBanner extends StatelessWidget {
-  const _VideoSoonBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: context.colors.brand500.withValues(alpha: 0.12),
-      child: Row(
-        children: [
-          Icon(Icons.videocam_off_outlined, size: 18, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Videochamada em breve no app — por enquanto o atendimento é pelo chat.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

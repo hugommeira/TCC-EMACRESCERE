@@ -6,12 +6,14 @@ import '../../services/api_client.dart';
 import '../../services/consultation_service.dart';
 import '../../services/doctor_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/video_call_panel.dart';
 import '../consultations/chat/chat_screen.dart';
 import 'patient_weight_sheet.dart';
 import 'prontuario_sheet.dart';
 
-/// Sala de atendimento do MÉDICO: dados do paciente + queixa, chat pelo
-/// roomToken e ações — prontuário (PATCH .../prontuario), receita (no
+/// Sala de atendimento do MÉDICO: dados do paciente + queixa, videochamada
+/// com a consulta em andamento ([VideoCallPanel]), chat pelo roomToken e
+/// ações — prontuário (PATCH .../prontuario), receita (no
 /// site, que tem o certificado ICP-Brasil) e encerrar (POST .../end).
 class DoctorRoomScreen extends StatefulWidget {
   const DoctorRoomScreen({super.key, required this.consultationId});
@@ -140,6 +142,9 @@ class _DoctorRoomScreenState extends State<DoctorRoomScreen> {
           body = Column(
             children: [
               _PatientBanner(consultation: c, onProntuario: () => _openProntuario(c)),
+              // O servidor só entrega a chave do vídeo com a consulta em
+              // andamento (409 antes de "Iniciar").
+              if (inProgress) VideoCallPanel(consultationId: c.id, otherLabel: 'o paciente'),
               Expanded(
                 child: c.roomToken != null
                     ? ChatScreen(roomToken: c.roomToken!, embedded: true)
