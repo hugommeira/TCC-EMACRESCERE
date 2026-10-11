@@ -2,8 +2,8 @@ import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }            from "@/lib/auth";
 import { markMessagesAsRead } from "@/services/api/chat";
-import { toApiError }      from "@/lib/errors";
 import { prisma }          from "@/lib/prisma";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export async function POST(
   _req: NextRequest,
@@ -12,7 +12,7 @@ export async function POST(
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const consultation = await prisma.consultation.findFirst({
@@ -20,13 +20,12 @@ export async function POST(
     });
 
     if (!consultation) {
-      return NextResponse.json({ message: "Sala não encontrada" }, { status: 404 });
+      return apiError("CHAT_SALA_NAO_ENCONTRADA");
     }
 
     await markMessagesAsRead(consultation.id, session.user.id);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

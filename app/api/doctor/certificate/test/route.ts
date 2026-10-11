@@ -1,10 +1,11 @@
 import { NextResponse }     from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }              from "@/lib/auth";
-import { toApiError }        from "@/lib/errors";
 import { auditLog }          from "@/lib/audit";
 import { checkOrigin, getClientIp, rateLimit, tooManyRequests } from "@/lib/security";
 import { generateTestCertificate } from "@/services/api/certificate";
+import { assertEncryptionKey } from "@/lib/crypto";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
@@ -24,12 +25,16 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
 
     // Gerar chave RSA é caro; evita abuso.
     const rl = rateLimit({ key: `cert-test:${session.user.id}`, limit: 3, windowSec: 60 * 10 });
     if (!rl.ok) return tooManyRequests(rl.resetSeconds);
+
+    // Antes de gastar CPU gerando a chave RSA: sem PFX_ENCRYPTION_KEY o
+    // certificado não pode ser guardado (CERTIFICADO_CHAVE_SERVIDOR).
+    assertEncryptionKey();
 
     const cert = await generateTestCertificate(session.user.id);
 
@@ -45,7 +50,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ certificate: cert }, { status: 201 });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

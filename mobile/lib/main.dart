@@ -3,12 +3,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'constants.dart';
 import 'screens/startup/startup_gate.dart';
+import 'services/session_guard.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ThemeController.instance.load();
+  // Para onde o app volta quando a sessão expira (SessionGuard).
+  SessionGuard.homeBuilder = () => const StartupGate();
   runApp(const MyApp());
 }
 
@@ -22,6 +25,8 @@ class MyApp extends StatelessWidget {
       listenable: themes,
       builder: (context, _) => MaterialApp(
         title: 'Emacrescere',
+        navigatorKey: SessionGuard.navigatorKey,
+        scaffoldMessengerKey: SessionGuard.messengerKey,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: themes.mode,

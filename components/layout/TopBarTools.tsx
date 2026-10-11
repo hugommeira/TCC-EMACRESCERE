@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Role } from "@prisma/client";
 import type { Route } from "next";
+import { apiFetch } from "@/lib/api-client";
 
 // Busca e notificações do TopBar. Os dois botões existiam desde o início
 // mas não faziam nada — agora a busca leva pra lista certa de cada perfil
@@ -98,9 +99,7 @@ export function NotificationsMenu() {
     let alive = true;
     async function load() {
       try {
-        const r = await fetch("/api/notifications", { cache: "no-store" });
-        if (!r.ok) return;
-        const data = (await r.json()) as { items: NotificationItem[] };
+        const data = await apiFetch<{ items: NotificationItem[] }>("/api/notifications", { cache: "no-store" });
         if (alive) {
           setItems(data.items ?? []);
           setLoaded(true);

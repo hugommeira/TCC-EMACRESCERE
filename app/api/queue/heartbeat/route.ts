@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { z }                 from "zod";
 import { auth }              from "@/lib/auth";
 import { patientHeartbeat }  from "@/services/api/queue";
-import { toApiError }        from "@/lib/errors";
+import { apiError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -14,13 +14,13 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ message: "consultationId obrigatório" }, { status: 422 });
+      return apiError("PARAMETRO_INVALIDO", { message: "Informe a consulta." });
     }
 
     const result = await patientHeartbeat({
@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

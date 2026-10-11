@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 interface Props {
   consultationId: string;
@@ -27,41 +28,33 @@ export function AwaitingPayment({
   useEffect(() => {
     const t = setInterval(async () => {
       try {
-        const r = await fetch(`/api/queue/position?id=${consultationId}`, { cache: "no-store" });
-        if (!r.ok) return;
-        const data = await r.json();
+        const data = await apiFetch<{ status?: string }>(`/api/queue/position?id=${consultationId}`, { cache: "no-store" });
         if (data.status === "WAITING" || data.status === "IN_PROGRESS") {
           router.refresh();
         }
-      } catch {}
+      } catch {
+        // Silencioso: tenta de novo em 3 s (ConnectionBanner avisa se persistir).
+      }
     }, 3000);
     return () => clearInterval(t);
   }, [consultationId, router]);
 
   function copy() {
     if (!pixCopyPaste) return;
-    void navigator.clipboard.writeText(pixCopyPaste);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    void navigator.clipboard.writeText(pixCopyPaste).then(
+      () => { setCopied(true); setTimeout(() => setCopied(false), 2000); },
+      () => setError("Não foi possível copiar automaticamente. Selecione o código e copie."),
+    );
   }
 
   async function simulate() {
     setSimulating(true);
     setError(null);
     try {
-      const r = await fetch("/api/dev/simulate-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body:   JSON.stringify({ consultationId }),
-      });
-      const data = await r.json();
-      if (!r.ok) {
-        setError(data.message ?? "Erro ao simular pagamento");
-        return;
-      }
+      await apiFetch("/api/dev/simulate-payment", { method: "POST", body: { consultationId } });
       router.refresh();
-    } catch {
-      setError("Erro de conexão");
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setSimulating(false);
     }

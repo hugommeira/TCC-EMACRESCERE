@@ -47,7 +47,7 @@ export function BackToTop({ aboveMobileBar = false }: { aboveMobileBar?: boolean
           : "bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
       } ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
     >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className={`h-5 w-5 ${visible ? "back-to-top-arrow" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 19V5" />
         <path d="m5 12 7-7 7 7" />
       </svg>

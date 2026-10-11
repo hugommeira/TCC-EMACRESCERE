@@ -2,6 +2,12 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "Emacrescere";
 export const APP_URL  = process.env.NEXT_PUBLIC_APP_URL  ?? "http://localhost:3000";
 
+// ─── Upload de arquivos ───────────────────────────────────────────────────────
+// Upload pelo servidor (sem S3): a Vercel recusa corpos acima de ~4,5 MB antes
+// de a rota rodar, com uma página de erro que não é JSON. O limite é checado no
+// navegador e na rota (ARQUIVO_MUITO_GRANDE no catálogo de erros).
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+
 // ─── Escopo: fila on-demand ───────────────────────────────────────────────────
 // Nesta entrega o atendimento é só por agendamento. A fila on-demand virou
 // trabalho futuro (TCC, seção 5.5.1), mas NADA dela foi apagado: rotas

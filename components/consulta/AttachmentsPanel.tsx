@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSse } from "@/lib/hooks/useSse";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
+import { ERROS } from "@/lib/error-catalog";
+import { MAX_UPLOAD_BYTES } from "@/lib/constants";
+
+// Mesma lista do servidor (attachments/upload/route.ts).
+const TIPOS_ACEITOS = ".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.doc,.docx,.txt";
 
 interface Attachment {
   id:          string;
@@ -44,10 +50,13 @@ export function AttachmentsPanel({
   const inputRef                  = useRef<HTMLInputElement>(null);
 
   async function load() {
-    const r = await fetch(`/api/consultations/${consultationId}/attachments`, { cache: "no-store" });
-    if (r.ok) {
-      const data = await r.json();
+    try {
+      const data = await apiFetch<{ attachments: Attachment[] }>(
+        `/api/consultations/${consultationId}/attachments`, { cache: "no-store" },
+      );
       setItems(data.attachments);
+    } catch (err) {
+      setError(mensagemDeErro(err));
     }
   }
 
@@ -58,29 +67,30 @@ export function AttachmentsPanel({
   });
 
   async function handleFile(file: File) {
-    setUploading(true);
     setError(null);
+    // Checado antes de enviar: acima do limite a Vercel devolve uma página de
+    // erro (antes aparecia "Falha no upload (HTTP 413)").
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(ERROS.ARQUIVO_MUITO_GRANDE.mensagem);
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+    setUploading(true);
     try {
       // Upload via servidor (FormData) — sem CORS
       const fd = new FormData();
       fd.append("file", file);
       fd.append("kind", kind);
 
-      const res = await fetch(`/api/consultations/${consultationId}/attachments/upload`, {
-        method: "POST",
-        body:   fd,
+      await apiFetch(`/api/consultations/${consultationId}/attachments/upload`, {
+        method:    "POST",
+        body:      fd,
+        timeoutMs: 120_000,
       });
-
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({} as { message?: string }));
-        setError(j.message ?? `Falha no upload (HTTP ${res.status})`);
-        return;
-      }
 
       await load();
     } catch (err) {
-      console.error("[upload] error:", err);
-      setError("Erro de conexão durante upload");
+      setError(mensagemDeErro(err));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -115,6 +125,7 @@ export function AttachmentsPanel({
           <input
             ref={inputRef}
             type="file"
+            accept={TIPOS_ACEITOS}
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -145,10 +156,10 @@ export function AttachmentsPanel({
             )}
           </button>
           <p className="mt-1.5 text-[10px] text-slate-400">
-            Máx. 50 MB · PDF, imagens, etc.
+            Máx. 4 MB · PDF, imagens ou Word
           </p>
           {error && (
-            <p className="mt-2 rounded-lg bg-red-50 px-2 py-1 text-[11px] text-red-700">{error}</p>
+            <p role="alert" className="mt-2 rounded-lg bg-red-50 px-2 py-1 text-[11px] text-red-700">{error}</p>
           )}
         </div>
       )}

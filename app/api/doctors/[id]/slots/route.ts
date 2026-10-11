@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { auth }             from "@/lib/auth";
 import { getDoctorDaySlots } from "@/services/api/consultation";
 import { isValidDateString } from "@/lib/scheduling";
-import { toApiError }        from "@/lib/errors";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,18 +24,17 @@ export async function GET(
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const date = req.nextUrl.searchParams.get("date") ?? "";
     if (!isValidDateString(date)) {
-      return NextResponse.json({ message: "Use date=AAAA-MM-DD" }, { status: 422 });
+      return apiError("AGENDA_DATA_INVALIDA");
     }
 
     const slots = await getDoctorDaySlots(params.id, date);
     return NextResponse.json({ data: { date, slots } });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

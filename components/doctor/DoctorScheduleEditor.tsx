@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
@@ -59,19 +60,13 @@ export function DoctorScheduleEditor({
       setSaving(true);
       setError(null);
       try {
-        const r = await fetch("/api/doctor/profile", {
-          method:  "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ availableHours: toApi(state) }),
+        await apiFetch("/api/doctor/profile", {
+          method: "PATCH",
+          body:   { availableHours: toApi(state) },
         });
-        if (!r.ok) {
-          const j = await r.json().catch(() => ({} as { message?: string }));
-          setError(j.message ?? "Falha ao salvar");
-          return;
-        }
         setSavedAt(new Date());
-      } catch {
-        setError("Erro de conexão");
+      } catch (err) {
+        setError(mensagemDeErro(err));
       } finally {
         setSaving(false);
       }

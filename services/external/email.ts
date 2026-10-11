@@ -1,33 +1,40 @@
-import { AppError } from "@/lib/errors";
+import { AppError, logError } from "@/lib/errors";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const RESEND_API_URL = "https://api.resend.com/emails";
-const RESEND_API_KEY = process.env["RESEND_API_KEY"] ?? "";
-const EMAIL_FROM      = process.env["EMAIL_FROM"] ?? "Emacrescere <onboarding@resend.dev>";
+const resendKey = () => process.env["RESEND_API_KEY"] ?? "";
+const emailFrom = () => process.env["EMAIL_FROM"] ?? "Emacrescere <onboarding@resend.dev>";
+
+const RESEND_TIMEOUT_MS = 10_000;
 
 // ─── HTTP client ─────────────────────────────────────────────────────────────
 
 async function resendRequest(body: Record<string, unknown>): Promise<void> {
-  if (!RESEND_API_KEY) {
+  if (!resendKey()) {
     // Sem provedor configurado: não derruba o fluxo, mas deixa claro no log.
-    console.error("[email] RESEND_API_KEY não configurada — e-mail não enviado");
+    logError("INFRA_EMAIL_NAO_CONFIGURADO");
     return;
   }
 
-  const res = await fetch(RESEND_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type":  "application/json",
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({ from: EMAIL_FROM, ...body }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(RESEND_API_URL, {
+      method: "POST",
+      signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${resendKey()}`,
+      },
+      body: JSON.stringify({ from: emailFrom(), ...body }),
+    });
+  } catch (err) {
+    throw new AppError("AUTH_EMAIL_NAO_ENVIADO", { detail: `Resend inacessível: ${(err as Error)?.message}`, cause: err });
+  }
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}));
-    console.error("[email] Resend error:", errBody);
-    throw new AppError("Falha ao enviar e-mail", "EMAIL_SEND_FAILED", 502);
+    throw new AppError("AUTH_EMAIL_NAO_ENVIADO", { detail: `Resend ${res.status}: ${JSON.stringify(errBody)}` });
   }
 }
 

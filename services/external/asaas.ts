@@ -1,10 +1,15 @@
 import type { AsaasCharge, AsaasCustomer } from "@/types";
-import { PaymentError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const ASAAS_API_URL = process.env.ASAAS_API_URL || "https://sandbox.asaas.com/api/v3";
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? "";
+// Lidas a cada chamada (e não no carregamento do módulo) para os testes de
+// falha conseguirem simular chave ausente.
+const asaasUrl = () => process.env.ASAAS_API_URL || "https://sandbox.asaas.com/api/v3";
+const asaasKey = () => process.env.ASAAS_API_KEY ?? "";
+
+/** Tempo máximo de espera pelo Asaas antes de desistir (PAGAMENTO_GATEWAY_INDISPONIVEL). */
+export const ASAAS_TIMEOUT_MS = 15_000;
 
 // ─── HTTP client ─────────────────────────────────────────────────────────────
 
@@ -12,14 +17,28 @@ async function asaasRequest<T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(`${ASAAS_API_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      "access_token": ASAAS_API_KEY,
-      ...options?.headers,
-    },
-  });
+  if (!asaasKey()) {
+    throw new AppError("PAGAMENTO_GATEWAY_NAO_CONFIGURADO", { detail: "ASAAS_API_KEY ausente" });
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${asaasUrl()}${path}`, {
+      ...options,
+      signal: AbortSignal.timeout(ASAAS_TIMEOUT_MS),
+      headers: {
+        "Content-Type": "application/json",
+        "access_token": asaasKey(),
+        ...options?.headers,
+      },
+    });
+  } catch (err) {
+    // Rede caiu, DNS, TLS ou timeout: nada foi cobrado.
+    throw new AppError("PAGAMENTO_GATEWAY_INDISPONIVEL", {
+      detail: `${options?.method ?? "GET"} ${path}: ${(err as Error)?.name} ${(err as Error)?.message}`,
+      cause:  err,
+    });
+  }
 
   if (!res.ok) {
     // Asaas responde { errors: [{ code, description }] }; sem chave configurada
@@ -31,16 +50,23 @@ async function asaasRequest<T>(
     };
     const detail = body.errors?.[0]?.description ?? body.description;
     console.error(`[asaas] ${options?.method ?? "GET"} ${path} -> ${res.status}`, body);
-    throw new PaymentError(
-      detail
-        ? `Gateway de pagamento: ${detail}`
-        : res.status === 401
-          ? "Gateway de pagamento não configurado (chave do Asaas ausente ou inválida)"
-          : "Erro na integração com gateway de pagamento",
-    );
+    if (res.status === 401 || res.status === 403) {
+      throw new AppError("PAGAMENTO_GATEWAY_NAO_CONFIGURADO", { detail: `Asaas ${res.status}` });
+    }
+    if (res.status >= 500) {
+      throw new AppError("PAGAMENTO_GATEWAY_INDISPONIVEL", { detail: `Asaas ${res.status}` });
+    }
+    throw new AppError("PAGAMENTO_RECUSADO", {
+      message: detail ? `Pagamento recusado: ${detail}` : undefined,
+      detail:  `Asaas ${res.status}`,
+    });
   }
 
-  return res.json() as Promise<T>;
+  try {
+    return (await res.json()) as T;
+  } catch (err) {
+    throw new AppError("PAGAMENTO_GATEWAY_INDISPONIVEL", { detail: "resposta do Asaas não é JSON", cause: err });
+  }
 }
 
 // ─── Customers ────────────────────────────────────────────────────────────────

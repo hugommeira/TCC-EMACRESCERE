@@ -6,9 +6,9 @@ import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { publish }           from "@/lib/realtime";
 import { buildKey, headObject, presignDownload, presignUpload } from "@/lib/s3";
-import { toApiError }        from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp, RL, rateLimit, tooManyRequests } from "@/lib/security";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 // ─── MIME whitelist ────────────────────────────────────────────────────────────
 const ALLOWED_MIME = new Set<string>([
@@ -49,9 +49,9 @@ async function authorize(consultationId: string, userId: string) {
     where: { id: consultationId },
     select: { patientId: true, doctorId: true, status: true },
   });
-  if (!c) return { ok: false as const, code: 404, msg: "Consulta não encontrada" };
+  if (!c) return { ok: false as const, err: "CONSULTA_NAO_ENCONTRADA" as const };
   if (c.patientId !== userId && c.doctorId !== userId) {
-    return { ok: false as const, code: 403, msg: "Sem permissão" };
+    return { ok: false as const, err: "CONSULTA_SEM_ACESSO" as const };
   }
   return { ok: true as const, consultation: c };
 }
@@ -60,11 +60,11 @@ async function authorize(consultationId: string, userId: string) {
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> | { id: string } }) {
   try {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    if (!session?.user) return apiError("AUTH_SESSAO_EXPIRADA");
 
     const { id } = await Promise.resolve(ctx.params);
     const az     = await authorize(id, session.user.id);
-    if (!az.ok)  return NextResponse.json({ message: az.msg }, { status: az.code });
+    if (!az.ok)  return apiError(az.err);
 
     const items = await prisma.attachment.findMany({
       where: { consultationId: id },
@@ -86,8 +86,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 
     return NextResponse.json({ attachments: withUrls });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
 
@@ -98,7 +97,7 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     if (originErr) return originErr;
 
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    if (!session?.user) return apiError("AUTH_SESSAO_EXPIRADA");
 
     const { id } = await Promise.resolve(ctx.params);
 
@@ -106,12 +105,12 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     if (!rl.ok) return tooManyRequests(rl.resetSeconds);
 
     const az     = await authorize(id, session.user.id);
-    if (!az.ok)  return NextResponse.json({ message: az.msg }, { status: az.code });
+    if (!az.ok)  return apiError(az.err);
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = presignSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors }, { status: 422 });
+      return validationError(parsed.error);
     }
 
     const ext   = parsed.data.fileName.split(".").pop() ?? "bin";
@@ -125,8 +124,7 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
 
     return NextResponse.json({ uploadUrl, s3Key });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
 
@@ -137,33 +135,33 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     if (originErr) return originErr;
 
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    if (!session?.user) return apiError("AUTH_SESSAO_EXPIRADA");
 
     const { id } = await Promise.resolve(ctx.params);
     const az     = await authorize(id, session.user.id);
-    if (!az.ok)  return NextResponse.json({ message: az.msg }, { status: az.code });
+    if (!az.ok)  return apiError(az.err);
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = confirmSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors }, { status: 422 });
+      return validationError(parsed.error);
     }
 
     // Garantir que a key pertence à consulta corrente (anti enumeration)
     if (!parsed.data.s3Key.includes(`/consultations/${id}/`)) {
-      return NextResponse.json({ message: "Chave inválida" }, { status: 422 });
+      return apiError("DADOS_INVALIDOS", { message: "Arquivo inválido." });
     }
 
     // Verificar real no S3: tamanho e mime
     const head = await headObject(parsed.data.s3Key);
     if (!head) {
-      return NextResponse.json({ message: "Arquivo não encontrado no storage" }, { status: 404 });
+      return apiError("ARQUIVO_NAO_ENCONTRADO");
     }
     if (head.size > MAX_SIZE) {
-      return NextResponse.json({ message: "Arquivo excede o tamanho permitido" }, { status: 413 });
+      return apiError("ARQUIVO_MUITO_GRANDE");
     }
     if (!ALLOWED_MIME.has(head.mimeType)) {
-      return NextResponse.json({ message: "Tipo de arquivo recusado" }, { status: 415 });
+      return apiError("ARQUIVO_TIPO_RECUSADO");
     }
 
     // Usar o size real do S3 (não confiar no cliente)
@@ -205,7 +203,6 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
     return NextResponse.json({ id: created.id }, { status: 201 });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

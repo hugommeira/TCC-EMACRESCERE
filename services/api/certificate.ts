@@ -1,10 +1,10 @@
 import { randomBytes } from "node:crypto";
 import * as forge from "node-forge";
 import { prisma } from "@/lib/prisma";
-import { encrypt, decrypt } from "@/lib/crypto";
+import { encrypt, decrypt, assertEncryptionKey } from "@/lib/crypto";
 import { buildKey, putObject, deleteObject, getObjectBuffer, headObject } from "@/lib/s3";
 import { extractPfxInfo, validatePfxPassword } from "@/lib/sign-pdf";
-import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors";
+import { AppError, logError } from "@/lib/errors";
 
 const MAX_PFX_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -30,19 +30,23 @@ export async function uploadCertificate(input: {
   fileName: string;
 }) {
   if (input.pfxBuffer.length === 0 || input.pfxBuffer.length > MAX_PFX_SIZE) {
-    throw new ConflictError("Arquivo .pfx inválido ou maior que 5MB");
+    throw new AppError("CERTIFICADO_ARQUIVO_INVALIDO");
   }
   if (!input.password) {
-    throw new ConflictError("Senha do certificado é obrigatória");
+    throw new AppError("CERTIFICADO_SENHA_INVALIDA", { message: "Digite a senha do certificado." });
   }
+  // Sem a chave nada pode ser guardado: falha antes de mexer no storage.
+  assertEncryptionKey();
 
-  // 1) Validar senha (obrigatório). Se falhar, lança ConflictError.
+  // 1) Validar senha (obrigatório).
   try {
     validatePfxPassword(input.pfxBuffer, input.password);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Não foi possível abrir o .pfx";
-    console.error("[uploadCertificate] validatePfxPassword failed:", err);
-    throw new ConflictError(msg);
+    const msg = err instanceof Error ? err.message : "";
+    throw new AppError(
+      /senha/i.test(msg) ? "CERTIFICADO_SENHA_INVALIDA" : "CERTIFICADO_ARQUIVO_INVALIDO",
+      { detail: msg, cause: err },
+    );
   }
 
   // 2) Extrair metadados (best-effort, não bloqueia o upload se falhar)
@@ -70,25 +74,25 @@ export async function uploadCertificate(input: {
 
   // 4) Salvar no storage (S3 ou banco), criptografado
   const s3Key = buildKey(["certificates", `${input.doctorId}.pfx`]);
+  // Cifrar FORA do try do storage: antes uma chave errada aparecia como
+  // "falha de storage". encrypt já lança CERTIFICADO_CHAVE_SERVIDOR.
+  const sealed            = sealPfx(input.pfxBuffer);
+  const encryptedPassword = encrypt(input.password);
   try {
     await putObject({
       key:         s3Key,
-      body:        sealPfx(input.pfxBuffer),
+      body:        sealed,
       contentType: "application/x-pkcs12",
     });
   } catch (err) {
-    console.error("[uploadCertificate] S3 putObject failed:", err);
-    throw new ConflictError("Falha ao enviar o certificado para o storage. Verifique a conexão e tente novamente.");
+    throw new AppError("ARQUIVO_ARMAZENAMENTO_FALHOU", {
+      message: "Não foi possível salvar o certificado agora. Tente de novo em instantes.",
+      detail:  (err as Error)?.message,
+      cause:   err,
+    });
   }
 
-  // 5) Salvar metadados (senha encriptada)
-  let encryptedPassword: string;
-  try {
-    encryptedPassword = encrypt(input.password);
-  } catch (err) {
-    console.error("[uploadCertificate] encrypt password failed:", err);
-    throw new ConflictError("Erro de criptografia. Contate o suporte (PFX_ENCRYPTION_KEY).");
-  }
+  // 5) Salvar metadados (senha encriptada acima)
 
   // exactOptionalPropertyTypes — montar objeto sem undefined
   const meta: {
@@ -154,8 +158,11 @@ export async function deleteCertificate(doctorId: string) {
   const c = await prisma.medicalCertificate.findUnique({
     where: { doctorId }, select: { id: true, s3Key: true },
   });
-  if (!c) throw new NotFoundError("Certificado");
-  try { await deleteObject(c.s3Key); } catch { /* ignore */ }
+  if (!c) throw new AppError("CERTIFICADO_NAO_ENCONTRADO");
+  try { await deleteObject(c.s3Key); } catch (err) {
+    // O registro some mesmo assim; o arquivo órfão só ocupa espaço.
+    logError("ARQUIVO_ARMAZENAMENTO_FALHOU", err, { etapa: "apagar certificado", s3Key: c.s3Key });
+  }
   await prisma.medicalCertificate.delete({ where: { id: c.id } });
 }
 
@@ -169,19 +176,17 @@ export async function loadCertificateForSigning(doctorId: string): Promise<{
     where: { doctorId },
     select: { s3Key: true, encryptedPassword: true, subjectCN: true, serialNumber: true, active: true, validTo: true },
   });
-  if (!c)               throw new NotFoundError("Certificado");
-  if (!c.active)        throw new ForbiddenError("Certificado inativo");
+  if (!c)               throw new AppError("CERTIFICADO_AUSENTE");
+  if (!c.active)        throw new AppError("CERTIFICADO_INATIVO");
   if (c.validTo && c.validTo < new Date()) {
-    throw new ForbiddenError("Certificado expirado");
+    throw new AppError("CERTIFICADO_EXPIRADO");
   }
 
   // Antes lia direto do S3 (que nunca foi configurado): emitir receita falhava
   // sempre. Os médicos da demo tinham só o registro, sem arquivo nenhum.
   const file = await getObjectBuffer(c.s3Key);
   if (!file) {
-    throw new ConflictError(
-      "O arquivo do seu certificado não foi encontrado. Envie o .pfx de novo, ou gere um certificado de teste em Certificado digital.",
-    );
+    throw new AppError("CERTIFICADO_ARQUIVO_PERDIDO");
   }
 
   return {
@@ -207,7 +212,7 @@ export async function generateTestCertificate(doctorId: string) {
     where:  { id: doctorId },
     select: { name: true, email: true, doctorProfile: { select: { crm: true, crmState: true } } },
   });
-  if (!doctor?.doctorProfile) throw new NotFoundError("Médico");
+  if (!doctor?.doctorProfile) throw new AppError("RECEITA_PERFIL_MEDICO_INCOMPLETO");
 
   const keys = forge.pki.rsa.generateKeyPair({ bits: 2048, e: 0x10001 });
   const cert = forge.pki.createCertificate();

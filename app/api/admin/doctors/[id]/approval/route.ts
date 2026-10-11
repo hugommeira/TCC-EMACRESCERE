@@ -2,11 +2,12 @@ import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
 import { z }               from "zod";
 import { auth }            from "@/lib/auth";
-import { toApiError, ForbiddenError } from "@/lib/errors";
+import { ForbiddenError } from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { getClientIp }     from "@/lib/security";
 import { decideDoctorApproval } from "@/services/api/user";
 import { doctorTitle } from "@/lib/utils";
+import { validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 const schema = z.object({
   decision: z.enum(["APPROVED", "REJECTED"]),
@@ -31,13 +32,10 @@ export async function POST(
       throw new ForbiddenError();
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error);
     }
 
     const updated = await decideDoctorApproval({
@@ -69,7 +67,6 @@ export async function POST(
         : `Cadastro de ${updated.user.name} reprovado`,
     });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

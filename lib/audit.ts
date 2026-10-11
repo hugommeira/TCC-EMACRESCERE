@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { logError } from "@/lib/errors";
 
 interface AuditOptions {
   actorId?:    string | null;
@@ -37,9 +38,15 @@ export function auditLog(opts: AuditOptions): void {
     userAgent:  opts.userAgent ?? undefined,
   });
 
-  void prisma.auditLog
-    .create({ data: data as Parameters<typeof prisma.auditLog.create>[0]["data"] })
-    .catch((err: unknown) => console.error("[AuditLog] failed:", err));
+  // Nem erro assíncrono (banco) nem síncrono (cliente indisponível) pode
+  // interromper a ação que está sendo auditada: INFRA_AUDITORIA_FALHOU só no log.
+  try {
+    void prisma.auditLog
+      .create({ data: data as Parameters<typeof prisma.auditLog.create>[0]["data"] })
+      .catch((err: unknown) => logError("INFRA_AUDITORIA_FALHOU", err, { acao: opts.action }));
+  } catch (err) {
+    logError("INFRA_AUDITORIA_FALHOU", err, { acao: opts.action });
+  }
 }
 
 // ─── Ações comuns ─────────────────────────────────────────────────────────────

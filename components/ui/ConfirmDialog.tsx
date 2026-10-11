@@ -42,11 +42,28 @@ export function confirmDialog(opts: ConfirmOptions): Promise<boolean> {
       title:        opts.title,
       message:      opts.message,
       ...(opts.confirmLabel ? { confirmLabel: opts.confirmLabel } : {}),
-      ...(opts.cancelLabel  ? { cancelLabel:  opts.cancelLabel  } : {}),
+      // "" = sem botão Cancelar (modo alerta); antes o "" era ignorado.
+      ...(opts.cancelLabel !== undefined ? { cancelLabel: opts.cancelLabel } : {}),
       ...(opts.tone         ? { tone: opts.tone }                : {}),
       resolve,
     };
     notify();
+  });
+}
+
+/** Aviso com um único botão (OK). Resolve quando o usuário fecha. */
+export async function alertDialog(opts: {
+  title:    string;
+  message:  string;
+  okLabel?: string;
+  tone?:    ConfirmTone;
+}): Promise<void> {
+  await confirmDialog({
+    title:        opts.title,
+    message:      opts.message,
+    confirmLabel: opts.okLabel ?? "Entendi",
+    cancelLabel:  "",
+    tone:         opts.tone ?? "warning",
   });
 }
 
@@ -140,13 +157,15 @@ export function ConfirmDialogHost() {
         </div>
 
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={() => close(false)}
-            className="cursor-pointer rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300"
-          >
-            {state.cancelLabel ?? "Cancelar"}
-          </button>
+          {state.cancelLabel !== "" && (
+            <button
+              type="button"
+              onClick={() => close(false)}
+              className="cursor-pointer rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300"
+            >
+              {state.cancelLabel ?? "Cancelar"}
+            </button>
+          )}
           <button
             type="button"
             autoFocus

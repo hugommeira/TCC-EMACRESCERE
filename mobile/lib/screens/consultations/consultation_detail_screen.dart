@@ -13,6 +13,7 @@ import '../../services/api_client.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/ui.dart';
 import 'chat/chat_screen.dart';
+import '../../services/api_error.dart';
 
 /// Prancheta "5 · Consulta e receita": abas Resumo (prontuário — campos da
 /// própria consulta, não há endpoint de leitura separado), Receita (selo 3D,
@@ -58,7 +59,7 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
       await launchUrl(Uri.file(file.path), mode: LaunchMode.externalApplication);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Não foi possível baixar a prescrição: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Não foi possível baixar a prescrição. ${errorMessage(e)}')));
     } finally {
       if (mounted) setState(() => _downloadingPdf = false);
     }
@@ -93,7 +94,7 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Text(
-                          'Erro ao carregar consulta: ${snapshot.error}',
+                          'Erro ao carregar consulta. ${errorMessage(snapshot.error!)}',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: ds.text),
                         ),

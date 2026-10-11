@@ -1,10 +1,10 @@
-import { NextResponse }     from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
-import { toApiError, ForbiddenError, NotFoundError, ConflictError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ConflictError } from "@/lib/errors";
 import { getObjectBuffer }   from "@/lib/s3";
 import { regeneratePrescriptionPdf } from "@/services/api/prescription";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export async function GET(
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const { id } = await Promise.resolve(ctx.params);
@@ -71,7 +71,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("[/api/prescriptions/:id/pdf] error:", error);
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

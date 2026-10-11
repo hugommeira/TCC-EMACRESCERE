@@ -2,8 +2,9 @@ import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }            from "@/lib/auth";
 import { prisma }          from "@/lib/prisma";
-import { toApiError, ForbiddenError } from "@/lib/errors";
-import type { ConsultationStatus } from "@prisma/client";
+import { AppError } from "@/lib/errors";
+import { ConsultationStatus } from "@prisma/client";
+import { handleRouteError, intParam, enumParam } from "@/lib/api-response";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,14 +13,14 @@ export async function GET(req: NextRequest) {
       !session?.user ||
       (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")
     ) {
-      throw new ForbiddenError();
+      throw new AppError("AUTH_SEM_PERMISSAO");
     }
 
     const { searchParams } = req.nextUrl;
-    const page   = Number(searchParams.get("page"))  || 1;
-    const limit  = Number(searchParams.get("limit")) || 20;
+    const page   = intParam(searchParams, "page",  { default: 1,  min: 1 });
+    const limit  = intParam(searchParams, "limit", { default: 20, min: 1, max: 100 });
     const skip   = (page - 1) * limit;
-    const status = searchParams.get("status") as ConsultationStatus | null;
+    const status = enumParam(searchParams, "status", Object.values(ConsultationStatus));
     const search = searchParams.get("search") ?? undefined;
 
     const where = {
@@ -53,7 +54,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

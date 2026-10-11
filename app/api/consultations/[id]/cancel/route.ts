@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { auth }            from "@/lib/auth";
 import { cancelConsultation , stripPartyPii } from "@/services/api/consultation";
 import { cancelConsultationSchema } from "@/lib/validations/consultation";
-import { toApiError }      from "@/lib/errors";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 export async function POST(
   req: NextRequest,
@@ -12,26 +12,22 @@ export async function POST(
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = cancelConsultationSchema.safeParse({
       ...body,
       consultationId: params.id,
     });
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error);
     }
 
     const consultation = await cancelConsultation(session.user.id, parsed.data);
     return NextResponse.json({ data: stripPartyPii(consultation) });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

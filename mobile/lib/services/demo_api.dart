@@ -205,7 +205,17 @@ class DemoApi extends Interceptor {
       DioException(
         requestOptions: o,
         type: DioExceptionType.badResponse,
-        response: Response(requestOptions: o, statusCode: status, data: {'message': message}),
+        // Mesmo formato do backend: { message, code } (catálogo de erros).
+        response: Response(requestOptions: o, statusCode: status, data: {
+          'message': message,
+          'code': switch (status) {
+            401 => 'AUTH_SESSAO_EXPIRADA',
+            404 => 'NAO_ENCONTRADO',
+            409 => 'AGENDA_HORARIO_OCUPADO',
+            422 => 'DADOS_INVALIDOS',
+            _ => 'ERRO_INTERNO',
+          },
+        }),
       ),
     );
 

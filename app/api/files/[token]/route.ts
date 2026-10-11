@@ -1,6 +1,7 @@
 import { NextResponse }     from "next/server";
 import type { NextRequest } from "next/server";
 import { getObjectBuffer, readDownloadToken } from "@/lib/s3";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,23 +18,28 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { token: string } },
 ) {
-  const claims = readDownloadToken(params.token);
-  if (!claims) {
-    return NextResponse.json({ message: "Link inválido ou expirado" }, { status: 403 });
-  }
+  try {
+    const claims = readDownloadToken(params.token);
+    if (!claims) {
+      return apiError("ARQUIVO_LINK_EXPIRADO");
+    }
 
-  const file = await getObjectBuffer(claims.k);
-  if (!file) {
-    return NextResponse.json({ message: "Arquivo não encontrado" }, { status: 404 });
-  }
+    const file = await getObjectBuffer(claims.k);
+    if (!file) {
+      return apiError("ARQUIVO_NAO_ENCONTRADO");
+    }
 
-  const name = (claims.f ?? claims.k.split("/").pop() ?? "arquivo").replace(/["\r\n]/g, "");
-  return new NextResponse(new Uint8Array(file.body), {
-    headers: {
-      "Content-Type":        file.contentType,
-      "Content-Length":      String(file.body.length),
-      "Content-Disposition": `attachment; filename="${name}"`,
-      "Cache-Control":       "private, no-store",
-    },
-  });
+    const name = (claims.f ?? claims.k.split("/").pop() ?? "arquivo").replace(/["\r\n]/g, "");
+    return new NextResponse(new Uint8Array(file.body), {
+      headers: {
+        "Content-Type":        file.contentType,
+        "Content-Length":      String(file.body.length),
+        "Content-Disposition": `attachment; filename="${name}"`,
+        "Cache-Control":       "private, no-store",
+      },
+    });
+  } catch (error) {
+    // Sem NEXTAUTH_SECRET o token não pode ser lido; falha do storage/banco.
+    return handleRouteError(error);
+  }
 }

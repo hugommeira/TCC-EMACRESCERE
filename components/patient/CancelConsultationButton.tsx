@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { confirmDialog } from "@/components/ui/ConfirmDialog";
 import { CANCEL_FULL_REFUND_HOURS, patientCancelIsRefundable } from "@/lib/scheduling";
+import { toast } from "@/components/ui/Toast";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
+import { ERROS } from "@/lib/error-catalog";
 
 /**
  * Cancelamento pelo paciente. Antes o site não tinha como o paciente cancelar
@@ -45,16 +48,18 @@ export function CancelConsultationButton({
     setBusy(true);
     setError(null);
     try {
-      const r = await fetch(`/api/consultations/${consultationId}/cancel`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ reason: "Cancelada pelo paciente" }),
-      });
-      const j = await r.json().catch(() => ({} as { message?: string }));
-      if (!r.ok) { setError(j.message ?? "Não foi possível cancelar"); return; }
+      const j = await apiFetch<{ data?: { reembolso?: "INTEGRAL" | "SEM_REEMBOLSO" | "NAO_PAGO" } }>(
+        `/api/consultations/${consultationId}/cancel`,
+        { method: "POST", body: { reason: "Cancelada pelo paciente" } },
+      );
+      // O servidor diz o que aconteceu com o pagamento (antes era silencioso).
+      const reembolso = j?.data?.reembolso;
+      if (reembolso === "SEM_REEMBOLSO") toast.warning(ERROS.CONSULTA_CANCELADA_SEM_REEMBOLSO.mensagem);
+      else if (reembolso === "INTEGRAL") toast.success("Consulta cancelada. O valor será estornado integralmente.");
+      else toast.success("Consulta cancelada.");
       router.refresh();
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setBusy(false);
     }

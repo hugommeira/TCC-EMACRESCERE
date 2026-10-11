@@ -5,6 +5,7 @@ import Link         from "next/link";
 import { Alert }    from "@/components/ui";
 import { forgotPasswordSchema } from "@/lib/validations/auth";
 import type { ForgotPasswordInput } from "@/lib/validations/auth";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 export function ForgotPasswordForm() {
   const [email,    setEmail]    = useState("");
@@ -26,17 +27,16 @@ export function ForgotPasswordForm() {
     setError(null);
 
     try {
-      const res = await fetch("/api/auth/forgot-password", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(parsed.data),
+      const json = await apiFetch<{ message?: string }>("/api/auth/forgot-password", {
+        method: "POST",
+        body:   parsed.data,
       });
-
-      const json = await res.json().catch(() => ({})) as { message?: string };
-      setMessage(json.message ?? "Se este e-mail estiver cadastrado, você receberá um link em instantes.");
+      setMessage(json?.message ?? "Se este e-mail estiver cadastrado, você receberá um link em instantes.");
       setSent(true);
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
+    } catch (err) {
+      // Antes não se olhava o status: limite de tentativas ou servidor fora
+      // apareciam como "Verifique seu e-mail" e o link nunca chegava.
+      setError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }

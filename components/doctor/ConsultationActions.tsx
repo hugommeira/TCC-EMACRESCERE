@@ -6,6 +6,7 @@ import { Button }    from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Alert }     from "@/components/ui/Alert";
 import type { ConsultationStatus } from "@prisma/client";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 interface Props {
   consultationId: string;
@@ -28,21 +29,14 @@ export function ConsultationActions({ consultationId, status, paid = true, sched
     setError(null);
 
     try {
-      const res = await fetch(`/api/consultations/${consultationId}/status`, {
-        method:  "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ status: newStatus }),
+      await apiFetch(`/api/consultations/${consultationId}/status`, {
+        method: "PATCH",
+        body:   { status: newStatus },
       });
-
-      if (!res.ok) {
-        const err = await res.json() as { message: string };
-        setError(err.message);
-        return;
-      }
-
       router.refresh();
-    } catch {
-      setError("Erro ao atualizar status");
+    } catch (err) {
+      // Antes: mensagem undefined quando o corpo não era JSON.
+      setError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }

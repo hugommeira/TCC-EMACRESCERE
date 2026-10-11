@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSse } from "@/lib/hooks/useSse";
 import { useHeartbeat } from "@/lib/hooks/useHeartbeat";
+import { apiFetch } from "@/lib/api-client";
 
 interface QueueState {
   status:   string;
@@ -39,9 +40,10 @@ export function PatientQueueRoom({
   useEffect(() => {
     const i = setInterval(async () => {
       try {
-        const r = await fetch(`/api/queue/position?id=${consultationId}`, { cache: "no-store" });
-        if (r.ok) setState(await r.json());
-      } catch {}
+        setState(await apiFetch(`/api/queue/position?id=${consultationId}`, { cache: "no-store" }));
+      } catch {
+        // Silencioso: tenta de novo em 8 s.
+      }
     }, 8000);
     return () => clearInterval(i);
   }, [consultationId]);

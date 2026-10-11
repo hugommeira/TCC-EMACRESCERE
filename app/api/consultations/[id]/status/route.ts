@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { updateConsultationStatus , stripPartyPii } from "@/services/api/consultation";
-import { toApiError } from "@/lib/errors";
 import { z } from "zod";
 import type { ConsultationStatus } from "@prisma/client";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 const schema = z.object({
   status: z.enum([
@@ -20,17 +20,14 @@ export async function PATCH(
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = schema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Status inválido", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error, "Status inválido");
     }
 
     const consultation = await updateConsultationStatus(
@@ -41,7 +38,6 @@ export async function PATCH(
 
     return NextResponse.json({ data: stripPartyPii(consultation) });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

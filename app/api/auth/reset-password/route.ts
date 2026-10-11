@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { resetPasswordWithToken } from "@/services/api/user";
 import { resetPasswordSchema } from "@/lib/validations/auth";
-import { toApiError } from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp, RL, rateLimit, tooManyRequests } from "@/lib/security";
+import { validationError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -21,13 +21,7 @@ export async function POST(req: NextRequest) {
     const parsed = resetPasswordSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          message: "Dados inválidos",
-          errors:  parsed.error.flatten().fieldErrors,
-        },
-        { status: 422 },
-      );
+      return validationError(parsed.error);
     }
 
     await resetPasswordWithToken(parsed.data.token, parsed.data.password);
@@ -41,7 +35,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: "Senha redefinida com sucesso" });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

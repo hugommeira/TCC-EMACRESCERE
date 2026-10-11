@@ -7,6 +7,8 @@ import { Alert }       from "@/components/ui/Alert";
 import { Card }        from "@/components/ui/Card";
 import { formatCurrency , doctorTitle } from "@/lib/utils";
 import type { PaymentMethod } from "@prisma/client";
+import { ApiError, apiFetch, mensagemDeErro } from "@/lib/api-client";
+import { ERROS } from "@/lib/error-catalog";
 
 interface CheckoutFormProps {
   consultationId: string;
@@ -71,25 +73,21 @@ export function CheckoutForm({
         };
       }
 
-      const res  = await fetch("/api/checkout", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(body),
-      });
-      const json = await res.json() as {
+      const json = await apiFetch<{
         data?: { id: string; pixQrCode?: string; pixCopyPaste?: string; boletoUrl?: string };
-        message?: string;
-      };
-
-      if (!res.ok) { setError(json.message ?? "Erro no pagamento"); return; }
+      }>("/api/checkout", { method: "POST", body, timeoutMs: 45_000 });
 
       if (method === "PIX")    setPixData({ qrCode: json.data?.pixQrCode, copyPaste: json.data?.pixCopyPaste });
       if (method === "BOLETO") setBoletoUrl(json.data?.boletoUrl ?? null);
 
       setStep("done");
       onSuccess?.(json.data?.id ?? "");
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
+    } catch (err) {
+      // Erro de um campo do cartão (zod) aparece com o nome do campo.
+      const campo = err instanceof ApiError
+        ? Object.values(err.fieldErrors).flat().find(Boolean)
+        : undefined;
+      setError(campo ? `${mensagemDeErro(err)} (${campo})` : mensagemDeErro(err));
     } finally {
       setLoading(false);
     }
@@ -206,20 +204,27 @@ export function CheckoutForm({
 
 function PixPayment({ qrCode, copyPaste }: { qrCode?: string; copyPaste?: string }) {
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   function copy() {
     if (!copyPaste) return;
-    void navigator.clipboard.writeText(copyPaste).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    });
+    void navigator.clipboard.writeText(copyPaste).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      },
+      // Sem permissão de área de transferência (http, navegador antigo).
+      () => setCopyFailed(true),
+    );
   }
 
   return (
     <Card className="space-y-4">
       <p className="font-semibold text-gray-900">Pague com PIX</p>
-      {qrCode && (
+      {qrCode ? (
         <img src={`data:image/png;base64,${qrCode}`} alt="QR Code PIX" className="mx-auto h-48 w-48" />
+      ) : (
+        <Alert variant="warning">{ERROS.PAGAMENTO_PIX_SEM_QR.mensagem} {ERROS.PAGAMENTO_PIX_SEM_QR.acao}</Alert>
       )}
       {copyPaste && (
         <div className="space-y-2">
@@ -230,6 +235,9 @@ function PixPayment({ qrCode, copyPaste }: { qrCode?: string; copyPaste?: string
           <Button variant="outline" fullWidth onClick={copy}>
             {copied ? "Copiado! ✓" : "Copiar código PIX"}
           </Button>
+          {copyFailed && (
+            <p className="text-xs text-gray-500">Não foi possível copiar automaticamente. Selecione o código acima e copie.</p>
+          )}
         </div>
       )}
       <Alert variant="info">O pagamento é confirmado automaticamente em até 1 minuto.</Alert>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 const IS_MOCK = process.env["NEXT_PUBLIC_PAYMENT_MOCK"] === "true";
 
@@ -21,19 +22,13 @@ export function StartConsultationForm({ feeBRL }: { feeBRL: number }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/queue/enter", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ chiefComplaint, method }),
+      const json = await apiFetch<{ consultation: { id: string } }>("/api/queue/enter", {
+        method: "POST",
+        body:   { chiefComplaint, method },
       });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.message ?? "Erro ao solicitar consulta");
-        return;
-      }
       router.push(`/dashboard/patient/queue/${json.consultation.id}`);
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }

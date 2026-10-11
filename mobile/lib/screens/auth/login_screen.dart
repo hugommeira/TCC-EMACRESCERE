@@ -6,6 +6,8 @@ import '../../services/auth_service.dart';
 import '../../widgets/brand_mark.dart';
 import '../../theme/app_theme.dart';
 import 'register_screen.dart';
+import '../../errors/error_catalog.dart';
+import '../../services/api_error.dart';
 
 /// Login nativo do app (NextAuth Credentials via AuthService.login — o
 /// mesmo mecanismo já validado em debug_login_test_screen.dart), pra não
@@ -51,8 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       setState(() {
         _loading = false;
-        _error = result.errorCode == 'CredentialsSignin'
-            ? 'E-mail ou senha incorretos.'
+        final code = kAuthJsCodes[result.errorCode];
+        _error = code != null
+            ? messageForCode(code)
             : 'Não foi possível entrar. Tente novamente.';
       });
     } catch (e, st) {
@@ -63,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Não foi possível conectar ao servidor: $e';
+        _error = errorMessage(e);
       });
     }
   }

@@ -4,9 +4,9 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { createOnDemandConsultation, discardUnpaidConsultation, CONSULTATION_FEE_REAIS } from "@/services/api/queue";
 import { initiatePayment } from "@/services/api/payment";
-import { toApiError } from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp, RL, rateLimit, tooManyRequests } from "@/lib/security";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     if (!session?.user || session.user.role !== "PATIENT") {
-      return NextResponse.json({ message: "Apenas pacientes" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para pacientes." });
     }
 
     const ip = getClientIp(req);
@@ -54,13 +54,10 @@ export async function POST(req: NextRequest) {
       return tooManyRequests(rl.resetSeconds);
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error);
     }
 
     // 1. Criar consulta (status SCHEDULED)
@@ -111,7 +108,6 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

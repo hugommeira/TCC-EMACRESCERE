@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api-client";
 
 interface Props {
   consultationId: string;
@@ -28,9 +29,10 @@ export function ScheduledConsultationWatcher({ consultationId, status, paymentSt
     const t = setInterval(async () => {
       if (document.visibilityState === "hidden") return;
       try {
-        const r = await fetch(`/api/consultations/${consultationId}`, { cache: "no-store" });
-        if (!r.ok || stopped) return;
-        const json = await r.json() as { data?: { status: string; payment?: { status: string } | null } };
+        const json = await apiFetch<{ data?: { status: string; payment?: { status: string } | null } }>(
+          `/api/consultations/${consultationId}`, { cache: "no-store" },
+        );
+        if (stopped) return;
         const next = {
           status:        json.data?.status ?? current.current.status,
           paymentStatus: json.data?.payment?.status ?? null,
@@ -39,7 +41,8 @@ export function ScheduledConsultationWatcher({ consultationId, status, paymentSt
           router.refresh();
         }
       } catch {
-        // rede instável: tenta de novo no próximo ciclo
+        // Rede instável: tenta de novo no próximo ciclo; falhas seguidas
+        // acendem o aviso de conexão (ConnectionBanner).
       }
     }, 5000);
     return () => { stopped = true; clearInterval(t); };

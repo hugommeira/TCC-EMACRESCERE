@@ -5,6 +5,7 @@ import '../../../services/consultation_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/formatters.dart';
 import '../chat/chat_screen.dart';
+import '../../../services/api_error.dart';
 
 /// Sala da consulta em andamento (IN_PROGRESS): chat real com o médico
 /// pelo roomToken da consulta. Videochamada (LiveKit, /api/livekit/token)
@@ -53,7 +54,7 @@ class _ConsultationRoomScreenState extends State<ConsultationRoomScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Não foi possível abrir a consulta: ${snapshot.error}',
+                  Text('Não foi possível abrir a consulta. ${errorMessage(snapshot.error!)}',
                       textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                   ElevatedButton(onPressed: _reload, child: const Text('Tentar de novo')),

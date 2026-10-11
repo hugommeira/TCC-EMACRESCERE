@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/curved_header_scaffold.dart';
 import '../startup/startup_gate.dart';
 import '../../widgets/theme_setting_card.dart';
+import '../../services/api_error.dart';
 
 /// Perfil do médico (GET/PATCH /api/doctor/profile): dados do conselho,
 /// status do credenciamento e o interruptor "disponível pra atender".
@@ -51,7 +52,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Não foi possível carregar seu perfil: $e';
+        _error = 'Não foi possível carregar seu perfil. ${errorMessage(e)}';
       });
     }
   }

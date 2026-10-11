@@ -2,9 +2,9 @@ import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
 import { registerPatient, registerDoctor } from "@/services/api/user";
 import { registerSchema, registerDoctorSchema } from "@/lib/validations/auth";
-import { toApiError }       from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp, RL, rateLimit, tooManyRequests } from "@/lib/security";
+import { validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const rl = rateLimit({ key: `register:${ip}`, ...RL.register });
     if (!rl.ok) return tooManyRequests(rl.resetSeconds);
 
-    const body = await req.json();
+    const body = await readJson(req);
 
     // role "DOCTOR" no body -> cadastro de médico (CRM verificado de forma
     // simulada, conta entra PENDING). Qualquer outra coisa -> paciente,
@@ -28,13 +28,7 @@ export async function POST(req: NextRequest) {
       : registerSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          message: "Dados de cadastro inválidos",
-          errors:  parsed.error.flatten().fieldErrors,
-        },
-        { status: 422 },
-      );
+      return validationError(parsed.error, "Dados de cadastro inválidos");
     }
 
     const user = isDoctor
@@ -68,7 +62,6 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

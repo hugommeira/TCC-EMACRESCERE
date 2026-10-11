@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSSE } from "@/hooks/useSSE";
 import type { ChatMessage, SSEEventType } from "@/types";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
+import { ERROS } from "@/lib/error-catalog";
 
 interface UseChatOptions {
   consultationId: string;
@@ -35,12 +37,11 @@ export function useChat({
   const loadHistory = useCallback(async () => {
     if (!roomToken) return;
     try {
-      const res  = await fetch(`/api/chat/${roomToken}/messages`, { cache: "no-store" });
-      const json = await res.json() as { data?: ChatMessage[]; message?: string };
-      if (!res.ok) { setError(json.message ?? "Falha ao carregar histórico"); return; }
+      const json = await apiFetch<{ data?: ChatMessage[] }>(`/api/chat/${roomToken}/messages`, { cache: "no-store" });
       setMessages(json.data ?? []);
-    } catch {
-      setError("Falha ao carregar histórico");
+      setError(null);
+    } catch (err) {
+      setError(mensagemDeErro(err));
     }
   }, [roomToken]);
 
@@ -96,20 +97,12 @@ export function useChat({
       setError(null);
 
       try {
-        const res = await fetch(`/api/chat/${roomToken}/messages`, {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ content }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json() as { message: string };
-          throw new Error(err.message);
-        }
+        await apiFetch(`/api/chat/${roomToken}/messages`, { method: "POST", body: { content } });
         // Sem depender do SSE pra mensagem aparecer pra quem enviou.
         await loadHistory();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Falha ao enviar mensagem");
+        // Antes o texto técnico ("Failed to fetch") chegava à tela.
+        setError(`${ERROS.CHAT_ENVIO_FALHOU.mensagem} ${mensagemDeErro(e)}`);
       } finally {
         setIsSending(false);
       }
@@ -126,7 +119,8 @@ export function useChat({
     );
 
     if (unread.length > 0) {
-      void fetch(`/api/chat/${roomToken}/read`, { method: "POST" });
+      // Confirmação de leitura é melhor esforço: falha não interrompe o chat.
+      void apiFetch(`/api/chat/${roomToken}/read`, { method: "POST" }).catch(() => {});
     }
   }, [messages, roomToken, currentUserId]);
 

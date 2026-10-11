@@ -8,6 +8,7 @@ import { Button }  from "@/components/ui/Button";
 import { toast }   from "@/components/ui/Toast";
 import { confirmDialog } from "@/components/ui/ConfirmDialog";
 import { doctorTitle } from "@/lib/utils";
+import { ApiError, apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 export interface DoctorForApproval {
   id:        string;
@@ -67,22 +68,16 @@ export function DoctorApprovalCard({ doctor }: { doctor: DoctorForApproval }) {
 
     setBusy(true);
     try {
-      const r = await fetch(`/api/admin/doctors/${doctor.id}/approval`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ decision, note: decision === "REJECTED" ? note.trim() : undefined }),
+      const data = await apiFetch<{ message?: string }>(`/api/admin/doctors/${doctor.id}/approval`, {
+        method: "POST",
+        body:   { decision, note: decision === "REJECTED" ? note.trim() : undefined },
       });
-      const data = await r.json();
-      if (!r.ok) {
-        toast.error(data.errors?.note?.[0] ?? data.message ?? "Não foi possível salvar a decisão");
-        return;
-      }
-      toast.success(data.message);
+      toast.success(data?.message ?? "Decisão salva");
       setRejecting(false);
       setNote("");
       router.refresh();
-    } catch {
-      toast.error("Falha de rede ao salvar a decisão");
+    } catch (err) {
+      toast.error((err instanceof ApiError && err.campo("note")) || mensagemDeErro(err));
     } finally {
       setBusy(false);
     }

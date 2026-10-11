@@ -12,6 +12,13 @@ import type { UserWithProfile } from "@/types";
 import { doctorTitle, formatCurrency } from "@/lib/utils";
 import { todayInSaoPaulo } from "@/lib/scheduling";
 import { CancellationPolicy } from "./CancellationPolicy";
+import { apiFetch, codigoDoErro, mensagemDeErro } from "@/lib/api-client";
+import type { ErrorCode } from "@/lib/error-catalog";
+
+// Horário deixou de servir entre a escolha e a confirmação: volta à agenda atualizada.
+const VOLTA_PARA_AGENDA: ErrorCode[] = [
+  "AGENDA_HORARIO_OCUPADO", "AGENDA_HORARIO_FORA_DA_AGENDA", "AGENDA_ANTECEDENCIA_MINIMA", "AGENDA_PACIENTE_JA_TEM_CONSULTA",
+];
 
 type Step = "doctor" | "datetime" | "complaint" | "payment";
 
@@ -44,12 +51,10 @@ export function ScheduleWizard() {
     setSlotsLoading(true);
     setSlots([]);
     try {
-      const res  = await fetch(`/api/doctors/${doctorId}/slots?date=${date}`, { cache: "no-store" });
-      const json = await res.json() as { data?: { slots: Slot[] }; message?: string };
-      if (!res.ok) { setError(json.message ?? "Erro ao carregar horários"); return; }
+      const json = await apiFetch<{ data?: { slots: Slot[] } }>(`/api/doctors/${doctorId}/slots?date=${date}`, { cache: "no-store" });
       setSlots(json.data?.slots ?? []);
-    } catch {
-      setError("Erro ao carregar horários");
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setSlotsLoading(false);
     }
@@ -64,10 +69,10 @@ export function ScheduleWizard() {
   // ou de horário: cancela a antiga pra não segurar aquele horário à toa.
   function releaseBooking() {
     if (!consultationId) return;
-    void fetch(`/api/consultations/${consultationId}/cancel`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ reason: "Paciente trocou o horário antes de pagar" }),
+    // Melhor esforço: se falhar, a reserva não paga expira sozinha em 30 min.
+    void apiFetch(`/api/consultations/${consultationId}/cancel`, {
+      method: "POST",
+      body:   { reason: "Paciente trocou o horário antes de pagar" },
     }).catch(() => {});
     setConsultationId(null);
     setBookedSlotIso(null);
@@ -78,11 +83,11 @@ export function ScheduleWizard() {
     setLoading(true);
     try {
       const q   = search ? `&search=${encodeURIComponent(search)}` : "";
-      const res = await fetch(`/api/users?doctors=true&limit=12${q}`);
-      const json = await res.json() as { data: { data: UserWithProfile[] } };
+      const json = await apiFetch<{ data: { data: UserWithProfile[] } }>(`/api/users?doctors=true&limit=12${q}`);
       setDoctors(json.data.data);
-    } catch {
-      setError("Erro ao carregar médicos");
+    } catch (err) {
+      // Antes não se olhava o status: um erro virava TypeError e a mensagem genérica.
+      setError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }
@@ -113,35 +118,29 @@ export function ScheduleWizard() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/consultations", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
+      const json = await apiFetch<{ data: { id: string } }>("/api/consultations", {
+        method: "POST",
+        body: {
           doctorId:       selectedDoctor.id,
           scheduledAt:    selectedSlot.startsAt,
           chiefComplaint: chiefComplaint.trim(),
           paymentMethod:  "PIX", // será sobrescrito no checkout
-        }),
+        },
       });
 
-      const json = await res.json() as { data?: { id: string }; message?: string };
-      if (!res.ok) {
-        setError(json.message ?? "Erro ao agendar");
-        // Alguém pegou o horário nesse meio-tempo: volta e mostra a agenda atualizada.
-        if (res.status === 409 && selectedDate) {
-          setStep("datetime");
-          void fetchSlots(selectedDoctor.id, selectedDate);
-        }
-        return;
-      }
-
-      setConsultationId(json.data!.id);
+      setConsultationId(json.data.id);
       setBookedSlotIso(selectedSlot.startsAt);
       // Só pra exibir: o valor cobrado é decidido pelo servidor.
       setConsultationAmount(Number(selectedDoctor.doctorProfile?.consultationFee ?? 0));
       setStep("payment");
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
+    } catch (err) {
+      setError(mensagemDeErro(err));
+      // Alguém pegou o horário nesse meio-tempo: volta e mostra a agenda atualizada.
+      const code = codigoDoErro(err);
+      if (code && VOLTA_PARA_AGENDA.includes(code) && selectedDate) {
+        setStep("datetime");
+        void fetchSlots(selectedDoctor.id, selectedDate);
+      }
     } finally {
       setLoading(false);
     }

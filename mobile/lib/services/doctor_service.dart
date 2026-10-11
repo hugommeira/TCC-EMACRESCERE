@@ -1,7 +1,6 @@
-import 'package:dio/dio.dart';
-
 import '../models/doctor_profile.dart';
 import 'api_client.dart';
+import 'api_error.dart';
 
 /// Paciente esperando na fila, como o médico vê (GET /api/queue/list).
 class QueueItem {
@@ -60,16 +59,26 @@ class QueueItem {
 /// Erro de negócio das rotas do médico com mensagem legível (403 quando o
 /// credenciamento ainda não foi aprovado, 409 quando outro médico pegou o
 /// paciente primeiro etc.).
-class DoctorFailure implements Exception {
-  const DoctorFailure(this.message, {this.statusCode});
+class DoctorFailure extends ApiError {
+  const DoctorFailure(
+    String message, {
+    int? statusCode,
+    String code = 'ERRO_INTERNO',
+    Map<String, List<String>> fieldErrors = const {},
+  }) : super(code, message, statusCode: statusCode, fieldErrors: fieldErrors);
 
-  final String message;
-  final int? statusCode;
+  /// Converte qualquer erro (Dio, resposta fora do formato, sem rede) com o
+  /// código do catálogo; [fallback] só quando o servidor não mandou mensagem.
+  factory DoctorFailure.fromError(Object e, {required String fallback}) {
+    final a = ApiError.from(e, fallback: fallback);
+    return DoctorFailure(a.message, statusCode: a.statusCode, code: a.code, fieldErrors: a.fieldErrors);
+  }
 
-  bool get isNotApproved => statusCode == 403;
-
-  @override
-  String toString() => message;
+  /// Credenciamento em análise ou reprovado.
+  bool get isNotApproved =>
+      code == 'MEDICO_EM_ANALISE' ||
+      code == 'MEDICO_REPROVADO' ||
+      (statusCode == 403 && code == 'ERRO_INTERNO');
 }
 
 /// Lado do médico. Contratos confirmados lendo app/api/queue/*,
@@ -83,7 +92,7 @@ class DoctorService {
     try {
       final response = await dio.get('/api/doctor/profile');
       return DoctorProfile.fromJson(response.data['profile'] as Map<String, dynamic>);
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível carregar seu perfil.');
     }
   }
@@ -93,7 +102,7 @@ class DoctorService {
     try {
       final response = await dio.patch('/api/doctor/profile', data: {'available': available});
       return DoctorProfile.fromJson(response.data['profile'] as Map<String, dynamic>);
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível atualizar a disponibilidade.');
     }
   }
@@ -105,7 +114,7 @@ class DoctorService {
       return (response.data['items'] as List)
           .map((e) => QueueItem.fromJson(e as Map<String, dynamic>))
           .toList();
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível carregar a fila.');
     }
   }
@@ -117,7 +126,7 @@ class DoctorService {
     try {
       final response = await dio.post('/api/queue/claim', data: {'consultationId': consultationId});
       return response.data['id'] as String;
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível iniciar o atendimento.');
     }
   }
@@ -129,7 +138,7 @@ class DoctorService {
     final dio = await ApiClient.instance;
     try {
       await dio.patch('/api/consultations/$consultationId/status', data: {'status': 'IN_PROGRESS'});
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível iniciar a consulta.');
     }
   }
@@ -138,7 +147,7 @@ class DoctorService {
     final dio = await ApiClient.instance;
     try {
       await dio.post('/api/consultations/$consultationId/end');
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível encerrar a consulta.');
     }
   }
@@ -159,14 +168,11 @@ class DoctorService {
           'notes': ?notes,
         },
       );
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível salvar o prontuário.');
     }
   }
 
-  static DoctorFailure _toFailure(DioException e, {required String fallback}) {
-    final data = e.response?.data;
-    final message = data is Map ? data['message'] as String? : null;
-    return DoctorFailure(message ?? fallback, statusCode: e.response?.statusCode);
-  }
+  static DoctorFailure _toFailure(Object e, {required String fallback}) =>
+      DoctorFailure.fromError(e, fallback: fallback);
 }

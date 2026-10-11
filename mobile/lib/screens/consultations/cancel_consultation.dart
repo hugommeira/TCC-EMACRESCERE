@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/consultation.dart';
 import '../../services/consultation_service.dart';
 import '../../theme/app_theme.dart';
+import '../../services/api_error.dart';
 
 /// Pede confirmação e cancela a consulta. Devolve true se cancelou.
 Future<bool> confirmAndCancelConsultation(
@@ -43,7 +44,7 @@ Future<bool> confirmAndCancelConsultation(
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível desmarcar: $e')),
+        SnackBar(content: Text('Não foi possível desmarcar. ${errorMessage(e)}')),
       );
     }
     return false;

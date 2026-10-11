@@ -1,24 +1,30 @@
-import 'package:dio/dio.dart';
-
 import '../models/weight_entry.dart';
 import 'api_client.dart';
+import 'api_error.dart';
 
 /// Erro de negócio das rotas de peso, com mensagem legível.
-class WeightFailure implements Exception {
-  const WeightFailure(this.message, {this.statusCode});
+class WeightFailure extends ApiError {
+  const WeightFailure(
+    String message, {
+    int? statusCode,
+    String code = 'ERRO_INTERNO',
+    Map<String, List<String>> fieldErrors = const {},
+  }) : super(code, message, statusCode: statusCode, fieldErrors: fieldErrors);
 
-  final String message;
-  final int? statusCode;
+  /// Converte qualquer erro (Dio, resposta fora do formato, sem rede) com o
+  /// código do catálogo; [fallback] só quando o servidor não mandou mensagem.
+  factory WeightFailure.fromError(Object e, {required String fallback}) {
+    final a = ApiError.from(e, fallback: fallback);
+    return WeightFailure(a.message, statusCode: a.statusCode, code: a.code, fieldErrors: a.fieldErrors);
+  }
 
-  @override
-  String toString() => message;
+  /// Mensagem do primeiro campo inválido (ex.: "O peso deve ser maior que…"),
+  /// ou a mensagem geral.
+  String get displayMessage => firstFieldError ?? message;
 }
 
-WeightFailure _toFailure(DioException e, {required String fallback}) {
-  final data = e.response?.data;
-  final message = data is Map<String, dynamic> ? data['message'] as String? : null;
-  return WeightFailure(message ?? fallback, statusCode: e.response?.statusCode);
-}
+WeightFailure _toFailure(Object e, {required String fallback}) =>
+    WeightFailure.fromError(e, fallback: fallback);
 
 /// Acompanhamento de peso e IMC.
 ///
@@ -51,7 +57,7 @@ class WeightService {
         summary: WeightSummary.fromJson(data['summary'] as Map<String, dynamic>),
         entries: points,
       );
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível carregar o acompanhamento.');
     }
   }
@@ -74,7 +80,7 @@ class WeightService {
         'consultationId': ?consultationId,
       });
       return WeightEntry.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível registrar o peso.');
     }
   }
@@ -83,7 +89,7 @@ class WeightService {
     final dio = await ApiClient.instance;
     try {
       await dio.delete('/api/weight/$id');
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível apagar o registro.');
     }
   }
@@ -110,7 +116,7 @@ class WeightService {
     try {
       final response = await dio.patch('/api/patient/metrics', data: data);
       return WeightSummary.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível salvar.');
     }
   }

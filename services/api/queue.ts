@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
-import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 import type { Consultation } from "@prisma/client";
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ export async function createOnDemandConsultation(input: {
     if (active.status === "SCHEDULED" && !active.payment) {
       await discardUnpaidConsultation(active.id);
     } else {
-      throw new ConflictError("Você já tem uma consulta em andamento");
+      throw new AppError("FILA_JA_EM_CONSULTA");
     }
   }
 
@@ -116,7 +116,7 @@ export async function claimFromQueue(input: {
 
   const claimed = result[0];
   if (!claimed) {
-    throw new ConflictError("Paciente já foi atendido por outro médico");
+    throw new AppError("FILA_JA_ATENDIDO");
   }
 
   await publish({
@@ -215,8 +215,8 @@ export async function patientHeartbeat(input: {
     where:  { id: input.consultationId },
     select: { patientId: true, status: true },
   });
-  if (!c)                              throw new NotFoundError("Consulta");
-  if (c.patientId !== input.patientId) throw new ForbiddenError("Não é sua consulta");
+  if (!c)                              throw new AppError("CONSULTA_NAO_ENCONTRADA");
+  if (c.patientId !== input.patientId) throw new AppError("CONSULTA_SEM_ACESSO");
   if (c.status === "COMPLETED" || c.status === "CANCELLED" || c.status === "NO_SHOW") {
     return { ok: false, status: c.status };
   }
@@ -238,21 +238,21 @@ export async function markNoShow(input: {
   const c = await prisma.consultation.findUnique({
     where: { id: input.consultationId },
   });
-  if (!c) throw new NotFoundError("Consulta");
+  if (!c) throw new AppError("CONSULTA_NAO_ENCONTRADA");
   if (c.doctorId !== input.doctorId) {
-    throw new ForbiddenError("Você não é o médico desta consulta");
+    throw new AppError("CONSULTA_SEM_ACESSO", { message: "Você não é o médico desta consulta." });
   }
   if (c.status !== "IN_PROGRESS") {
-    throw new ConflictError("Consulta não está em andamento");
+    throw new AppError("CONSULTA_NAO_EM_ANDAMENTO");
   }
 
   // Tempo mínimo desde claim antes de permitir NO_SHOW
   if (c.claimedAt) {
     const elapsed = (Date.now() - c.claimedAt.getTime()) / 1000;
     if (elapsed < NO_SHOW_THRESHOLD_SEC) {
-      throw new ConflictError(
-        `Aguarde mais ${Math.ceil(NO_SHOW_THRESHOLD_SEC - elapsed)}s antes de marcar como não compareceu`,
-      );
+      throw new AppError("CONSULTA_FALTA_CEDO_DEMAIS", {
+        message: `Aguarde mais ${Math.ceil(NO_SHOW_THRESHOLD_SEC - elapsed)} s antes de marcar que o paciente não compareceu.`,
+      });
     }
   }
 
@@ -285,7 +285,7 @@ export async function getQueuePosition(consultationId: string) {
       enqueuedAt: true, claimedAt: true, patientLastSeenAt: true,
     },
   });
-  if (!c) throw new NotFoundError("Consulta");
+  if (!c) throw new AppError("CONSULTA_NAO_ENCONTRADA");
 
   if (c.status !== "WAITING" || !c.enqueuedAt) {
     return {
@@ -323,12 +323,12 @@ export async function endConsultation(input: {
   const c = await prisma.consultation.findUnique({
     where: { id: input.consultationId },
   });
-  if (!c) throw new NotFoundError("Consulta");
+  if (!c) throw new AppError("CONSULTA_NAO_ENCONTRADA");
   if (c.doctorId !== input.doctorId) {
-    throw new ForbiddenError("Você não é o médico desta consulta");
+    throw new AppError("CONSULTA_SEM_ACESSO", { message: "Você não é o médico desta consulta." });
   }
   if (c.status !== "IN_PROGRESS") {
-    throw new ConflictError("Consulta não está em andamento");
+    throw new AppError("CONSULTA_NAO_EM_ANDAMENTO");
   }
 
   const updated = await prisma.consultation.update({

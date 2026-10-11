@@ -2,8 +2,8 @@ import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }            from "@/lib/auth";
 import { getUserById, updatePatientProfile } from "@/services/api/user";
-import { toApiError }      from "@/lib/errors";
 import { z }               from "zod";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 export async function GET(
   _req: NextRequest,
@@ -12,13 +12,13 @@ export async function GET(
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     // Usuário só pode ver o próprio perfil; admin vê qualquer um
     const isAdmin = session.user.role === "ADMIN" || session.user.role === "SUPER_ADMIN";
     if (!isAdmin && session.user.id !== params.id) {
-      return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO");
     }
 
     const user = await getUserById(params.id);
@@ -29,8 +29,7 @@ export async function GET(
 
     return NextResponse.json({ data: safeUser });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
 
@@ -50,27 +49,23 @@ export async function PATCH(
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     if (session.user.id !== params.id) {
-      return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO");
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = updateProfileSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error);
     }
 
     const user = await updatePatientProfile(params.id, parsed.data);
     return NextResponse.json({ data: user });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

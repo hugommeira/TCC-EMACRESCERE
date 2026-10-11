@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
-import { NotFoundError, ForbiddenError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 import type { ChatMessage } from "@/types";
 import type { MessageType } from "@prisma/client";
 
@@ -48,16 +48,16 @@ export async function sendMessage(
     where: { id: consultationId },
   });
 
-  if (!consultation) throw new NotFoundError("Consulta");
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
   if (
     consultation.patientId !== senderId &&
     consultation.doctorId  !== senderId
   ) {
-    throw new ForbiddenError();
+    throw new AppError("CONSULTA_SEM_ACESSO");
   }
 
   if (consultation.status !== "IN_PROGRESS" && consultation.status !== "WAITING") {
-    throw new ForbiddenError("Chat disponível apenas durante consultas ativas");
+    throw new AppError("CHAT_FORA_DA_CONSULTA");
   }
 
   const message = await prisma.message.create({
@@ -120,12 +120,12 @@ export async function getMessageHistory(
     where: { id: consultationId },
   });
 
-  if (!consultation) throw new NotFoundError("Consulta");
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
   if (
     consultation.patientId !== requesterId &&
     consultation.doctorId  !== requesterId
   ) {
-    throw new ForbiddenError();
+    throw new AppError("CONSULTA_SEM_ACESSO");
   }
 
   const messages = await prisma.message.findMany({

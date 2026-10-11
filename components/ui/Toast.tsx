@@ -28,7 +28,11 @@ export const toast = {
 };
 
 function addToast(message: string, variant: ToastVariant) {
-  const id   = crypto.randomUUID();
+  // randomUUID só existe em contexto seguro (https/localhost); no dev pela
+  // rede local (http://192.168...) quebrava todo toast.
+  const id   = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const next = [...toastList, { id, message, variant }];
   emit(next);
   setTimeout(() => removeToast(id), 4000);

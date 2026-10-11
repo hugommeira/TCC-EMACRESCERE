@@ -3,8 +3,8 @@ import type { NextRequest } from "next/server";
 import { z }                 from "zod";
 import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
-import { toApiError }        from "@/lib/errors";
 import { checkOrigin }       from "@/lib/security";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -48,13 +48,13 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
     const profile = await prisma.doctorProfile.findUnique({
       where:  { userId: session.user.id },
       select: PROFILE_SELECT,
     });
-    if (!profile) return NextResponse.json({ message: "Perfil não encontrado" }, { status: 404 });
+    if (!profile) return apiError("NAO_ENCONTRADO", { message: "Perfil de médico não encontrado." });
     return NextResponse.json({
       profile: {
         ...profile,
@@ -62,8 +62,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
 
@@ -74,16 +73,13 @@ export async function PATCH(req: NextRequest) {
 
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = updateSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error);
     }
 
     // exactOptionalPropertyTypes — só envia o que foi enviado
@@ -107,11 +103,8 @@ export async function PATCH(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[/api/doctor/profile] error:", error);
-    const err = toApiError(error);
-    if (err.code === "INTERNAL_ERROR" && error instanceof Error) {
-      err.message = error.message;
-    }
-    return NextResponse.json(err, { status: err.status });
+    // Perfil inexistente no update vira NAO_ENCONTRADO (P2025) em toApiError;
+    // antes a mensagem crua do Prisma era mostrada ao médico.
+    return handleRouteError(error);
   }
 }

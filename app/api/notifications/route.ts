@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth }          from "@/lib/auth";
 import { prisma }        from "@/lib/prisma";
-import { toApiError }    from "@/lib/errors";
 import { doctorTitle, formatDateTime } from "@/lib/utils";
 import { QUEUE_ENABLED } from "@/lib/constants";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const items: NotificationItem[] = [];
@@ -194,7 +194,6 @@ export async function GET() {
 
     return NextResponse.json({ items, count: items.length });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

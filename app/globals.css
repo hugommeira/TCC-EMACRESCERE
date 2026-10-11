@@ -289,3 +289,12 @@ a, button, [role="button"] {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
+
+/* Seta "Voltar ao topo": sobe e volta, chamando a atencao sem incomodar. */
+@keyframes arrow-up-bob {
+  0%, 100% { transform: translateY(2px); }
+  50% { transform: translateY(-3px); }
+}
+.back-to-top-arrow {
+  animation: arrow-up-bob 1.4s ease-in-out infinite;
+}

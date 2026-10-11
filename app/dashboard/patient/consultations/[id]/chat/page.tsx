@@ -1,5 +1,6 @@
 import type { Metadata }  from "next";
 import { notFound, redirect } from "next/navigation";
+import { naoEncontradoOuLanca } from "@/lib/page-errors";
 import { auth }           from "@/lib/auth";
 import { getConsultationById } from "@/services/api/consultation";
 import { ChatWindow }     from "@/components/chat/ChatWindow";
@@ -17,8 +18,8 @@ export default async function PatientChatPage({ params }: Props) {
   let consultation;
   try {
     consultation = await getConsultationById(params.id, session.user.id);
-  } catch {
-    notFound();
+  } catch (err) {
+    naoEncontradoOuLanca(err);
   }
 
   if (!consultation.roomToken) notFound();

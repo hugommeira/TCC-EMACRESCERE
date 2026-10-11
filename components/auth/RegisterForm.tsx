@@ -6,6 +6,7 @@ import Link               from "next/link";
 import { Alert }          from "@/components/ui";
 import { registerSchema, registerDoctorSchema } from "@/lib/validations/auth";
 import type { RegisterInput } from "@/lib/validations/auth";
+import { ApiError, apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 // Campos do médico ficam no mesmo estado; no cadastro de paciente são
 // ignorados (o schema do paciente descarta chaves que não conhece).
@@ -110,23 +111,21 @@ export function RegisterForm({ variant = "patient" }: { variant?: "patient" | "d
     setApiError(null);
 
     try {
-      const res = await fetch("/api/users/register", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(parsed.data),
-      });
-
-      const json = await res.json() as { message?: string };
-
-      if (!res.ok) {
-        setApiError(json.message ?? "Erro ao criar conta");
-        return;
-      }
+      await apiFetch("/api/users/register", { method: "POST", body: parsed.data });
 
       setSuccess(true);
       setTimeout(() => router.push("/auth/login?registered=1"), isDoctor ? 3500 : 1500);
-    } catch {
-      setApiError("Erro de conexão. Tente novamente.");
+    } catch (err) {
+      // Erros por campo do servidor (ex.: CRM não encontrado) vão para o
+      // campo; antes só a mensagem geral aparecia.
+      if (err instanceof ApiError) {
+        const next: FieldErrors = {};
+        for (const [key, val] of Object.entries(err.fieldErrors)) {
+          if (val?.[0]) next[key as keyof Values] = val[0];
+        }
+        if (Object.keys(next).length) setErrors(next);
+      }
+      setApiError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }

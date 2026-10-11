@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSse } from "@/lib/hooks/useSse";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 interface QueueItem {
   id:                string;
@@ -128,31 +129,22 @@ export function DoctorQueueLive({ initial }: { initial: QueueItem[] }) {
 
   async function refetch() {
     try {
-      const r = await fetch("/api/queue/list", { cache: "no-store" });
-      if (!r.ok) return;
-      const data = await r.json();
-      setQueue(data.items as QueueItem[]);
-    } catch {}
+      const data = await apiFetch<{ items: QueueItem[] }>("/api/queue/list", { cache: "no-store" });
+      setQueue(data.items);
+    } catch {
+      // Silencioso: o próximo ciclo tenta de novo.
+    }
   }
 
   async function claim(id: string) {
     setClaiming(id);
     setError(null);
     try {
-      const r = await fetch("/api/queue/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body:   JSON.stringify({ consultationId: id }),
-      });
-      const json = await r.json();
-      if (!r.ok) {
-        setError(json.message ?? "Erro ao atender");
-        await refetch();
-        return;
-      }
+      await apiFetch("/api/queue/claim", { method: "POST", body: { consultationId: id } });
       startTransition(() => router.push(`/consulta/${id}`));
-    } catch {
-      setError("Erro de conexão");
+    } catch (err) {
+      setError(mensagemDeErro(err));
+      await refetch();
     } finally {
       setClaiming(null);
     }

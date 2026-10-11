@@ -137,6 +137,13 @@ e-mail, em memória: reiniciar o dev server zera. Roteiro da banca em
   `docs/3d/STATUS.md`.
 - **Fotos:** `docs/fotos/BRIEFING.md` (alta qualidade sempre; servir de
   `public/photos/`, com fonte e licença registradas).
+- **Erros:** catálogo único em `lib/error-catalog.ts` (código, mensagem ao
+  usuário, ação e reação). Servidor: `new AppError("CODIGO")` /
+  `apiError("CODIGO")` (`lib/api-response.ts`); site: `apiFetch`
+  (`lib/api-client.ts`); app: `ApiError.from` (`mobile/lib/services/api_error.dart`).
+  Documento gerado em `docs/catalogo-erros.md` (`npx tsx scripts/gerar-catalogo-erros.ts`;
+  o teste `test/falhas/catalogo.test.ts` reprova se ficar desatualizado).
+  Testes de queda das peças críticas em `test/falhas/`; saúde em `/api/health`.
 - **Estado atual e pendências:** `PROJETO-STATUS.md`. Contas, setup, deploy e
   tabela do `ignoreCommand`: `README.md`. Roteiro da banca:
   `docs/roteiro-demonstracao.md`. Segurança/LGPD: `docs/auditoria-seguranca.md`.

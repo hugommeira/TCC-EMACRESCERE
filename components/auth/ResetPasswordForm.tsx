@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link               from "next/link";
 import { Alert }          from "@/components/ui";
 import { resetPasswordSchema } from "@/lib/validations/auth";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -45,23 +46,12 @@ export function ResetPasswordForm() {
     setApiError(null);
 
     try {
-      const res = await fetch("/api/auth/reset-password", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(parsed.data),
-      });
-
-      const json = await res.json().catch(() => ({})) as { message?: string };
-
-      if (!res.ok) {
-        setApiError(json.message ?? "Não foi possível redefinir sua senha");
-        return;
-      }
+      await apiFetch("/api/auth/reset-password", { method: "POST", body: parsed.data });
 
       setSuccess(true);
       setTimeout(() => router.push("/auth/login"), 1800);
-    } catch {
-      setApiError("Erro de conexão. Tente novamente.");
+    } catch (err) {
+      setApiError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }

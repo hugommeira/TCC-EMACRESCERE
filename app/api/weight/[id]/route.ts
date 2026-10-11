@@ -1,10 +1,10 @@
 import { NextResponse }     from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }              from "@/lib/auth";
-import { toApiError }        from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp } from "@/lib/security";
 import { deleteWeightRecord } from "@/services/api/weight";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -19,7 +19,7 @@ export async function DELETE(
 
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const { id } = await Promise.resolve(ctx.params);
@@ -37,7 +37,6 @@ export async function DELETE(
 
     return NextResponse.json({ data: { id } });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { NotFoundError, PaymentError } from "@/lib/errors";
+import { AppError, logError } from "@/lib/errors";
 import {
   createAsaasCharge,
   createAsaasCustomer,
@@ -69,12 +69,12 @@ export async function initiatePayment(
     include: { patient: true, payment: true },
   });
 
-  if (!consultation) throw new NotFoundError("Consulta");
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
   if (consultation.patientId !== input.patientId) {
-    throw new PaymentError("Consulta não pertence a este paciente");
+    throw new AppError("CONSULTA_SEM_ACESSO");
   }
   if (consultation.status !== "SCHEDULED") {
-    throw new PaymentError("Esta consulta não está aguardando pagamento");
+    throw new AppError("PAGAMENTO_NAO_AGUARDANDO");
   }
 
   // Payment.consultationId é único: uma segunda tentativa (voltar e clicar de
@@ -82,10 +82,10 @@ export async function initiatePayment(
   if (consultation.payment) {
     const s = consultation.payment.status;
     if (s === "RECEIVED" || s === "CONFIRMED") {
-      throw new PaymentError("Esta consulta já está paga");
+      throw new AppError("PAGAMENTO_JA_PAGO");
     }
     if (s === "PENDING") return consultation.payment; // reaproveita a cobrança aberta
-    if (s === "REFUNDED") throw new PaymentError("O pagamento desta consulta foi estornado");
+    if (s === "REFUNDED") throw new AppError("PAGAMENTO_ESTORNADO");
     // Vencida (OVERDUE) ou cancelada: libera pra gerar uma cobrança nova.
     await prisma.payment.delete({ where: { id: consultation.payment.id } });
   }
@@ -95,7 +95,7 @@ export async function initiatePayment(
   // esta checagem, dois pacientes pagariam pelo mesmo horário do mesmo médico.
   if (consultation.scheduledAt && consultation.doctorId) {
     if (consultation.scheduledAt.getTime() <= Date.now()) {
-      throw new PaymentError("O horário desta consulta já passou — agende um novo");
+      throw new AppError("PAGAMENTO_HORARIO_EXPIRADO");
     }
     const { occupyingWhere } = await import("./consultation");
     const taken = await prisma.consultation.findFirst({
@@ -106,7 +106,7 @@ export async function initiatePayment(
       },
       select: { id: true },
     });
-    if (taken) throw new PaymentError("Esse horário foi ocupado por outro paciente — agende um novo");
+    if (taken) throw new AppError("PAGAMENTO_HORARIO_TOMADO");
   }
 
   const amount = await consultationPrice(consultation.doctorId);
@@ -180,7 +180,10 @@ export async function initiatePayment(
 
   let pixData: { qrCode?: string; copyPaste?: string } = {};
   if (input.method === "PIX") {
-    const pix = await getPixQrCode(charge.id).catch(() => null);
+    const pix = await getPixQrCode(charge.id).catch((err) => {
+      logError("PAGAMENTO_PIX_SEM_QR", err, { chargeId: charge.id });
+      return null;
+    });
     if (pix) {
       pixData = { qrCode: pix.encodedImage, copyPaste: pix.payload };
     }
@@ -214,8 +217,8 @@ export async function initiatePayment(
 
 export async function syncPaymentStatus(paymentId: string): Promise<Payment> {
   const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
-  if (!payment) throw new NotFoundError("Pagamento");
-  if (!payment.asaasPaymentId) throw new PaymentError("ID Asaas não encontrado");
+  if (!payment) throw new AppError("PAGAMENTO_NAO_ENCONTRADO");
+  if (!payment.asaasPaymentId) throw new AppError("PAGAMENTO_NAO_ENCONTRADO", { detail: "sem asaasPaymentId" });
 
   const charge = await getAsaasCharge(payment.asaasPaymentId);
 
@@ -240,6 +243,15 @@ export async function processAsaasWebhook(payload: {
   const status   = mapAsaasStatus(payload.payment.status);
   const wasPaid  = payment.status === "RECEIVED" || payment.status === "CONFIRMED";
   const nowPaid  = status === "RECEIVED" || status === "CONFIRMED";
+
+  // Evento atrasado ou fora de ordem não pode "despagar" uma consulta paga
+  // (antes um PENDING/OVERDUE tardio rebaixava o pagamento). Estorno passa.
+  if (wasPaid && !nowPaid && status !== "REFUNDED") {
+    logError("WEBHOOK_REGRESSAO_IGNORADA", undefined, {
+      paymentId: payment.id, atual: payment.status, recebido: payload.payment.status, evento: payload.event,
+    });
+    return;
+  }
 
   await prisma.payment.update({
     where: { id: payment.id },
@@ -274,7 +286,7 @@ async function afterFirstConfirmation(consultationId: string): Promise<void> {
   // o paciente pagou um QR antigo). Devolve o dinheiro em vez de ficar com ele.
   if (c.status === "CANCELLED" && c.payment) {
     await refundPayment(c.payment.id).catch((err) =>
-      console.error("[webhook] estorno automático de consulta cancelada falhou:", err),
+      logError("CONSULTA_REEMBOLSO_FALHOU", err, { etapa: "estorno automático de consulta cancelada", consultationId }),
     );
     return;
   }
@@ -304,8 +316,8 @@ export async function voidPendingPayment(paymentId: string): Promise<void> {
 
 export async function refundPayment(paymentId: string): Promise<Payment> {
   const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
-  if (!payment)              throw new NotFoundError("Pagamento");
-  if (!payment.asaasPaymentId) throw new PaymentError("ID Asaas ausente");
+  if (!payment)              throw new AppError("PAGAMENTO_NAO_ENCONTRADO");
+  if (!payment.asaasPaymentId) throw new AppError("PAGAMENTO_NAO_ENCONTRADO", { detail: "sem asaasPaymentId" });
   if (payment.status === "REFUNDED") return payment;
 
   // Pagamentos da demonstração (demo_*) e do modo de simulação (mock_*) não

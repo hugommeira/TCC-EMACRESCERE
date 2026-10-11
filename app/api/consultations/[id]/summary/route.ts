@@ -2,7 +2,7 @@ import { NextResponse }     from "next/server";
 import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { presignDownload }   from "@/lib/s3";
-import { toApiError }        from "@/lib/errors";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export async function GET(
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const { id } = await Promise.resolve(ctx.params);
@@ -46,14 +46,14 @@ export async function GET(
       },
     });
 
-    if (!c) return NextResponse.json({ message: "Consulta não encontrada" }, { status: 404 });
+    if (!c) return apiError("CONSULTA_NAO_ENCONTRADA");
 
     const allowed =
       c.patientId === session.user.id ||
       c.doctorId  === session.user.id ||
       session.user.role === "ADMIN" ||
       session.user.role === "SUPER_ADMIN";
-    if (!allowed) return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+    if (!allowed) return apiError("CONSULTA_SEM_ACESSO");
 
     // Anexos com URL temporária de download
     const attachments = await Promise.all(
@@ -99,7 +99,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

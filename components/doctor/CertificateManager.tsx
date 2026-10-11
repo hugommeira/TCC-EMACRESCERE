@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { confirmDialog } from "@/components/ui/ConfirmDialog";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 interface CertInfo {
   id:           string;
@@ -32,11 +33,10 @@ export function CertificateManager() {
 
   async function load() {
     try {
-      const r = await fetch("/api/doctor/certificate", { cache: "no-store" });
-      if (r.ok) {
-        const data = await r.json();
-        setCert(data.certificate);
-      }
+      const data = await apiFetch("/api/doctor/certificate", { cache: "no-store" });
+      setCert(data.certificate);
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export function CertificateManager() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!file)    { setError("Selecione o arquivo .pfx"); return; }
+    if (!file)    { setError("Selecione o arquivo .pfx ou .p12"); return; }
     if (!password){ setError("Digite a senha do certificado"); return; }
     setUploading(true);
     setError(null);
@@ -54,18 +54,13 @@ export function CertificateManager() {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("password", password);
-      const r = await fetch("/api/doctor/certificate", { method: "POST", body: fd });
-      const data = await r.json();
-      if (!r.ok) {
-        setError(data.message ?? "Falha ao salvar certificado");
-        return;
-      }
+      const data = await apiFetch("/api/doctor/certificate", { method: "POST", body: fd, timeoutMs: 60_000 });
       setCert(data.certificate);
       setPassword("");
       setFile(null);
       if (fileRef.current) fileRef.current.value = "";
-    } catch {
-      setError("Erro de conexão");
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setUploading(false);
     }
@@ -86,12 +81,10 @@ export function CertificateManager() {
     setGenerating(true);
     setError(null);
     try {
-      const r = await fetch("/api/doctor/certificate/test", { method: "POST" });
-      const data = await r.json();
-      if (!r.ok) { setError(data.message ?? "Falha ao gerar certificado"); return; }
+      await apiFetch("/api/doctor/certificate/test", { method: "POST", timeoutMs: 60_000 });
       await load();
-    } catch {
-      setError("Erro de conexão");
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setGenerating(false);
     }
@@ -105,8 +98,14 @@ export function CertificateManager() {
       tone:         "danger",
     });
     if (!ok) return;
-    const r = await fetch("/api/doctor/certificate", { method: "DELETE" });
-    if (r.ok) setCert(null);
+    setError(null);
+    try {
+      await apiFetch("/api/doctor/certificate", { method: "DELETE" });
+      setCert(null);
+    } catch (err) {
+      // Antes uma falha aqui não mostrava nada.
+      setError(mensagemDeErro(err));
+    }
   }
 
   if (loading) {

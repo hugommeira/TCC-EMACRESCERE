@@ -97,7 +97,12 @@ na página inicial, login, cadastro e painel do paciente.
 - Propostas da auditoria (`docs/auditoria-seguranca.md`): CPF cifrado, log de
   leitura do prontuário, limite de login por IP, validade menor da sessão.
 - 60 erros antigos de TypeScript (escondidos por `ignoreBuildErrors`).
-- `robots.txt`, `sitemap.xml`, imagem de Open Graph, monitoramento de erros.
+- `robots.txt`, `sitemap.xml`, imagem de Open Graph. Erros: há catálogo,
+  log com código e `/api/health` (`docs/catalogo-erros.md`), mas nenhum
+  serviço externo de alerta (ex.: Sentry).
+- Problemas de erro registrados e não corrigidos (reserva dupla de horário,
+  médico pendente agindo na consulta etc.): seção "Problemas conhecidos" de
+  `docs/catalogo-erros.md`.
 - O build web do app ocupa ~43 MB no git (inclui arquivos `.symbols`); cada build
   novo commitado soma isso ao histórico.
 - `images.pexels.com` ainda está liberado na CSP, embora as fotos agora sejam
@@ -167,3 +172,11 @@ na página inicial, login, cadastro e painel do paciente.
   comida, "LGPD" trocado por "consulta por vídeo" nos destaques (a LGPD fica no
   FAQ e no rodapé), foto nova da consulta por vídeo e topo do celular só com
   texto, sem o celular 3D.
+- 11/10 (branch `catalogo-erros`): **catálogo central de erros** (`lib/error-catalog.ts`,
+  108 códigos) usado pela API, pelo site e pelo app; documento gerado
+  `docs/catalogo-erros.md`; `/api/health` e card "Saúde do sistema" no admin;
+  testes de queda das peças críticas (`test/falhas/`). Correções: falha do NOTIFY
+  não vira mais 500; JSON/parâmetro inválido vira 400/422; API sem sessão responde
+  401 JSON (o app voltava HTML); login bloqueado e conta desativada com mensagem
+  própria; mensagens técnicas não vazam; timeouts no Asaas, Resend e no app;
+  webhook não rebaixa pagamento pago; cancelamento informa o reembolso.

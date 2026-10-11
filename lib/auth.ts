@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Facebook from "next-auth/providers/facebook";
@@ -10,6 +10,15 @@ import { loginSchema } from "@/lib/validations/auth";
 import { authConfig } from "@/lib/auth.config";
 import { auditLog, AuditAction } from "@/lib/audit";
 import type { Role } from "@prisma/client";
+import { logError } from "@/lib/errors";
+
+// Motivos de recusa do login que a tela precisa distinguir. O Auth.js devolve
+// `code` ao cliente (signIn -> result.code; redirect -> ?code=). Mapeados para
+// o catálogo em AUTH_JS_CODES (lib/error-catalog.ts).
+class LoginBloqueado extends CredentialsSignin { override code = "login_bloqueado"; }
+class ContaDesativada extends CredentialsSignin { override code = "conta_desativada"; }
+class SenhaIncorreta extends CredentialsSignin { override code = "senha_incorreta"; }
+class EmailSenhaIncorretos extends CredentialsSignin { override code = "email_senha_incorretos"; }
 
 // Hash dummy fixo (cost 12) usado pra anular timing attack quando user não existe.
 // O bcrypt.compare ainda gasta o mesmo tempo do que contra um hash real.
@@ -65,7 +74,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Rate-limit por email: 5 tentativas a cada 15 min
         const { rateLimit } = await import("@/lib/security");
         const rl = rateLimit({ key: `login:${email.toLowerCase()}`, limit: 5, windowSec: 60 * 15 });
-        if (!rl.ok) return null;
+        if (!rl.ok) throw new LoginBloqueado();
 
         const user = await prisma.user.findUnique({ where: { email } });
 
@@ -80,14 +89,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const hashToCompare = account?.access_token ?? DUMMY_HASH;
         const passwordOk    = await bcrypt.compare(password, hashToCompare);
 
-        // Bail out só agora — sem revelar se foi user, account ou senha
+        // Decisão do grupo: a tela diz o que está errado. E-mail cadastrado com
+        // senha errada → "senha incorreta"; e-mail sem cadastro → e-mail e senha.
+        // (Isso revela quais e-mails existem; o limite de 5 tentativas/15 min por
+        // e-mail e o bcrypt sempre rodando seguem valendo.)
+        // Conta desativada só é revelada com a senha certa.
+        if (user && !user.active && account?.access_token && passwordOk) {
+          auditLog({
+            actorEmail: email,
+            action:     AuditAction.USER_LOGIN_FAILED,
+            entity:     "User",
+            entityId:   user.id,
+          });
+          throw new ContaDesativada();
+        }
+
         if (!user || !user.active || !account?.access_token || !passwordOk) {
           auditLog({
             actorEmail: email,
             action:     AuditAction.USER_LOGIN_FAILED,
             entity:     "User",
           });
-          return null;
+          // E-mail existe e tem senha: só a senha está errada.
+          if (user && account?.access_token) throw new SenhaIncorreta();
+          throw new EmailSenhaIncorretos();
         }
 
         auditLog({
@@ -202,10 +227,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // mude) no banco no máximo a cada 60s; inativo => sessão invalidada.
       const checkedAt = Number(token["checkedAt"] ?? 0);
       if (token["id"] && Date.now() - checkedAt > ACTIVE_RECHECK_MS) {
-        const dbUser = await prisma.user.findUnique({
-          where:  { id: token["id"] as string },
-          select: { active: true, role: true },
-        });
+        let dbUser: { active: boolean; role: Role } | null;
+        try {
+          dbUser = await prisma.user.findUnique({
+            where:  { id: token["id"] as string },
+            select: { active: true, role: true },
+          });
+        } catch (err) {
+          // Banco instável: mantém a sessão e reconfere na próxima requisição,
+          // em vez de derrubar todas as páginas com erro.
+          logError("INFRA_BANCO_INDISPONIVEL", err, { origem: "auth.jwt" });
+          return token;
+        }
         if (!dbUser || !dbUser.active) return null;
         token["role"]      = dbUser.role;
         token["checkedAt"] = Date.now();
@@ -223,7 +256,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     async redirect({ url, baseUrl }) {
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (new URL(url).origin === baseUrl) return url;
+      try {
+        if (new URL(url).origin === baseUrl) return url;
+      } catch {
+        /* URL malformada: cai no baseUrl */
+      }
       return baseUrl;
     },
   },

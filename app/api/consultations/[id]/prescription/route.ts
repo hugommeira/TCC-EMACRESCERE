@@ -3,9 +3,9 @@ import type { NextRequest } from "next/server";
 import { z }                 from "zod";
 import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
-import { toApiError }        from "@/lib/errors";
 import { checkOrigin }       from "@/lib/security";
 import { upsertPrescription, getPrescriptionByConsultation } from "@/services/api/prescription";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -32,26 +32,25 @@ const upsertSchema = z.object({
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> | { id: string } }) {
   try {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    if (!session?.user) return apiError("AUTH_SESSAO_EXPIRADA");
 
     const { id } = await Promise.resolve(ctx.params);
     const c = await prisma.consultation.findUnique({
       where:  { id }, select: { patientId: true, doctorId: true },
     });
-    if (!c) return NextResponse.json({ message: "Consulta não encontrada" }, { status: 404 });
+    if (!c) return apiError("CONSULTA_NAO_ENCONTRADA");
 
     const allowed =
       c.patientId === session.user.id ||
       c.doctorId  === session.user.id ||
       session.user.role === "ADMIN" ||
       session.user.role === "SUPER_ADMIN";
-    if (!allowed) return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+    if (!allowed) return apiError("CONSULTA_SEM_ACESSO");
 
     const prescription = await getPrescriptionByConsultation(id);
     return NextResponse.json({ prescription });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
 
@@ -63,15 +62,15 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
 
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
 
     const { id } = await Promise.resolve(ctx.params);
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = upsertSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors }, { status: 422 });
+      return validationError(parsed.error);
     }
 
     // Limpa campos undefined antes de passar (exactOptionalPropertyTypes)
@@ -101,7 +100,6 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
 
     return NextResponse.json({ prescription: p });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

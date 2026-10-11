@@ -5,27 +5,41 @@ import '../models/day_slot.dart';
 import '../models/doctor.dart';
 import '../models/payment.dart';
 import 'api_client.dart';
+import 'api_error.dart';
 
 /// Erro de negócio das rotas de consulta, com mensagem legível — 409 quando
 /// o horário acabou de ser ocupado, 422 de validação, 402 de pagamento.
-class ConsultationFailure implements Exception {
-  const ConsultationFailure(this.message, {this.statusCode});
+class ConsultationFailure extends ApiError {
+  const ConsultationFailure(
+    String message, {
+    int? statusCode,
+    String code = 'ERRO_INTERNO',
+    Map<String, List<String>> fieldErrors = const {},
+  }) : super(code, message, statusCode: statusCode, fieldErrors: fieldErrors);
 
-  final String message;
-  final int? statusCode;
+  /// Converte qualquer erro (Dio, resposta fora do formato, sem rede) com o
+  /// código do catálogo; [fallback] só quando o servidor não mandou mensagem.
+  factory ConsultationFailure.fromError(Object e, {required String fallback}) {
+    final a = ApiError.from(e, fallback: fallback);
+    return ConsultationFailure(a.message, statusCode: a.statusCode, code: a.code, fieldErrors: a.fieldErrors);
+  }
 
-  /// Alguém pegou o horário entre a escolha e a confirmação.
-  bool get isSlotTaken => statusCode == 409;
-
-  @override
-  String toString() => message;
+  /// Horário deixou de servir entre a escolha e a confirmação (ocupado, fora
+  /// da agenda, em cima da hora): a tela volta para a agenda atualizada.
+  bool get isSlotTaken =>
+      const {
+        'AGENDA_HORARIO_OCUPADO',
+        'AGENDA_HORARIO_FORA_DA_AGENDA',
+        'AGENDA_ANTECEDENCIA_MINIMA',
+        'AGENDA_PACIENTE_JA_TEM_CONSULTA',
+        'PAGAMENTO_HORARIO_TOMADO',
+      }.contains(code) ||
+      // Modo demonstração (DemoApi) responde sem código.
+      (statusCode == 409 && code == 'ERRO_INTERNO');
 }
 
-ConsultationFailure _toFailure(DioException e, {required String fallback}) {
-  final data = e.response?.data;
-  final message = data is Map ? data['message'] as String? : null;
-  return ConsultationFailure(message ?? fallback, statusCode: e.response?.statusCode);
-}
+ConsultationFailure _toFailure(Object e, {required String fallback}) =>
+    ConsultationFailure.fromError(e, fallback: fallback);
 
 /// Consultas reais do backend — histórico, detalhe, prontuário (embutido no
 /// detalhe) e prescrição (embutida no detalhe também).
@@ -112,7 +126,7 @@ class ConsultationService {
       return (response.data['data']['slots'] as List)
           .map((e) => DaySlot.fromJson(e as Map<String, dynamic>))
           .toList();
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível carregar os horários.');
     }
   }
@@ -144,7 +158,7 @@ class ConsultationService {
         },
       );
       return Consultation.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível agendar a consulta.');
     }
   }
@@ -165,7 +179,7 @@ class ConsultationService {
         data: {'consultationId': consultationId, 'method': method},
       );
       return PaymentInfo.fromJson(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível gerar a cobrança.');
     }
   }
@@ -176,8 +190,8 @@ class ConsultationService {
     final dio = await ApiClient.instance;
     try {
       await dio.post('/api/dev/simulate-payment', data: {'consultationId': consultationId});
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
         throw const ConsultationFailure(
           'Simulação indisponível: o servidor está sem PAYMENT_MOCK=true.',
           statusCode: 404,

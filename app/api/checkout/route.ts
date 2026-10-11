@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { initiatePayment } from "@/services/api/payment";
-import { toApiError } from "@/lib/errors";
 import { z } from "zod";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 const checkoutSchema = z.object({
   consultationId: z.string().cuid(),
@@ -35,18 +35,16 @@ const checkoutSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user || session.user.role !== "PATIENT") {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    if (!session?.user) return apiError("AUTH_SESSAO_EXPIRADA");
+    if (session.user.role !== "PATIENT") {
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Só pacientes podem pagar consultas." });
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = checkoutSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Dados de pagamento inválidos", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error, "Dados de pagamento inválidos");
     }
 
     // `amount` fica de fora de propósito: quem decide o valor é o servidor.
@@ -60,7 +58,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: payment }, { status: 201 });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

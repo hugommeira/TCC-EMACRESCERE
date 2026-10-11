@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 interface Props {
   initial: {
@@ -27,24 +28,18 @@ export function DoctorProfileForm({ initial }: Props) {
       setSaving(true);
       setError(null);
       try {
-        const r = await fetch("/api/doctor/profile", {
-          method:  "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        await apiFetch("/api/doctor/profile", {
+          method: "PATCH",
+          body: {
             available,
             consultationFee: Number(fee) || 0,
             subSpecialty: subSpecialty || undefined,
             bio:          bio          || undefined,
-          }),
+          },
         });
-        if (!r.ok) {
-          const j = await r.json().catch(() => ({} as { message?: string }));
-          setError(j.message ?? "Falha ao salvar");
-          return;
-        }
         setSavedAt(new Date());
-      } catch {
-        setError("Erro de conexão");
+      } catch (err) {
+        setError(mensagemDeErro(err));
       } finally {
         setSaving(false);
       }

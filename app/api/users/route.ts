@@ -2,21 +2,21 @@ import { NextResponse }  from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }           from "@/lib/auth";
 import { listUsers, listDoctors } from "@/services/api/user";
-import { toApiError }     from "@/lib/errors";
-import type { Role }      from "@prisma/client";
+import { Role }           from "@prisma/client";
+import { apiError, handleRouteError, intParam, enumParam } from "@/lib/api-response";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const { searchParams } = req.nextUrl;
-    const page    = Number(searchParams.get("page"))  || 1;
-    const limit   = Number(searchParams.get("limit")) || 10;
+    const page    = intParam(searchParams, "page",  { default: 1,  min: 1 });
+    const limit   = intParam(searchParams, "limit", { default: 10, min: 1, max: 100 });
     const search  = searchParams.get("search") ?? undefined;
-    const role    = searchParams.get("role") as Role | null;
+    const role    = enumParam(searchParams, "role", Object.values(Role)) ?? null;
     const doctors = searchParams.get("doctors") === "true";
 
     // Rota pública (autenticada): listar médicos para agendamento
@@ -46,13 +46,12 @@ export async function GET(req: NextRequest) {
 
     // Rota admin: listar todos os usuários
     if (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO");
     }
 
     const result = await listUsers({ page, limit, search, role: role ?? undefined });
     return NextResponse.json({ data: result });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

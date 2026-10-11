@@ -1,6 +1,7 @@
 import "server-only";
 import { EventEmitter } from "node:events";
 import { Client } from "pg";
+import { logError } from "@/lib/errors";
 
 // ─── Bus em memória (intra-processo) ──────────────────────────────────────────
 // Cada processo Next.js tem 1 EventEmitter. Múltiplos clientes SSE escutam
@@ -88,15 +89,34 @@ async function ensurePgListener() {
     await client.query("LISTEN realtime");
 
     globalForBus.__pgListener = client;
-  })();
+  })().catch((err: unknown) => {
+    // Não deixar uma promise rejeitada em cache: a próxima chamada tenta de novo.
+    delete globalForBus.__pgListener;
+    delete globalForBus.__pgListenerInit;
+    throw err;
+  });
 
   return globalForBus.__pgListenerInit;
 }
 
 // ─── API pública ──────────────────────────────────────────────────────────────
 
-/** Publica um evento no canal (broadcast cross-process via Postgres NOTIFY). */
+/**
+ * Publica um evento no canal (broadcast cross-process via Postgres NOTIFY).
+ *
+ * Nunca lança: é sempre chamado depois de a ação já estar gravada, e uma falha
+ * aqui não pode virar erro para o usuário (o polling do cliente entrega a
+ * atualização). A falha vai para o log como INFRA_REALTIME_FALHOU.
+ */
 export async function publish(event: RealtimeEvent): Promise<void> {
+  try {
+    await publishOrThrow(event);
+  } catch (err) {
+    logError("INFRA_REALTIME_FALHOU", err, { canal: event.channel, tipo: event.type });
+  }
+}
+
+async function publishOrThrow(event: RealtimeEvent): Promise<void> {
   await ensurePgListener();
   // NOTIFY tem limite de 8000 chars no payload; truncar se preciso.
   const payload = JSON.stringify(event);
@@ -114,7 +134,7 @@ export function subscribe(
   channel: RealtimeChannel,
   handler: (event: RealtimeEvent) => void,
 ): () => void {
-  void ensurePgListener();
+  ensurePgListener().catch((err) => logError("INFRA_REALTIME_FALHOU", err, { canal: channel }));
   const wrapped = (ev: RealtimeEvent) => handler(ev);
   bus().on(channel, wrapped);
   return () => bus().off(channel, wrapped);

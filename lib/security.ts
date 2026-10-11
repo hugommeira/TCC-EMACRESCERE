@@ -1,6 +1,7 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ERROS } from "@/lib/error-catalog";
 
 // ─── Rate limiter (in-memory, sliding window) ─────────────────────────────────
 //
@@ -57,7 +58,7 @@ export function rateLimit(opts: RateLimitOptions): RateLimitResult {
 /** Resposta padronizada quando rate-limit é atingido. */
 export function tooManyRequests(reset = 60) {
   return NextResponse.json(
-    { message: "Muitas requisições. Aguarde alguns segundos.", code: "RATE_LIMIT" },
+    { message: ERROS.LIMITE_REQUISICOES.mensagem, code: "LIMITE_REQUISICOES", status: 429 },
     {
       status: 429,
       headers: {
@@ -101,16 +102,27 @@ export function checkOrigin(req: NextRequest | Request): NextResponse | null {
   // GETs simples NextAuth não passam aqui (rotas de mutação só).
   if (!origin && !referer) {
     // Sem Origin nem Referer -> bloqueia (improvável em fetch normal)
-    return NextResponse.json({ message: "Origem não verificável" }, { status: 403 });
+    return origemRecusada("Origem não verificável");
   }
 
   const allowed = allowedOrigins();
-  const candidate = origin ?? (referer ? new URL(referer).origin : "");
+  let candidate = origin ?? "";
+  if (!candidate && referer) {
+    // Referer malformado não pode derrubar a rota (antes virava 500).
+    try { candidate = new URL(referer).origin; } catch { return origemRecusada("Origem não verificável"); }
+  }
 
   if (!allowed.has(candidate.replace(/\/$/, ""))) {
-    return NextResponse.json({ message: "Origem não autorizada" }, { status: 403 });
+    return origemRecusada("Origem não autorizada");
   }
   return null;
+}
+
+function origemRecusada(detalhe: string): NextResponse {
+  return NextResponse.json(
+    { message: ERROS.ORIGEM_NAO_AUTORIZADA.mensagem, code: "ORIGEM_NAO_AUTORIZADA", status: 403, detalhe },
+    { status: 403 },
+  );
 }
 
 // ─── Helpers comuns para limites por rota ─────────────────────────────────────

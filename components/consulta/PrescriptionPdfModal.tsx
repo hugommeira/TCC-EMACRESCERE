@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { apiFetchBlob, mensagemDeErro } from "@/lib/api-client";
+import { Alert } from "@/components/ui/Alert";
 
 interface Props {
   open:           boolean;
@@ -16,8 +18,25 @@ export function PrescriptionPdfModal({
 }: Props) {
   const [mounted, setMounted] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  // O PDF é conferido antes de ir para o iframe: se der erro, aparece uma
+  // mensagem (antes o JSON de erro aparecia cru dentro do visualizador). O
+  // iframe usa a mesma URL de antes (a CSP não libera iframe de blob:).
+  const [pronto, setPronto] = useState(false);
+  const [erro,   setErro]   = useState<string | null>(null);
+  const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelado = false;
+    setPronto(false);
+    setErro(null);
+    apiFetchBlob(`/api/prescriptions/${prescriptionId}/pdf`)
+      .then(() => { if (!cancelado) setPronto(true); })
+      .catch((err) => { if (!cancelado) setErro(mensagemDeErro(err)); });
+    return () => { cancelado = true; };
+  }, [open, prescriptionId, tentativa]);
 
   useEffect(() => {
     if (!open) return;
@@ -29,15 +48,7 @@ export function PrescriptionPdfModal({
   async function download() {
     setDownloading(true);
     try {
-      const res = await fetch(`/api/prescriptions/${prescriptionId}/pdf?download=1`, {
-        cache: "no-store",
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({} as { message?: string }));
-        alert(j.message ?? "Falha ao baixar a receita");
-        return;
-      }
-      const blob = await res.blob();
+      const blob = await apiFetchBlob(`/api/prescriptions/${prescriptionId}/pdf?download=1`);
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement("a");
       a.href     = url;
@@ -46,6 +57,8 @@ export function PrescriptionPdfModal({
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+    } catch (err) {
+      setErro(mensagemDeErro(err));
     } finally {
       setDownloading(false);
     }
@@ -126,11 +139,30 @@ export function PrescriptionPdfModal({
 
         {/* PDF viewer */}
         <div className="flex-1 overflow-hidden bg-slate-100">
-          <iframe
-            src={inlineUrl}
-            title="Receita médica"
-            className="h-full w-full border-0"
-          />
+          {erro ? (
+            <div className="flex h-full items-center justify-center p-6">
+              <Alert variant="error" title="Não foi possível abrir a receita" className="max-w-md">
+                <p>{erro}</p>
+                <button
+                  type="button"
+                  onClick={() => setTentativa((t) => t + 1)}
+                  className="mt-2 text-sm font-semibold underline"
+                >
+                  Tentar de novo
+                </button>
+              </Alert>
+            </div>
+          ) : pronto ? (
+            <iframe
+              src={inlineUrl}
+              title="Receita médica"
+              className="h-full w-full border-0"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-slate-500">
+              Carregando a receita...
+            </div>
+          )}
         </div>
       </div>
     </div>,

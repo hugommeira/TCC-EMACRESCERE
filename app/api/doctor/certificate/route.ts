@@ -1,12 +1,13 @@
 import { NextResponse }     from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }              from "@/lib/auth";
-import { toApiError }        from "@/lib/errors";
 import { auditLog }          from "@/lib/audit";
+import { assertEncryptionKey } from "@/lib/crypto";
 import { checkOrigin, getClientIp } from "@/lib/security";
 import {
   uploadCertificate, getCertificateInfo, deleteCertificate,
 } from "@/services/api/certificate";
+import { apiError, handleRouteError, readFormData } from "@/lib/api-response";
 
 export const runtime  = "nodejs";
 export const dynamic  = "force-dynamic";
@@ -17,13 +18,12 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
     const info = await getCertificateInfo(session.user.id);
     return NextResponse.json({ certificate: info ?? null });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
 
@@ -35,48 +35,32 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
 
-    if (!process.env["PFX_ENCRYPTION_KEY"]) {
-      console.error("[/api/doctor/certificate] PFX_ENCRYPTION_KEY ausente");
-      return NextResponse.json(
-        { message: "Servidor mal configurado (PFX_ENCRYPTION_KEY). Contate o administrador." },
-        { status: 500 },
-      );
-    }
+    // Sem a chave (ou com tamanho errado) nada pode ser cifrado: CERTIFICADO_CHAVE_SERVIDOR.
+    assertEncryptionKey();
 
-    const form     = await req.formData();
+    const form     = await readFormData(req);
     const file     = form.get("file");
     const password = String(form.get("password") ?? "");
     if (!(file instanceof File)) {
-      return NextResponse.json({ message: "Arquivo .pfx ausente" }, { status: 422 });
+      return apiError("ARQUIVO_AUSENTE", { message: "Selecione o arquivo .pfx ou .p12." });
     }
     if (!password) {
-      return NextResponse.json({ message: "Senha obrigatória" }, { status: 422 });
+      return apiError("CERTIFICADO_SENHA_INVALIDA", { message: "Digite a senha do certificado." });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    let cert;
-    try {
-      cert = await uploadCertificate({
-        doctorId:  session.user.id,
-        pfxBuffer: buffer,
-        password,
-        fileName:  file.name.slice(0, 200),
-      });
-    } catch (err) {
-      // Log completo do erro real no servidor
-      console.error("[/api/doctor/certificate] uploadCertificate threw:", err);
-      // ConflictError / AppError já têm mensagem amigável — propaga via toApiError
-      const out = toApiError(err);
-      // Garante mensagem útil no client (não esconder em prod nesse endpoint)
-      if (out.code === "INTERNAL_ERROR" && err instanceof Error) {
-        out.message = err.message;
-      }
-      return NextResponse.json(out, { status: out.status });
-    }
+    // Erros do upload já vêm com código do catálogo (senha, arquivo, chave,
+    // storage). Antes a mensagem técnica crua era repassada ao usuário.
+    const cert = await uploadCertificate({
+      doctorId:  session.user.id,
+      pfxBuffer: buffer,
+      password,
+      fileName:  file.name.slice(0, 200),
+    });
 
     auditLog({
       actorId:    session.user.id,
@@ -89,12 +73,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ certificate: cert }, { status: 201 });
   } catch (error) {
-    console.error("[/api/doctor/certificate] outer error:", error);
-    const err = toApiError(error);
-    if (err.code === "INTERNAL_ERROR" && error instanceof Error) {
-      err.message = error.message;
-    }
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
 
@@ -106,7 +85,7 @@ export async function DELETE(req: NextRequest) {
 
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
 
     await deleteCertificate(session.user.id);
@@ -121,7 +100,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

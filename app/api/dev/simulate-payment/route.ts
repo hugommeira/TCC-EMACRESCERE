@@ -4,8 +4,8 @@ import { z }                 from "zod";
 import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { processAsaasWebhook } from "@/services/api/payment";
-import { toApiError }        from "@/lib/errors";
 import { checkOrigin }       from "@/lib/security";
+import { apiError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -17,7 +17,7 @@ const schema = z.object({ consultationId: z.string().min(1).max(40) });
  */
 export async function POST(req: NextRequest) {
   if (process.env["PAYMENT_MOCK"] !== "true") {
-    return NextResponse.json({ message: "Not found" }, { status: 404 });
+    return apiError("PAGAMENTO_SIMULACAO_DESLIGADA");
   }
 
   try {
@@ -26,22 +26,22 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ message: "consultationId obrigatório" }, { status: 422 });
+      return apiError("PARAMETRO_INVALIDO", { message: "Informe a consulta." });
     }
 
     const consultation = await prisma.consultation.findUnique({
       where:   { id: parsed.data.consultationId },
       select:  { patientId: true, payment: { select: { id: true, asaasPaymentId: true } } },
     });
-    if (!consultation)                            return NextResponse.json({ message: "Consulta não encontrada" }, { status: 404 });
-    if (consultation.patientId !== session.user.id) return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
-    if (!consultation.payment?.asaasPaymentId)    return NextResponse.json({ message: "Pagamento não encontrado" }, { status: 404 });
+    if (!consultation)                            return apiError("CONSULTA_NAO_ENCONTRADA");
+    if (consultation.patientId !== session.user.id) return apiError("CONSULTA_SEM_ACESSO");
+    if (!consultation.payment?.asaasPaymentId)    return apiError("PAGAMENTO_NAO_ENCONTRADO");
 
     // Reutiliza o caminho real do webhook -> garante que move pra fila.
     await processAsaasWebhook({
@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

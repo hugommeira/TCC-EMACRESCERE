@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { NotFoundError, ConflictError, ForbiddenError, AppError } from "@/lib/errors";
+import { AppError, logError } from "@/lib/errors";
 import bcrypt from "bcryptjs";
 import type { RegisterInput, RegisterDoctorInput } from "@/lib/validations/auth";
 import type { UserWithProfile, PaginationParams, PaginatedResponse } from "@/types";
@@ -36,12 +36,12 @@ export async function registerDoctor(
   });
 
   if (existing) {
-    throw new ConflictError(
+    throw new AppError(
       existing.email === input.email
-        ? "E-mail já cadastrado"
+        ? "USUARIO_EMAIL_JA_CADASTRADO"
         : existing.cpf === input.cpf
-          ? "CPF já cadastrado"
-          : "CRM já cadastrado",
+          ? "USUARIO_CPF_JA_CADASTRADO"
+          : "USUARIO_CRM_JA_CADASTRADO",
     );
   }
 
@@ -53,7 +53,10 @@ export async function registerDoctor(
   if (!verification.valid) {
     // 422 com a mensagem da "consulta ao conselho" — o app mostra como erro
     // do campo CRM.
-    throw new AppError(verification.message, "CRM_INVALID", 422);
+    throw new AppError(
+      verification.situation === "SUSPENSO" ? "USUARIO_CRM_SUSPENSO" : "USUARIO_CRM_INVALIDO",
+      { message: verification.message, errors: { crm: [verification.message] } },
+    );
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12);
@@ -100,11 +103,7 @@ export async function assertDoctorApproved(userId: string): Promise<void> {
     select: { approvalStatus: true },
   });
   if (profile?.approvalStatus !== "APPROVED") {
-    throw new ForbiddenError(
-      profile?.approvalStatus === "REJECTED"
-        ? "Seu cadastro de médico foi reprovado. Fale com a equipe Emacrescere."
-        : "Seu credenciamento ainda está em análise. Aguarde a aprovação.",
-    );
+    throw new AppError(profile?.approvalStatus === "REJECTED" ? "MEDICO_REPROVADO" : "MEDICO_EM_ANALISE");
   }
 }
 
@@ -128,7 +127,7 @@ export async function decideDoctorApproval(input: {
   note?:        string;
 }) {
   const profile = await prisma.doctorProfile.findUnique({ where: { userId: input.doctorUserId } });
-  if (!profile) throw new NotFoundError("Médico");
+  if (!profile) throw new AppError("ADMIN_MEDICO_NAO_ENCONTRADO");
 
   return prisma.doctorProfile.update({
     where: { userId: input.doctorUserId },
@@ -159,10 +158,8 @@ export async function registerPatient(
   });
 
   if (existing) {
-    throw new ConflictError(
-      existing.email === input.email
-        ? "E-mail já cadastrado"
-        : "CPF já cadastrado",
+    throw new AppError(
+      existing.email === input.email ? "USUARIO_EMAIL_JA_CADASTRADO" : "USUARIO_CPF_JA_CADASTRADO",
     );
   }
 
@@ -224,7 +221,7 @@ export async function requestPasswordReset(
     await sendPasswordResetEmail(email, resetUrl);
   } catch (err) {
     // Não propaga: a rota responde sucesso genérico de qualquer forma.
-    console.error("[requestPasswordReset] falha ao enviar e-mail:", err);
+    logError("AUTH_EMAIL_NAO_ENVIADO", err);
   }
 }
 
@@ -244,12 +241,12 @@ export async function resetPasswordWithToken(
         where: { token: tokenHash },
       }).catch(() => undefined);
     }
-    throw new AppError("Link de redefinição inválido ou expirado", "INVALID_TOKEN", 400);
+    throw new AppError("AUTH_LINK_REDEFINICAO_INVALIDO");
   }
 
   const user = await prisma.user.findUnique({ where: { email: record.identifier } });
   if (!user || !user.active) {
-    throw new AppError("Link de redefinição inválido ou expirado", "INVALID_TOKEN", 400);
+    throw new AppError("AUTH_LINK_REDEFINICAO_INVALIDO");
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
@@ -284,7 +281,7 @@ export async function resetPasswordWithToken(
     const isRecordNotFound =
       typeof err === "object" && err !== null && "code" in err && err.code === "P2025";
     if (isRecordNotFound) {
-      throw new AppError("Link de redefinição inválido ou expirado", "INVALID_TOKEN", 400);
+      throw new AppError("AUTH_LINK_REDEFINICAO_INVALIDO");
     }
     throw err;
   }
@@ -298,7 +295,7 @@ export async function getUserById(id: string): Promise<UserWithProfile> {
     include: { patientProfile: true, doctorProfile: true },
   });
 
-  if (!user) throw new NotFoundError("Usuário");
+  if (!user) throw new AppError("USUARIO_NAO_ENCONTRADO");
   return user;
 }
 
@@ -316,7 +313,7 @@ export async function updatePatientProfile(
   },
 ): Promise<UserWithProfile> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw new NotFoundError("Usuário");
+  if (!user) throw new AppError("USUARIO_NAO_ENCONTRADO");
 
   return prisma.user.update({
     where: { id: userId },

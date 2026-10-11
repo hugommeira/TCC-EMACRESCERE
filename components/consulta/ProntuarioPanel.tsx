@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useSse } from "@/lib/hooks/useSse";
 import { doctorTitle, doctorFirstName } from "@/lib/utils";
+import { ApiError, apiFetch, mensagemDeErro } from "@/lib/api-client";
+import { ERROS } from "@/lib/error-catalog";
+
+/** Espera antes de tentar salvar de novo depois de uma falha temporária. */
+const RETRY_MS = 5_000;
 
 interface Prontuario {
   chiefComplaint: string | null;
@@ -45,6 +50,10 @@ export function ProntuarioPanel({
   );
   const [updatedBy, setUpdatedBy] = useState<string | null>(doctorName ?? null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Falha temporária (rede, servidor): incrementar dispara um novo save.
+  const [tentativa, setTentativa] = useState(0);
+  const [vaiTentar, setVaiTentar] = useState(false);
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ref pro estado inicial — evita salvar no primeiro render
   const isFirstRender = useRef(true);
@@ -87,29 +96,32 @@ export function ProntuarioPanel({
     const t = setTimeout(async () => {
       setStatus("saving");
       setErrorMsg(null);
+      setVaiTentar(false);
       try {
-        const r = await fetch(`/api/consultations/${consultationId}/prontuario`, {
-          method:  "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify(data),
+        const json = await apiFetch<{ updatedAt?: string }>(`/api/consultations/${consultationId}/prontuario`, {
+          method: "PATCH",
+          body:   data,
         });
-        if (!r.ok) {
-          const j = await r.json().catch(() => ({} as { message?: string }));
-          setErrorMsg(j.message ?? "Falha ao salvar");
-          setStatus("error");
-          return;
-        }
-        const json = await r.json();
-        if (json.updatedAt) setSavedAt(new Date(json.updatedAt));
+        if (json?.updatedAt) setSavedAt(new Date(json.updatedAt));
         setStatus("saved");
-      } catch {
-        setErrorMsg("Erro de conexão");
+      } catch (err) {
+        setErrorMsg(mensagemDeErro(err));
         setStatus("error");
+        // Antes o selo dizia "tentando..." mas nada era repetido: o texto só
+        // era salvo na próxima edição. Agora erro temporário tenta de novo.
+        const temporario = !(err instanceof ApiError) || ERROS[err.code].tentarNovamente;
+        if (temporario) {
+          setVaiTentar(true);
+          retryTimer.current = setTimeout(() => setTentativa((n) => n + 1), RETRY_MS);
+        }
       }
     }, 800);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.chiefComplaint, data.diagnosis, data.conduct, data.notes]);
+  }, [data.chiefComplaint, data.diagnosis, data.conduct, data.notes, tentativa]);
 
   function field<K extends keyof Prontuario>(key: K) {
     return {
@@ -128,6 +140,7 @@ export function ProntuarioPanel({
             status={status}
             savedAt={savedAt}
             error={errorMsg}
+            retrying={vaiTentar}
             isDoctor={isDoctor}
             updatedBy={updatedBy}
           />
@@ -198,12 +211,14 @@ function SaveBadge({
   status,
   savedAt,
   error,
+  retrying,
   isDoctor,
   updatedBy,
 }: {
   status:    SaveStatus;
   savedAt:   Date | null;
   error:     string | null;
+  retrying:  boolean;
   isDoctor:  boolean;
   updatedBy: string | null;
 }) {
@@ -242,7 +257,7 @@ function SaveBadge({
         className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700 ring-1 ring-rose-200"
       >
         <span className="h-1.5 w-1.5 rounded-full bg-rose-500" aria-hidden />
-        Falha — tentando...
+        {retrying ? "Falha ao salvar — tentando de novo..." : (error ?? "Não salvo")}
       </span>
     );
   }

@@ -4,9 +4,9 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { claimFromQueue } from "@/services/api/queue";
 import { assertDoctorApproved } from "@/services/api/user";
-import { toApiError } from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp, RL, rateLimit, tooManyRequests } from "@/lib/security";
+import { apiError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
     // Só médico credenciado pega paciente da fila.
     await assertDoctorApproved(session.user.id);
@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
     const rl = rateLimit({ key: `queue.claim:${session.user.id}`, ...RL.queueClaim });
     if (!rl.ok) return tooManyRequests(rl.resetSeconds);
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ message: "consultationId obrigatório" }, { status: 422 });
+      return apiError("PARAMETRO_INVALIDO", { message: "Informe a consulta." });
     }
 
     const consultation = await claimFromQueue({
@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
       status:      consultation.status,
     });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

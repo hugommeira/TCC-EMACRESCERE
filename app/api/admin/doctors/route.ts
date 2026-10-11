@@ -1,9 +1,10 @@
 import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }            from "@/lib/auth";
-import { toApiError, ForbiddenError } from "@/lib/errors";
+import { ForbiddenError } from "@/lib/errors";
 import { listDoctorsForApproval } from "@/services/api/user";
 import type { DoctorApprovalStatus } from "@prisma/client";
+import { handleRouteError } from "@/lib/api-response";
 
 const STATUSES: DoctorApprovalStatus[] = ["PENDING", "APPROVED", "REJECTED"];
 
@@ -45,7 +46,6 @@ export async function GET(req: NextRequest) {
       })),
     });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

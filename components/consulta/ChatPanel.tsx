@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSse } from "@/lib/hooks/useSse";
 import { doctorTitle } from "@/lib/utils";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
+import { ERROS } from "@/lib/error-catalog";
 
 interface Message {
   id:       string;
@@ -30,6 +32,7 @@ export function ChatPanel({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input,    setInput]    = useState("");
   const [sending,  setSending]  = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // load history + polling de 5s. O SSE abaixo depende de pg NOTIFY, que
@@ -40,9 +43,10 @@ export function ChatPanel({
     let alive = true;
     async function load() {
       try {
-        const r = await fetch(`/api/consultations/${consultationId}/messages?take=100`, { cache: "no-store" });
-        if (!r.ok || !alive) return;
-        const data = (await r.json()) as { messages: Message[] };
+        const data = await apiFetch<{ messages: Message[] }>(
+          `/api/consultations/${consultationId}/messages?take=100`, { cache: "no-store" },
+        );
+        if (!alive) return;
         setMessages((prev) => {
           const pending = prev.filter((m) => m.id.startsWith("tmp-"));
           const known   = new Set(data.messages.map((m) => m.id));
@@ -50,7 +54,8 @@ export function ChatPanel({
           return [...data.messages, ...extra, ...pending];
         });
       } catch {
-        // sem rede: mantém o que tinha
+        // Sem rede: mantém o que tinha. Falhas seguidas acendem o aviso de
+        // conexão instável (ConnectionBanner) via apiFetch.
       }
     }
     void load();
@@ -80,6 +85,7 @@ export function ChatPanel({
     const content = input.trim();
     if (!content || sending) return;
     setSending(true);
+    setSendError(null);
     const optimisticId = `tmp-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
@@ -94,24 +100,23 @@ export function ChatPanel({
     ]);
     setInput("");
     try {
-      const r = await fetch(`/api/consultations/${consultationId}/messages`, {
+      const saved = await apiFetch<Message>(`/api/consultations/${consultationId}/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body:   { content },
       });
-      if (!r.ok) {
-        // rollback optimistic
-        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-        return;
-      }
       // Troca a otimista pela real (senão o polling/SSE traria a mesma
       // mensagem de novo e ela apareceria duplicada pra quem enviou).
-      const saved = (await r.json()) as Message;
       setMessages((prev) =>
         prev.some((m) => m.id === saved.id)
           ? prev.filter((m) => m.id !== optimisticId)
           : prev.map((m) => (m.id === optimisticId ? saved : m)),
       );
+    } catch (err) {
+      // CHAT_ENVIO_FALHOU: tira a otimista (antes ficava na tela como se
+      // tivesse ido, ou sumia junto com o texto) e devolve o texto à caixa.
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+      setInput((atual) => atual || content);
+      setSendError(`${ERROS.CHAT_ENVIO_FALHOU.mensagem} ${mensagemDeErro(err)}`);
     } finally {
       setSending(false);
     }
@@ -156,6 +161,11 @@ export function ChatPanel({
       </div>
 
       <form onSubmit={send} className="flex-none border-t border-slate-200 p-3">
+        {sendError && (
+          <p role="alert" className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            {sendError}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           <input
             type="text"

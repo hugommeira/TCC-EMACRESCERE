@@ -2,8 +2,9 @@ import { NextResponse }    from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }            from "@/lib/auth";
 import { prisma }          from "@/lib/prisma";
-import { toApiError, ForbiddenError, NotFoundError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 import { auditLog } from "@/lib/audit";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export async function POST(
   _req: NextRequest,
@@ -15,18 +16,15 @@ export async function POST(
       !session?.user ||
       (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")
     ) {
-      throw new ForbiddenError();
+      throw new AppError("AUTH_SEM_PERMISSAO");
     }
 
     const target = await prisma.user.findUnique({ where: { id: params.id } });
-    if (!target) throw new NotFoundError("Usuário");
+    if (!target) throw new AppError("USUARIO_NAO_ENCONTRADO");
 
     // Impedir desativar a si mesmo
     if (target.id === session.user.id) {
-      return NextResponse.json(
-        { message: "Não é possível desativar sua própria conta" },
-        { status: 400 },
-      );
+      return apiError("ADMIN_AUTODESATIVACAO");
     }
 
     const updated = await prisma.user.update({
@@ -49,7 +47,6 @@ export async function POST(
       message: updated.active ? "Usuário ativado" : "Usuário desativado",
     });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

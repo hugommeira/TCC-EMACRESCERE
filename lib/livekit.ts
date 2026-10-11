@@ -1,9 +1,10 @@
 import "server-only";
 import { AccessToken } from "livekit-server-sdk";
+import { AppError } from "@/lib/errors";
 
 function env(name: "LIVEKIT_URL" | "LIVEKIT_API_KEY" | "LIVEKIT_API_SECRET"): string {
   const v = process.env[name];
-  if (!v) throw new Error(`Variável ${name} não configurada`);
+  if (!v) throw new AppError("VIDEO_NAO_CONFIGURADO", { detail: `Variável ${name} não configurada` });
   return v;
 }
 

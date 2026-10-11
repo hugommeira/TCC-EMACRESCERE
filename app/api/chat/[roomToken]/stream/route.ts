@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { subscribeToRoom } from "@/services/api/chat";
 import { createSSEMessage } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs"; // SSE não é compatível com Edge
 
@@ -10,25 +11,26 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { roomToken: string } },
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return new Response("Unauthorized", { status: 401 });
+  let consultation;
+  try {
+    const session = await auth();
+    if (!session?.user) return apiError("AUTH_SESSAO_EXPIRADA");
+
+    // Verificar se o usuário pertence a esta sala
+    consultation = await prisma.consultation.findFirst({
+      where: {
+        roomToken: params.roomToken,
+        OR: [
+          { patientId: session.user.id },
+          { doctorId:  session.user.id },
+        ],
+      },
+    });
+  } catch (error) {
+    return handleRouteError(error);
   }
 
-  // Verificar se o usuário pertence a esta sala
-  const consultation = await prisma.consultation.findFirst({
-    where: {
-      roomToken: params.roomToken,
-      OR: [
-        { patientId: session.user.id },
-        { doctorId:  session.user.id },
-      ],
-    },
-  });
-
-  if (!consultation) {
-    return new Response("Forbidden", { status: 403 });
-  }
+  if (!consultation) return apiError("CONSULTA_SEM_ACESSO");
 
   const encoder = new TextEncoder();
 
@@ -68,7 +70,7 @@ export async function GET(
       req.signal.addEventListener("abort", () => {
         clearInterval(pingInterval);
         unsubscribe();
-        controller.close();
+        try { controller.close(); } catch { /* já fechado */ }
       });
     },
   });

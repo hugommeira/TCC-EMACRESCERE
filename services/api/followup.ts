@@ -1,5 +1,5 @@
 import { prisma }         from "@/lib/prisma";
-import { NotFoundError, ForbiddenError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 import type { FollowUp }  from "@prisma/client";
 
 // ─── Create follow-up ─────────────────────────────────────────────────────────
@@ -14,8 +14,8 @@ export async function createFollowUp(
     where: { id: consultationId },
   });
 
-  if (!consultation)               throw new NotFoundError("Consulta");
-  if (consultation.doctorId !== doctorId) throw new ForbiddenError();
+  if (!consultation)               throw new AppError("CONSULTA_NAO_ENCONTRADA");
+  if (consultation.doctorId !== doctorId) throw new AppError("CONSULTA_SEM_ACESSO");
 
   return prisma.followUp.create({
     data: {
@@ -37,13 +37,13 @@ export async function listFollowUps(
     where: { id: consultationId },
   });
 
-  if (!consultation) throw new NotFoundError("Consulta");
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
 
   const isParticipant =
     consultation.patientId === requesterId ||
     consultation.doctorId  === requesterId;
 
-  if (!isParticipant) throw new ForbiddenError();
+  if (!isParticipant) throw new AppError("CONSULTA_SEM_ACESSO");
 
   return prisma.followUp.findMany({
     where:   { consultationId },
@@ -63,8 +63,8 @@ export async function respondToFollowUp(
     include: { consultation: true },
   });
 
-  if (!followUp) throw new NotFoundError("Follow-up");
-  if (followUp.consultation.patientId !== patientId) throw new ForbiddenError();
+  if (!followUp) throw new AppError("NAO_ENCONTRADO", { message: "Acompanhamento não encontrado." });
+  if (followUp.consultation.patientId !== patientId) throw new AppError("CONSULTA_SEM_ACESSO");
 
   return prisma.followUp.update({
     where: { id: followUpId },
@@ -96,8 +96,8 @@ export async function closeFollowUp(
     include: { consultation: true },
   });
 
-  if (!followUp) throw new NotFoundError("Follow-up");
-  if (followUp.consultation.doctorId !== doctorId) throw new ForbiddenError();
+  if (!followUp) throw new AppError("NAO_ENCONTRADO", { message: "Acompanhamento não encontrado." });
+  if (followUp.consultation.doctorId !== doctorId) throw new AppError("CONSULTA_SEM_ACESSO");
 
   return prisma.followUp.update({
     where: { id: followUpId },

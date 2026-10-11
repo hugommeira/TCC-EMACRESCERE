@@ -4,8 +4,8 @@ import { z }                 from "zod";
 import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { publish }           from "@/lib/realtime";
-import { toApiError }        from "@/lib/errors";
 import { checkOrigin, RL, rateLimit, tooManyRequests } from "@/lib/security";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
 
     const rl = rateLimit({ key: `prontuario:${session.user.id}`, ...RL.prontuario });
@@ -34,13 +34,13 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     const c = await prisma.consultation.findUnique({
       where: { id }, select: { doctorId: true },
     });
-    if (!c)                            return NextResponse.json({ message: "Consulta não encontrada" }, { status: 404 });
-    if (c.doctorId !== session.user.id) return NextResponse.json({ message: "Você não é o médico desta consulta" }, { status: 403 });
+    if (!c)                            return apiError("CONSULTA_NAO_ENCONTRADA");
+    if (c.doctorId !== session.user.id) return apiError("CONSULTA_SEM_ACESSO", { message: "Você não é o médico desta consulta." });
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = updateSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors }, { status: 422 });
+      return validationError(parsed.error);
     }
 
     // O painel da sala manda os campos ainda vazios como null (vêm assim do
@@ -76,7 +76,6 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
     return NextResponse.json(updated);
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

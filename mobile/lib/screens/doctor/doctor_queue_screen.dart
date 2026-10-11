@@ -8,6 +8,7 @@ import '../../utils/formatters.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/curved_header_scaffold.dart';
 import 'doctor_room_screen.dart';
+import '../../services/api_error.dart';
 
 /// Fila de atendimento como o médico vê (GET /api/queue/list): pacientes
 /// que pagaram e esperam. "Atender" faz o claim atômico
@@ -66,7 +67,7 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = silent ? _error : 'Não foi possível carregar a fila: $e';
+        _error = silent ? _error : 'Não foi possível carregar a fila. ${errorMessage(e)}';
       });
     }
   }

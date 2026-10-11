@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { createHash } from "node:crypto";
 import { publish } from "@/lib/realtime";
 import { buildKey, putObject, presignDownload, headObject } from "@/lib/s3";
-import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors";
+import { AppError, logError } from "@/lib/errors";
 import { generatePrescriptionPdf } from "@/lib/prescription-pdf";
 import { signPdf } from "@/lib/sign-pdf";
 import { loadCertificateForSigning } from "./certificate";
@@ -69,9 +69,9 @@ export async function upsertPrescription(input: {
     where:  { id: input.consultationId },
     select: { id: true, doctorId: true, patientId: true, status: true },
   });
-  if (!consultation) throw new NotFoundError("Consulta");
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
   if (consultation.doctorId !== input.doctorId) {
-    throw new ForbiddenError("Você não é o médico desta consulta");
+    throw new AppError("CONSULTA_SEM_ACESSO", { message: "Você não é o médico desta consulta." });
   }
 
   // Determinar tipo da receita pelos medicamentos vinculados
@@ -89,7 +89,7 @@ export async function upsertPrescription(input: {
     select: { id: true, status: true },
   });
   if (existing?.status === "ISSUED") {
-    throw new ConflictError("Receita já emitida — não pode ser editada");
+    throw new AppError("RECEITA_JA_EMITIDA");
   }
 
   const prescription = await prisma.$transaction(async (tx) => {
@@ -169,7 +169,7 @@ type FullPrescription = NonNullable<Awaited<ReturnType<typeof getPrescription>>>
 async function renderPrescriptionPdf(full: FullPrescription, issuedAt: Date, appBaseUrl?: string): Promise<Buffer> {
   const doctor   = full.consultation.doctor;
   const profile  = full.consultation.doctor?.doctorProfile;
-  if (!doctor || !profile) throw new ConflictError("Perfil do médico incompleto");
+  if (!doctor || !profile) throw new AppError("RECEITA_PERFIL_MEDICO_INCOMPLETO");
 
   const patient        = full.consultation.patient;
   const patientProfile = full.consultation.patient?.patientProfile;
@@ -219,23 +219,19 @@ async function signWithDoctorCertificate(
       contactInfo: doctor.email,
     });
   } catch (err) {
-    // Log completo
-    console.error("[issuePrescription] sign error:", err);
-    if (err instanceof Error && err.stack) console.error(err.stack);
-
-    // Mensagens contextuais conforme tipo de falha
+    // Mensagens contextuais conforme tipo de falha; o texto técnico só vai pro log.
     const msg = err instanceof Error ? err.message : String(err);
 
-    if (/invalid password|MAC|integrity/i.test(msg)) {
-      throw new ConflictError("Senha do certificado A1 inválida. Recarregue o certificado em Configurações > Certificado.");
+    if (/invalid password|MAC|integrity|senha/i.test(msg)) {
+      throw new AppError("CERTIFICADO_SENHA_INVALIDA", {
+        message: "Senha do certificado A1 inválida. Envie o certificado de novo em Certificado digital.",
+        detail:  msg,
+      });
     }
     if (/Unsupported PKCS|Unsupported encryption|not implemented/i.test(msg)) {
-      throw new ConflictError(
-        "Algoritmo do certificado não suportado pelo servidor. " +
-        "Exporte o .pfx em formato 'Compatibilidade — TripleDES-SHA1' no Adobe Reader / IcePalantir / Windows Certmgr.",
-      );
+      throw new AppError("CERTIFICADO_ALGORITMO_NAO_SUPORTADO", { detail: msg });
     }
-    throw new ConflictError(`Falha ao assinar a receita: ${msg}`);
+    throw new AppError("CERTIFICADO_ASSINATURA_FALHOU", { detail: msg, cause: err });
   }
 }
 
@@ -249,22 +245,22 @@ export async function issuePrescription(input: {
   appBaseUrl?:    string;
 }) {
   const full = await getPrescription(input.prescriptionId);
-  if (!full)                              throw new NotFoundError("Receita");
-  if (full.doctorId !== input.doctorId)   throw new ForbiddenError("Não é seu");
-  if (full.status === "ISSUED")           throw new ConflictError("Receita já emitida");
-  if (full.items.length === 0)            throw new ConflictError("Adicione ao menos um medicamento");
-  if (!full.consultation.doctor?.doctorProfile) throw new ConflictError("Perfil do médico incompleto");
+  if (!full)                              throw new AppError("RECEITA_NAO_ENCONTRADA");
+  if (full.doctorId !== input.doctorId)   throw new AppError("CONSULTA_SEM_ACESSO", { message: "Esta receita não é sua." });
+  if (full.status === "ISSUED")           throw new AppError("RECEITA_JA_EMITIDA");
+  if (full.items.length === 0)            throw new AppError("RECEITA_SEM_ITENS");
+  if (!full.consultation.doctor?.doctorProfile) throw new AppError("RECEITA_PERFIL_MEDICO_INCOMPLETO");
 
   const cert = await loadCertificateForSigning(input.doctorId);
 
   const issuedAt  = new Date();
   const expiresAt = calculateExpiry(full.type, issuedAt);
 
-  const pdfBuffer = await renderPrescriptionPdf(full, issuedAt, input.appBaseUrl);
+  const pdfBuffer = await renderPdfOrThrow(full, issuedAt, input.appBaseUrl);
   const signedPdf = await signWithDoctorCertificate(pdfBuffer, full, cert);
 
   const s3Key = buildKey(["prescriptions", full.consultationId, `${full.id}.pdf`]);
-  await putObject({ key: s3Key, body: signedPdf, contentType: "application/pdf" });
+  await putPdfOrThrow(s3Key, signedPdf);
 
   const sha256 = createHash("sha256").update(signedPdf).digest("hex");
 
@@ -308,11 +304,11 @@ export async function issuePrescription(input: {
  */
 export async function regeneratePrescriptionPdf(prescriptionId: string): Promise<Buffer> {
   const full = await getPrescription(prescriptionId);
-  if (!full)                    throw new NotFoundError("Receita");
-  if (full.status !== "ISSUED") throw new ConflictError("Receita ainda não emitida");
+  if (!full)                    throw new AppError("RECEITA_NAO_ENCONTRADA");
+  if (full.status !== "ISSUED") throw new AppError("RECEITA_NAO_EMITIDA");
 
   const issuedAt = full.issuedAt ?? new Date();
-  const pdf = await renderPrescriptionPdf(full, issuedAt, appBaseUrlFromEnv());
+  const pdf = await renderPdfOrThrow(full, issuedAt, appBaseUrlFromEnv());
 
   let finalPdf = pdf;
   let signature: { cn: string | null; serial: string | null } | null = null;
@@ -321,11 +317,11 @@ export async function regeneratePrescriptionPdf(prescriptionId: string): Promise
     finalPdf  = await signWithDoctorCertificate(pdf, full, cert);
     signature = { cn: cert.cert.subjectCN, serial: cert.cert.serialNumber };
   } catch (err) {
-    console.warn("[regeneratePrescriptionPdf] sem assinatura:", err instanceof Error ? err.message : err);
+    logError((err as AppError)?.code ?? "CERTIFICADO_ASSINATURA_FALHOU", err, { etapa: "regerar PDF sem assinatura", prescriptionId });
   }
 
   const key = full.signedPdfKey ?? buildKey(["prescriptions", full.consultationId, `${full.id}.pdf`]);
-  await putObject({ key, body: finalPdf, contentType: "application/pdf" });
+  await putPdfOrThrow(key, finalPdf);
 
   await prisma.prescription.update({
     where: { id: full.id },
@@ -338,6 +334,28 @@ export async function regeneratePrescriptionPdf(prescriptionId: string): Promise
   });
 
   return finalPdf;
+}
+
+/** Gera o PDF; falha do pdf-lib vira RECEITA_PDF_FALHOU (erros do catálogo passam). */
+async function renderPdfOrThrow(full: FullPrescription, issuedAt: Date, appBaseUrl?: string): Promise<Buffer> {
+  try {
+    return await renderPrescriptionPdf(full, issuedAt, appBaseUrl);
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    throw new AppError("RECEITA_PDF_FALHOU", { detail: (err as Error)?.message, cause: err });
+  }
+}
+
+async function putPdfOrThrow(key: string, body: Buffer): Promise<void> {
+  try {
+    await putObject({ key, body, contentType: "application/pdf" });
+  } catch (err) {
+    throw new AppError("ARQUIVO_ARMAZENAMENTO_FALHOU", {
+      message: "Não foi possível salvar o PDF da receita agora. Tente de novo em instantes.",
+      detail:  (err as Error)?.message,
+      cause:   err,
+    });
+  }
 }
 
 function calculateExpiry(type: PrescriptionType, issuedAt: Date): Date {
@@ -366,15 +384,15 @@ export async function getPrescriptionPdfUrl(input: {
     where:  { id: input.prescriptionId },
     select: { signedPdfKey: true, patientId: true, doctorId: true, status: true },
   });
-  if (!p)                          throw new NotFoundError("Receita");
-  if (p.status !== "ISSUED") throw new ConflictError("Receita ainda não emitida");
+  if (!p)                          throw new AppError("RECEITA_NAO_ENCONTRADA");
+  if (p.status !== "ISSUED") throw new AppError("RECEITA_NAO_EMITIDA");
 
   const allowed =
     p.patientId === input.requesterId ||
     p.doctorId  === input.requesterId ||
     input.requesterRole === "ADMIN" ||
     input.requesterRole === "SUPER_ADMIN";
-  if (!allowed) throw new ForbiddenError("Sem permissão");
+  if (!allowed) throw new AppError("CONSULTA_SEM_ACESSO");
 
   // Sem arquivo (receita da demo — que nem tem signedPdfKey —, ou emitida antes
   // do storage): gera antes de entregar o link, senão ele apontaria pra nada.
@@ -385,7 +403,7 @@ export async function getPrescriptionPdfUrl(input: {
       where:  { id: input.prescriptionId },
       select: { signedPdfKey: true },
     }))?.signedPdfKey ?? null;
-    if (!key) throw new ConflictError("Não foi possível gerar o PDF da receita");
+    if (!key) throw new AppError("RECEITA_PDF_FALHOU");
   }
 
   return presignDownload({

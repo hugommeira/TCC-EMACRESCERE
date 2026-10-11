@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { NotFoundError, ForbiddenError, ConflictError } from "@/lib/errors";
+import { AppError, logError } from "@/lib/errors";
 import { generateRoomToken } from "@/lib/utils";
 import type {
   ScheduleConsultationInput,
@@ -53,7 +53,7 @@ export async function getDoctorDaySlots(doctorId: string, date: string): Promise
     select: { availableHours: true, available: true, approvalStatus: true },
   });
   if (!doctor || !doctor.available || doctor.approvalStatus !== "APPROVED") {
-    throw new NotFoundError("Médico");
+    throw new AppError("AGENDA_MEDICO_INDISPONIVEL");
   }
 
   const times = slotsForDate(normalizeWeekHours(doctor.availableHours), date);
@@ -89,19 +89,21 @@ export async function scheduleConsultation(
     where: { userId: input.doctorId },
   });
 
-  if (!doctor) throw new NotFoundError("Médico");
-  if (!doctor.available) throw new ConflictError("Médico indisponível no momento");
+  if (!doctor) throw new AppError("AGENDA_MEDICO_INDISPONIVEL");
+  if (!doctor.available) throw new AppError("AGENDA_MEDICO_INDISPONIVEL");
   // Médico pendente/reprovado não aparece na lista, mas a API aceitava o id.
-  if (doctor.approvalStatus !== "APPROVED") throw new ConflictError("Médico indisponível no momento");
+  if (doctor.approvalStatus !== "APPROVED") throw new AppError("AGENDA_MEDICO_INDISPONIVEL");
 
   // O horário precisa ser um dos que o médico oferece na agenda dele. Antes o
   // site oferecia 8h–18h todo dia, inclusive fim de semana, ignorando a agenda
   // configurada em "Meu perfil".
   if (!isOfferedSlot(normalizeWeekHours(doctor.availableHours), input.scheduledAt)) {
-    throw new ConflictError("Esse horário não está na agenda do médico");
+    throw new AppError("AGENDA_HORARIO_FORA_DA_AGENDA");
   }
   if (input.scheduledAt.getTime() < Date.now() + MIN_LEAD_MINUTES * 60_000) {
-    throw new ConflictError(`Agende com pelo menos ${MIN_LEAD_MINUTES} minutos de antecedência`);
+    throw new AppError("AGENDA_ANTECEDENCIA_MINIMA", {
+      message: `Agende com pelo menos ${MIN_LEAD_MINUTES} minutos de antecedência.`,
+    });
   }
 
   // Verificar conflito de horário
@@ -109,7 +111,7 @@ export async function scheduleConsultation(
     where: { ...occupyingWhere(input.doctorId), scheduledAt: input.scheduledAt },
   });
 
-  if (conflict) throw new ConflictError("Horário já ocupado para este médico");
+  if (conflict) throw new AppError("AGENDA_HORARIO_OCUPADO");
 
   // Mesmo paciente, mesmo horário, outro médico: não dá pra estar em duas.
   const clash = await prisma.consultation.findFirst({
@@ -123,7 +125,7 @@ export async function scheduleConsultation(
       ],
     },
   });
-  if (clash) throw new ConflictError("Você já tem uma consulta marcada nesse horário");
+  if (clash) throw new AppError("AGENDA_PACIENTE_JA_TEM_CONSULTA");
 
   const consultation = await prisma.consultation.create({
     data: {
@@ -157,13 +159,13 @@ export async function getConsultationById(
     },
   });
 
-  if (!consultation) throw new NotFoundError("Consulta");
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
 
   const isParticipant =
     consultation.patientId === requesterId ||
     consultation.doctorId  === requesterId;
 
-  if (!isParticipant) throw new ForbiddenError();
+  if (!isParticipant) throw new AppError("CONSULTA_SEM_ACESSO");
 
   // "Notas internas" são só do médico (ProntuarioPanel, /summary). Antes a
   // linha inteira ia pro paciente pelo GET /api/consultations/[id].
@@ -276,18 +278,18 @@ export async function updateConsultationStatus(
     where:   { id },
     include: { payment: { select: { id: true, status: true } } },
   });
-  if (!consultation) throw new NotFoundError("Consulta");
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
 
   // Só o médico da consulta muda o status por aqui (o paciente cancela via
   // /cancel). Antes bastava ser parte da consulta: o paciente conseguia
   // marcar a própria consulta como COMPLETED/IN_PROGRESS pela API.
-  if (consultation.doctorId !== actorId) throw new ForbiddenError();
+  if (consultation.doctorId !== actorId) throw new AppError("CONSULTA_SEM_ACESSO", { message: "Você não é o médico desta consulta." });
 
   const allowed = STATUS_TRANSITIONS[consultation.status] ?? [];
   if (!allowed.includes(status)) {
-    throw new ConflictError(
-      `Consulta ${STATUS_LABEL[consultation.status]} não pode passar para ${STATUS_LABEL[status]}`,
-    );
+    throw new AppError("CONSULTA_TRANSICAO_INVALIDA", {
+      message: `Consulta ${STATUS_LABEL[consultation.status]} não pode passar para ${STATUS_LABEL[status]}.`,
+    });
   }
 
   // Regras do agendamento (consulta com data marcada).
@@ -296,11 +298,11 @@ export async function updateConsultationStatus(
     // Antes o médico conseguia chamar/iniciar uma consulta que o paciente
     // nunca pagou (ou que abandonou na tela de pagamento).
     if ((status === "WAITING" || status === "IN_PROGRESS") && !paid) {
-      throw new ConflictError("O pagamento desta consulta ainda não foi confirmado");
+      throw new AppError("CONSULTA_PAGAMENTO_PENDENTE");
     }
     // "Não compareceu" só faz sentido depois do horário marcado.
     if (status === "NO_SHOW" && consultation.scheduledAt.getTime() > Date.now()) {
-      throw new ConflictError("Só dá pra marcar falta depois do horário da consulta");
+      throw new AppError("CONSULTA_FALTA_ANTES_DO_HORARIO");
     }
   }
 
@@ -322,6 +324,9 @@ export async function updateConsultationStatus(
 
 // ─── Cancel ───────────────────────────────────────────────────────────────────
 
+/** Resultado financeiro do cancelamento, devolvido ao cliente. */
+export type Reembolso = "INTEGRAL" | "SEM_REEMBOLSO" | "NAO_PAGO";
+
 /**
  * Aplica a política de estorno (lib/scheduling.ts) a um cancelamento. Antes
  * nenhum cancelamento devolvia dinheiro: refundPayment existia, mas nada o
@@ -342,7 +347,7 @@ async function settleCancellationPayment(
     if (c.payment.status === "PENDING") {
       const { voidPendingPayment } = await import("./payment");
       await voidPendingPayment(c.payment.id).catch((err) =>
-        console.error("[cancel] não consegui cancelar a cobrança em aberto:", err),
+        logError("PAGAMENTO_GATEWAY_INDISPONIVEL", err, { etapa: "cancelar cobrança em aberto", consultationId: c.id }),
       );
     }
     return "NOT_PAID";
@@ -358,8 +363,8 @@ async function settleCancellationPayment(
   try {
     await refundPayment(c.payment.id);
   } catch (err) {
-    console.error("[cancel] estorno falhou:", err);
-    throw new ConflictError("Não foi possível processar o estorno agora. Tente de novo em alguns minutos.");
+    logError("CONSULTA_REEMBOLSO_FALHOU", err, { consultationId: c.id });
+    throw new AppError("CONSULTA_REEMBOLSO_FALHOU", { cause: err });
   }
   return "REFUNDED";
 }
@@ -367,39 +372,44 @@ async function settleCancellationPayment(
 export async function cancelConsultation(
   actorId: string,
   input: CancelConsultationInput,
-): Promise<ConsultationWithParties> {
+): Promise<ConsultationWithParties & { reembolso: Reembolso }> {
   const consultation = await prisma.consultation.findUnique({
     where:   { id: input.consultationId },
     include: { payment: { select: { id: true, status: true } } },
   });
 
-  if (!consultation) throw new NotFoundError("Consulta");
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
 
   if (
     consultation.patientId !== actorId &&
     consultation.doctorId  !== actorId
   ) {
-    throw new ForbiddenError();
+    throw new AppError("CONSULTA_SEM_ACESSO");
   }
   const cancelledBy = consultation.doctorId === actorId ? "DOCTOR" : "PATIENT";
 
   if (["COMPLETED", "CANCELLED", "NO_SHOW"].includes(consultation.status)) {
-    throw new ConflictError("Consulta não pode ser cancelada neste estado");
+    throw new AppError("CONSULTA_ESTADO_INVALIDO", { message: "Esta consulta não pode mais ser cancelada." });
   }
 
   // Em andamento, quem encerra é o médico (/end). O paciente conseguia
   // "desmarcar" pelo app no meio do atendimento e a consulta sumia da sala.
   if (consultation.status === "IN_PROGRESS" && consultation.patientId === actorId) {
-    throw new ConflictError("A consulta já está em andamento — peça ao médico para encerrá-la");
+    throw new AppError("CONSULTA_EM_ANDAMENTO_NAO_CANCELA");
   }
 
-  await settleCancellationPayment(consultation, cancelledBy);
+  const settled = await settleCancellationPayment(consultation, cancelledBy);
 
-  return prisma.consultation.update({
+  const updated = await prisma.consultation.update({
     where: { id: input.consultationId },
     data:  { status: "CANCELLED" },
     include: { patient: true, doctor: true, payment: true },
   });
+  // Diz ao cliente o que aconteceu com o dinheiro (antes o cancelamento com
+  // menos de 24 h ficava sem reembolso em silêncio).
+  const reembolso: Reembolso =
+    settled === "REFUNDED" ? "INTEGRAL" : settled === "NO_REFUND" ? "SEM_REEMBOLSO" : "NAO_PAGO";
+  return { ...updated, reembolso };
 }
 
 // ─── Saída pra API ────────────────────────────────────────────────────────────

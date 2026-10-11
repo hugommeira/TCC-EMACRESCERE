@@ -2,19 +2,11 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-
-const ERROR_MESSAGES: Record<string, string> = {
-  OAuthAccountNotLinked:
-    "Este e-mail já está cadastrado com outro método de login. Entre com e-mail e senha, ou use \"Esqueci minha senha\" para defini-la.",
-  AccessDenied: "Login cancelado.",
-  Configuration: "Login social não está configurado no momento. Tente entrar com e-mail e senha.",
-  CredentialsSignin: "E-mail ou senha incorretos.",
-};
+import { mensagemLogin } from "@/lib/auth-messages";
 
 export function AuthErrorContent() {
-  const error   = useSearchParams().get("error");
-  const message = (error && ERROR_MESSAGES[error]) ??
-    "Não foi possível completar o login. Verifique suas credenciais e tente novamente.";
+  const params  = useSearchParams();
+  const message = mensagemLogin(params.get("error"), params.get("code"));
 
   return (
     <div className="relative w-full max-w-md animate-rise rounded-3xl bg-white p-8 text-center shadow-xl shadow-slate-900/5 ring-1 ring-slate-200">

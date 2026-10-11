@@ -1,11 +1,11 @@
 import { NextResponse }     from "next/server";
 import type { NextRequest } from "next/server";
 import { auth }              from "@/lib/auth";
-import { toApiError }        from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, RL, rateLimit, tooManyRequests, getClientIp } from "@/lib/security";
 import { getWeightHistory, createWeightRecord } from "@/services/api/weight";
 import { createWeightRecordSchema, listWeightQuerySchema } from "@/lib/validations/weight";
+import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const parsed = listWeightQuerySchema.safeParse({
@@ -29,10 +29,7 @@ export async function GET(req: NextRequest) {
       range:     req.nextUrl.searchParams.get("range")     ?? undefined,
     });
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Parâmetros inválidos", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error, "Parâmetros inválidos");
     }
 
     const patientId = parsed.data.patientId ?? session.user.id;
@@ -42,8 +39,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ data: history });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
 
@@ -55,19 +51,16 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const rl = rateLimit({ key: `weight:${session.user.id}`, ...RL.weight });
     if (!rl.ok) return tooManyRequests(rl.resetSeconds);
 
-    const body   = await req.json();
+    const body   = await readJson(req);
     const parsed = createWeightRecordSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Dados inválidos", errors: parsed.error.flatten().fieldErrors },
-        { status: 422 },
-      );
+      return validationError(parsed.error);
     }
 
     const patientId = parsed.data.patientId ?? session.user.id;
@@ -95,7 +88,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: ponto }, { status: 201 });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../models/chat_message.dart';
 import '../../../services/chat_service.dart';
 import '../../../theme/app_theme.dart';
+import '../../../services/api_error.dart';
 
 /// Chat real de uma consulta (roomToken vem do backend). Atualiza via
 /// polling — o backend também expõe SSE em .../stream, dá pra trocar
@@ -61,7 +62,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = silent ? _error : 'Não foi possível carregar o chat: $e';
+        _error = silent ? _error : 'Não foi possível carregar o chat. ${errorMessage(e)}';
       });
     }
   }
@@ -85,7 +86,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível enviar: $e')),
+        SnackBar(content: Text('Não foi possível enviar. ${errorMessage(e)}')),
       );
     } finally {
       if (mounted) setState(() => _sending = false);

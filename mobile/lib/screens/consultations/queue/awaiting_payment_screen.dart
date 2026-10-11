@@ -10,6 +10,7 @@ import '../../../models/consultation.dart';
 import '../../../models/payment.dart';
 import '../../../services/consultation_service.dart';
 import '../../../theme/app_theme.dart';
+import '../../../services/api_error.dart';
 
 /// Cobrança gerada: QR Pix / copia-e-cola / boleto vindos do backend
 /// (Asaas), e espera pela confirmação.
@@ -149,7 +150,7 @@ class _AwaitingPaymentScreenState extends State<AwaitingPaymentScreen> {
       if (!mounted) return;
       setState(() {
         _cancelling = false;
-        _notice = 'Não foi possível cancelar: $e';
+        _notice = 'Não foi possível cancelar. ${errorMessage(e)}';
       });
     }
   }

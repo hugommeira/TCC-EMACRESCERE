@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../models/payment.dart';
 import 'api_client.dart';
+import 'api_error.dart';
 
 /// Resultado de POST /api/queue/enter: a consulta criada (SCHEDULED até o
 /// pagamento confirmar) e a cobrança gerada no Asaas.
@@ -43,14 +44,20 @@ class QueuePosition {
 
 /// Erro de negócio devolvido pelo backend com mensagem legível (409 quando
 /// já existe consulta ativa, 422 de validação etc.).
-class QueueFailure implements Exception {
-  const QueueFailure(this.message, {this.statusCode});
+class QueueFailure extends ApiError {
+  const QueueFailure(
+    String message, {
+    int? statusCode,
+    String code = 'ERRO_INTERNO',
+    Map<String, List<String>> fieldErrors = const {},
+  }) : super(code, message, statusCode: statusCode, fieldErrors: fieldErrors);
 
-  final String message;
-  final int? statusCode;
-
-  @override
-  String toString() => message;
+  /// Converte qualquer erro (Dio, resposta fora do formato, sem rede) com o
+  /// código do catálogo; [fallback] só quando o servidor não mandou mensagem.
+  factory QueueFailure.fromError(Object e, {required String fallback}) {
+    final a = ApiError.from(e, fallback: fallback);
+    return QueueFailure(a.message, statusCode: a.statusCode, code: a.code, fieldErrors: a.fieldErrors);
+  }
 }
 
 /// Fila de atendimento on-demand. Contrato confirmado lendo
@@ -78,7 +85,7 @@ class QueueService {
         consultationId: (data['consultation'] as Map<String, dynamic>)['id'] as String,
         payment: PaymentInfo.fromJson(data['payment'] as Map<String, dynamic>),
       );
-    } on DioException catch (e) {
+    } catch (e) {
       throw _toFailure(e, fallback: 'Não foi possível entrar na fila.');
     }
   }
@@ -105,8 +112,8 @@ class QueueService {
     final dio = await ApiClient.instance;
     try {
       await dio.post('/api/dev/simulate-payment', data: {'consultationId': consultationId});
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
         throw const QueueFailure(
           'Simulação indisponível: o servidor está sem PAYMENT_MOCK=true.',
           statusCode: 404,
@@ -116,9 +123,6 @@ class QueueService {
     }
   }
 
-  static QueueFailure _toFailure(DioException e, {required String fallback}) {
-    final data = e.response?.data;
-    final message = data is Map ? data['message'] as String? : null;
-    return QueueFailure(message ?? fallback, statusCode: e.response?.statusCode);
-  }
+  static QueueFailure _toFailure(Object e, {required String fallback}) =>
+      QueueFailure.fromError(e, fallback: fallback);
 }

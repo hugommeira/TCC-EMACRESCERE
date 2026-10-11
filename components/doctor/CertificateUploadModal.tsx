@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 interface Props {
   open:       boolean;
@@ -50,16 +51,11 @@ export function CertificateUploadModal({ open, onClose, onSuccess, title, reason
       const fd = new FormData();
       fd.append("file", file);
       fd.append("password", password);
-      const r = await fetch("/api/doctor/certificate", { method: "POST", body: fd });
-      const data = await r.json();
-      if (!r.ok) {
-        setError(data.message ?? "Não foi possível validar o certificado");
-        return;
-      }
+      await apiFetch("/api/doctor/certificate", { method: "POST", body: fd, timeoutMs: 60_000 });
       onSuccess?.();
       onClose();
-    } catch {
-      setError("Erro de conexão");
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setUploading(false);
     }

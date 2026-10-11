@@ -6,6 +6,7 @@ import '../../../models/consultation.dart';
 import '../../../services/consultation_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/formatters.dart';
+import '../../../services/api_error.dart';
 
 const _monthNames = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -105,7 +106,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text('Erro ao carregar agenda: ${snapshot.error}'));
+                  return Center(child: Text('Erro ao carregar agenda. ${errorMessage(snapshot.error!)}'));
                 }
 
                 final events = (snapshot.data ?? [])

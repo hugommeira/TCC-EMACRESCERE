@@ -9,16 +9,8 @@ import { safeCallbackUrl } from "@/lib/redirect";
 import { Alert }          from "@/components/ui";
 import { loginSchema }    from "@/lib/validations/auth";
 import type { LoginInput } from "@/lib/validations/auth";
-
-// Erros que o Auth.js devolve em ?error= depois do login com Facebook/Google.
-const OAUTH_ERRORS: Record<string, string> = {
-  FacebookSemEmail:     "O Facebook não compartilhou o seu e-mail, e ele é necessário para a conta. Tente de novo permitindo o e-mail, ou entre com e-mail e senha.",
-  GoogleSemEmail:       "O Google não confirmou o e-mail desta conta, e ele é necessário. Use outra conta Google ou entre com e-mail e senha.",
-  AccessDenied:         "O login foi cancelado ou não foi autorizado.",
-  OAuthAccountNotLinked:"Este e-mail já tem conta. Entre com e-mail e senha.",
-  OAuthCallbackError:   "O login não foi concluído. Tente de novo.",
-  Configuration:        "Este tipo de login está indisponível no momento. Entre com e-mail e senha.",
-};
+import { mensagemLogin }  from "@/lib/auth-messages";
+import { ERROS }          from "@/lib/error-catalog";
 
 type Social = "facebook" | "google";
 
@@ -35,9 +27,13 @@ export function LoginForm({
 
   const [values,   setValues]   = useState<LoginInput>({ email: "", password: "" });
   const [errors,   setErrors]   = useState<Partial<LoginInput>>({});
+  // Erros que o Auth.js devolve em ?error= (e ?code=) depois de um login social.
   const oauthError = searchParams.get("error");
   const [apiError, setApiError] = useState<string | null>(
-    oauthError ? (OAUTH_ERRORS[oauthError] ?? "Não foi possível entrar. Tente de novo.") : null,
+    oauthError
+      ? mensagemLogin(oauthError, searchParams.get("code"))
+      // ?expirou=1: veio de uma chamada da API que recebeu 401 (lib/api-client.ts).
+      : searchParams.get("expirou") === "1" ? ERROS.AUTH_SESSAO_EXPIRADA.mensagem : null,
   );
   const [loading,  setLoading]  = useState(false);
   const [showPwd,  setShowPwd]  = useState(false);
@@ -89,14 +85,23 @@ export function LoginForm({
       });
 
       if (result?.error) {
-        setApiError("E-mail ou senha incorretos");
+        // result.code distingue senha errada, bloqueio por tentativas e conta desativada.
+        const code = (result as { code?: string }).code;
+        // Marca o campo errado: só a senha, ou os dois quando o e-mail não existe.
+        if (code === "senha_incorreta") {
+          setErrors({ password: ERROS.AUTH_SENHA_INCORRETA.mensagem });
+        } else if (code === "email_senha_incorretos") {
+          setErrors({ email: "E-mail incorreto.", password: "Senha incorreta." });
+        } else {
+          setApiError(mensagemLogin(result.error, code));
+        }
         return;
       }
 
       router.push(callbackUrl as Route);
       router.refresh();
     } catch {
-      setApiError("Erro ao entrar. Tente novamente.");
+      setApiError(ERROS.REDE_SEM_CONEXAO.mensagem + " Tente de novo.");
     } finally {
       setLoading(false);
     }

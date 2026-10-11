@@ -15,6 +15,7 @@ import 'consultation_detail_screen.dart';
 import 'consultation_actions.dart';
 import 'queue/enter_queue_screen.dart';
 import 'schedule/schedule_screen.dart';
+import '../../services/api_error.dart';
 
 /// Aba Consultas: mesmo header verde curvo da Home/Peso, consulta ativa
 /// (se houver), atalho pra marcar nova, e histórico real
@@ -144,7 +145,7 @@ class _ConsultationsScreenState extends State<ConsultationsScreen> with TabVisib
                 );
               }
               if (snapshot.hasError) {
-                return _ErrorState(onRetry: _reload, error: snapshot.error.toString());
+                return _ErrorState(onRetry: _reload, error: errorMessage(snapshot.error!));
               }
 
               final consultations = snapshot.data ?? [];

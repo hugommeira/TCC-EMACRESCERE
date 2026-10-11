@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../constants.dart';
 import 'demo_api.dart';
+import 'session_guard.dart';
 
 class ApiClient {
   ApiClient._();
@@ -75,6 +76,11 @@ class ApiClient {
       // celular tudo isso falhava. Aqui o app se apresenta como o site.
       // Na web o navegador proíbe setar Origin, por isso o guard.
       headers: kIsWeb ? null : {'Origin': _stripSlash(baseUrl)},
+      // Sem tempo limite, um servidor fora do ar deixava a tela carregando
+      // até o sistema desistir (minutos). Viram REDE_TEMPO_ESGOTADO (ApiError).
+      connectTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
     ));
 
     // path_provider (e por consequência PersistCookieJar/FileStorage) não
@@ -102,6 +108,21 @@ class ApiClient {
         responseBody: true,
       ));
     }
+
+    // Sessão vencida no meio do uso: o backend responde 401 JSON
+    // (AUTH_SESSAO_EXPIRADA) em qualquer /api/*. Limpa o cookie e volta pra
+    // tela de entrada com o aviso — uma vez, para o app inteiro.
+    // As rotas do próprio login (/api/auth/*) ficam de fora.
+    dio.interceptors.add(InterceptorsWrapper(
+      onError: (e, handler) async {
+        final path = e.requestOptions.path;
+        if (e.response?.statusCode == 401 && !path.startsWith('/api/auth/')) {
+          await clearSession();
+          SessionGuard.onSessionExpired();
+        }
+        handler.next(e);
+      },
+    ));
 
     // Modo demonstração: as respostas vêm do próprio app (nada sai pra rede).
     if (kDemoApi) dio.interceptors.insert(0, DemoApi());

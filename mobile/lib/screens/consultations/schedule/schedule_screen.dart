@@ -7,6 +7,7 @@ import '../../../theme/app_theme.dart';
 import '../../../widgets/ui.dart';
 import '../../../utils/formatters.dart';
 import '../payment/consultation_payment_screen.dart';
+import '../../../services/api_error.dart';
 
 enum _Step { doctor, datetime, complaint }
 
@@ -441,7 +442,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             if (snapshot.hasError) {
               return Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('Erro ao carregar médicos: ${snapshot.error}', style: TextStyle(color: ds.text)),
+                child: Text('Erro ao carregar médicos. ${errorMessage(snapshot.error!)}', style: TextStyle(color: ds.text)),
               );
             }
             final doctors = _filteredDoctors;

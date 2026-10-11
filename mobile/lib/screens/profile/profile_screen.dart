@@ -9,6 +9,7 @@ import '../../widgets/curved_header_scaffold.dart';
 import '../startup/startup_gate.dart';
 import 'edit_profile_sheet.dart';
 import '../../widgets/theme_setting_card.dart';
+import '../../services/api_error.dart';
 
 /// Perfil do paciente — dados de User + PatientProfile
 /// (GET/PATCH /api/users/[id]).
@@ -50,7 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Não foi possível carregar seu perfil: $e';
+        _error = 'Não foi possível carregar seu perfil. ${errorMessage(e)}';
       });
     }
   }

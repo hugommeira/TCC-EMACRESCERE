@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import type { ConsultationWithParties } from "@/types";
 import type { ConsultationStatus } from "@prisma/client";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 interface UseConsultationReturn {
   consultation: ConsultationWithParties | null;
@@ -23,13 +24,10 @@ export function useConsultation(): UseConsultationReturn {
     setError(null);
 
     try {
-      const res  = await fetch(`/api/consultations/${id}`);
-      const json = await res.json() as { data: ConsultationWithParties };
-
-      if (!res.ok) throw new Error((json as unknown as { message: string }).message);
+      const json = await apiFetch<{ data: ConsultationWithParties }>(`/api/consultations/${id}`);
       setConsultation(json.data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao carregar consulta");
+      setError(mensagemDeErro(e));
     } finally {
       setIsLoading(false);
     }
@@ -40,21 +38,13 @@ export function useConsultation(): UseConsultationReturn {
     setError(null);
 
     try {
-      const res = await fetch(`/api/consultations/${id}/cancel`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ reason }),
+      const json = await apiFetch<{ data: ConsultationWithParties }>(`/api/consultations/${id}/cancel`, {
+        method: "POST",
+        body:   { reason },
       });
-
-      if (!res.ok) {
-        const err = await res.json() as { message: string };
-        throw new Error(err.message);
-      }
-
-      const json = await res.json() as { data: ConsultationWithParties };
       setConsultation(json.data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao cancelar consulta");
+      setError(mensagemDeErro(e));
     } finally {
       setIsLoading(false);
     }
@@ -66,21 +56,13 @@ export function useConsultation(): UseConsultationReturn {
       setError(null);
 
       try {
-        const res = await fetch(`/api/consultations/${id}/status`, {
-          method:  "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ status }),
+        const json = await apiFetch<{ data: ConsultationWithParties }>(`/api/consultations/${id}/status`, {
+          method: "PATCH",
+          body:   { status },
         });
-
-        if (!res.ok) {
-          const err = await res.json() as { message: string };
-          throw new Error(err.message);
-        }
-
-        const json = await res.json() as { data: ConsultationWithParties };
         setConsultation(json.data);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Erro ao atualizar consulta");
+        setError(mensagemDeErro(e));
       } finally {
         setIsLoading(false);
       }

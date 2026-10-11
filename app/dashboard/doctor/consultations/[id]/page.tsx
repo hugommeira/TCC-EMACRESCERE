@@ -1,5 +1,6 @@
 import type { Metadata }  from "next";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
+import { naoEncontradoOuLanca } from "@/lib/page-errors";
 import Link               from "next/link";
 import { auth }           from "@/lib/auth";
 import { getConsultationById }  from "@/services/api/consultation";
@@ -24,8 +25,8 @@ export default async function DoctorConsultationDetailPage({ params }: Props) {
   let consultation;
   try {
     consultation = await getConsultationById(params.id, session.user.id);
-  } catch {
-    notFound();
+  } catch (err) {
+    naoEncontradoOuLanca(err);
   }
 
   const prescription = await getPrescriptionByConsultation(params.id, session.user.id).catch(() => null);

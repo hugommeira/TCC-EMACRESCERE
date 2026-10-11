@@ -12,6 +12,7 @@ import '../../widgets/motion.dart';
 import '../../widgets/ui.dart';
 import 'doctor_room_screen.dart';
 import 'doctor_shell.dart';
+import '../../services/api_error.dart';
 
 /// Prancheta "6 · Início (médica)": disponibilidade, números do dia e as
 /// consultas (GET /api/consultations com role DOCTOR devolve as dele) — em
@@ -204,7 +205,7 @@ class _DoctorConsultationsScreenState extends State<DoctorConsultationsScreen> {
         child: Column(
           children: [
             Text(
-              'Não foi possível carregar: ${snapshot.error}',
+              'Não foi possível carregar. ${errorMessage(snapshot.error!)}',
               textAlign: TextAlign.center,
               style: TextStyle(color: ds.text),
             ),

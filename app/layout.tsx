@@ -3,6 +3,7 @@ import { Inter, Fraunces } from "next/font/google";
 import { SessionProvider }    from "@/components/providers/SessionProvider";
 import { Toaster }            from "@/components/ui/Toast";
 import { ConfirmDialogHost }  from "@/components/ui/ConfirmDialog";
+import { ConnectionBanner } from "@/components/ui/ConnectionBanner";
 import { APP_NAME }           from "@/lib/constants";
 import "./globals.css";
 
@@ -70,6 +71,7 @@ export default function RootLayout({
         <SessionProvider>{children}</SessionProvider>
         <Toaster />
         <ConfirmDialogHost />
+        <ConnectionBanner />
       </body>
     </html>
   );

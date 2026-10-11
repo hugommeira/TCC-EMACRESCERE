@@ -6,6 +6,7 @@ import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/brand_mark.dart';
 import 'credential_check_dialog.dart';
+import '../../services/api_error.dart';
 
 /// Valida dígitos verificadores do CPF — espelha a mesma checagem do
 /// backend (lib/validations/auth.ts) pra dar feedback imediato antes do
@@ -146,7 +147,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Conta criada, mas não foi possível conectar pra fazer login: $e';
+        _error = 'Conta criada, mas não foi possível conectar pra fazer login. ${errorMessage(e)}';
       });
       return;
     }

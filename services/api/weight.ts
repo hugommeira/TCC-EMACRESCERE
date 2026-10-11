@@ -1,5 +1,5 @@
 import { prisma }        from "@/lib/prisma";
-import { NotFoundError, ForbiddenError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 import { calculateBmi, healthyWeightCeilingKg } from "@/lib/bmi";
 import type { BmiResult } from "@/lib/bmi";
 import type { WeightRange } from "@/lib/validations/weight";
@@ -64,12 +64,12 @@ async function assertCanAccess(
       select: { id: true },
     });
     if (!vinculo) {
-      throw new ForbiddenError("Você não atende este paciente");
+      throw new AppError("PESO_PACIENTE_NAO_VINCULADO");
     }
     return "DOCTOR";
   }
 
-  throw new ForbiddenError();
+  throw new AppError("AUTH_SEM_PERMISSAO");
 }
 
 // ─── Período ──────────────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ export async function createWeightRecord(opts: {
     where:  { id: opts.patientId },
     select: { id: true, role: true },
   });
-  if (!paciente || paciente.role !== "PATIENT") throw new NotFoundError("Paciente");
+  if (!paciente || paciente.role !== "PATIENT") throw new AppError("PESO_PACIENTE_NAO_ENCONTRADO");
 
   // Se veio consulta junto, ela tem que ser desse paciente — e, se quem
   // registra é o médico, dele também.
@@ -189,9 +189,9 @@ export async function createWeightRecord(opts: {
       where:  { id: opts.consultationId },
       select: { patientId: true, doctorId: true },
     });
-    if (!c || c.patientId !== opts.patientId) throw new NotFoundError("Consulta");
+    if (!c || c.patientId !== opts.patientId) throw new AppError("CONSULTA_NAO_ENCONTRADA");
     if (papel === "DOCTOR" && c.doctorId !== opts.requesterId) {
-      throw new ForbiddenError("Você não é o médico desta consulta");
+      throw new AppError("CONSULTA_SEM_ACESSO", { message: "Você não é o médico desta consulta." });
     }
   }
 
@@ -229,13 +229,13 @@ export async function deleteWeightRecord(
     where:  { id },
     select: { patientId: true, recordedById: true, source: true },
   });
-  if (!registro) throw new NotFoundError("Registro de peso");
+  if (!registro) throw new AppError("PESO_REGISTRO_NAO_ENCONTRADO");
 
   const ehDono       = registro.patientId === requesterId && registro.source === "PATIENT";
   const ehQuemGravou = registro.recordedById === requesterId;
   const ehAdmin      = requesterRole === "ADMIN" || requesterRole === "SUPER_ADMIN";
 
-  if (!ehDono && !ehQuemGravou && !ehAdmin) throw new ForbiddenError();
+  if (!ehDono && !ehQuemGravou && !ehAdmin) throw new AppError("AUTH_SEM_PERMISSAO");
 
   await prisma.weightRecord.delete({ where: { id } });
 }

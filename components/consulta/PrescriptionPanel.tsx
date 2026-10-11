@@ -1,10 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiFetch, codigoDoErro, mensagemDeErro } from "@/lib/api-client";
+import type { ErrorCode } from "@/lib/error-catalog";
 import { useSse } from "@/lib/hooks/useSse";
 import { confirmDialog } from "@/components/ui/ConfirmDialog";
 import { CertificateUploadModal } from "@/components/doctor/CertificateUploadModal";
 import { PrescriptionPdfModal } from "@/components/consulta/PrescriptionPdfModal";
+
+// Sem certificado utilizável: abre o envio do certificado na própria tela
+// (antes isso era detectado por regex no texto da mensagem).
+const CERT_PRECISA_ENVIO: ErrorCode[] = [
+  "CERTIFICADO_AUSENTE", "CERTIFICADO_INATIVO", "CERTIFICADO_EXPIRADO", "CERTIFICADO_ARQUIVO_PERDIDO",
+];
 
 interface MedSearch {
   id:               string;
@@ -102,32 +110,33 @@ export function PrescriptionPanel({
 
   async function load() {
     try {
-      const r = await fetch(`/api/consultations/${consultationId}/prescription`, { cache: "no-store" });
-      if (r.ok) {
-        const data = await r.json();
-        const p: Prescription | null = data.prescription;
-        setPrescription(p);
-        if (p) {
-          setNotes(p.notes ?? "");
-          setDrafts(p.items.map((i, idx) => ({
-            tmpId:          `db-${i.id}-${idx}`,
-            ...(i.medicationId   ? { medicationId:   i.medicationId   } : {}),
-            name:           i.name,
-            ...(i.commercialName ? { commercialName: i.commercialName } : {}),
-            ...(i.presentation   ? { presentation:  i.presentation  } : {}),
-            dosage:         i.dosage,
-            ...(i.route          ? { route:         i.route         } : {}),
-            frequency:      i.frequency,
-            ...(i.duration       ? { duration:      i.duration      } : {}),
-            ...(i.quantity       ? { quantity:      i.quantity      } : {}),
-            ...(i.instructions   ? { instructions:  i.instructions  } : {}),
-            continuous:     i.continuous,
-          })));
-        } else {
-          setDrafts([]);
-          setNotes("");
-        }
+      const data = await apiFetch<{ prescription: Prescription | null }>(
+        `/api/consultations/${consultationId}/prescription`, { cache: "no-store" },
+      );
+      const p: Prescription | null = data.prescription;
+      setPrescription(p);
+      if (p) {
+        setNotes(p.notes ?? "");
+        setDrafts(p.items.map((i, idx) => ({
+          tmpId:          `db-${i.id}-${idx}`,
+          ...(i.medicationId   ? { medicationId:   i.medicationId   } : {}),
+          name:           i.name,
+          ...(i.commercialName ? { commercialName: i.commercialName } : {}),
+          ...(i.presentation   ? { presentation:  i.presentation  } : {}),
+          dosage:         i.dosage,
+          ...(i.route          ? { route:         i.route         } : {}),
+          frequency:      i.frequency,
+          ...(i.duration       ? { duration:      i.duration      } : {}),
+          ...(i.quantity       ? { quantity:      i.quantity      } : {}),
+          ...(i.instructions   ? { instructions:  i.instructions  } : {}),
+          continuous:     i.continuous,
+        })));
+      } else {
+        setDrafts([]);
+        setNotes("");
       }
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setLoading(false);
     }
@@ -154,10 +163,9 @@ export function PrescriptionPanel({
     setSaving(true);
     setError(null);
     try {
-      const r = await fetch(`/api/consultations/${consultationId}/prescription`, {
+      const data = await apiFetch<{ prescription: Prescription }>(`/api/consultations/${consultationId}/prescription`, {
         method:  "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           notes,
           items: drafts.map((d) => ({
             ...(d.medicationId   ? { medicationId:   d.medicationId   } : {}),
@@ -172,18 +180,12 @@ export function PrescriptionPanel({
             ...(d.instructions   ? { instructions:  d.instructions   } : {}),
             continuous:          d.continuous,
           })),
-        }),
+        },
       });
-      if (!r.ok) {
-        const j = await r.json().catch(() => ({} as { message?: string }));
-        setError(j.message ?? "Falha ao salvar");
-        return;
-      }
-      const data = await r.json();
       setPrescription(data.prescription);
       setSavedAt(new Date());
-    } catch {
-      setError("Erro de conexão");
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setSaving(false);
     }
@@ -192,7 +194,7 @@ export function PrescriptionPanel({
   async function issue() {
     const ok = await confirmDialog({
       title:        "Emitir e assinar digitalmente?",
-      message:      "A receita será assinada com seu certificado A1 e salva no S3.\nEsta ação não pode ser desfeita.",
+      message:      "A receita será assinada com seu certificado A1 e salva na plataforma.\nEsta ação não pode ser desfeita.",
       confirmLabel: "Emitir e assinar",
       tone:         "primary",
     });
@@ -201,23 +203,15 @@ export function PrescriptionPanel({
     setIssuing(true);
     setError(null);
     try {
-      const r = await fetch(`/api/consultations/${consultationId}/prescription/issue`, { method: "POST" });
-      const data = await r.json();
-      if (!r.ok) {
-        // Sem certificado cadastrado -> abre modal de upload inline
-        const noCert =
-          /certificado.*não.*encontr/i.test(data.message ?? "") ||
-          /certificado.*inativo/i.test(data.message ?? "") ||
-          /certificado.*expirado/i.test(data.message ?? "");
-
-        if (noCert) {
-          setShowCertModal(true);
-          return;
-        }
-        setError(data.message ?? "Falha ao emitir");
+      await apiFetch(`/api/consultations/${consultationId}/prescription/issue`, { method: "POST", timeoutMs: 70_000 });
+      await load();
+    } catch (err) {
+      const code = codigoDoErro(err);
+      if (code && CERT_PRECISA_ENVIO.includes(code)) {
+        setShowCertModal(true);
         return;
       }
-      await load();
+      setError(mensagemDeErro(err));
     } finally {
       setIssuing(false);
     }
@@ -229,13 +223,10 @@ export function PrescriptionPanel({
     setIssuing(true);
     setError(null);
     try {
-      const r = await fetch(`/api/consultations/${consultationId}/prescription/issue`, { method: "POST" });
-      const data = await r.json();
-      if (!r.ok) {
-        setError(data.message ?? "Falha ao emitir após cadastrar certificado");
-        return;
-      }
+      await apiFetch(`/api/consultations/${consultationId}/prescription/issue`, { method: "POST", timeoutMs: 70_000 });
       await load();
+    } catch (err) {
+      setError(mensagemDeErro(err));
     } finally {
       setIssuing(false);
     }
@@ -413,12 +404,12 @@ function MedSearchBox({ onSelect }: { onSelect: (m: MedSearch) => void }) {
     tref.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const r = await fetch(`/api/medications/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
-        if (r.ok) {
-          const data = await r.json();
-          setResults(data.items);
-          setOpen(true);
-        }
+        const data = await apiFetch<{ items: MedSearch[] }>(`/api/medications/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
+        setResults(data.items);
+        setOpen(true);
+      } catch {
+        // Busca é auxiliar: sem resultado, o médico digita o medicamento à mão.
+        setResults([]);
       } finally {
         setLoading(false);
       }

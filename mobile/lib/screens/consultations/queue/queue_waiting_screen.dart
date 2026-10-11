@@ -6,6 +6,7 @@ import '../../../services/consultation_service.dart';
 import '../../../services/queue_service.dart';
 import '../../../theme/app_theme.dart';
 import '../room/consultation_room_screen.dart';
+import '../../../services/api_error.dart';
 
 /// Paciente na fila (status WAITING): mostra a posição, mantém o
 /// heartbeat (POST /api/queue/heartbeat a cada 20s — sem ele o backend
@@ -72,7 +73,7 @@ class _QueueWaitingScreenState extends State<QueueWaitingScreen> {
         );
       }
     } catch (e) {
-      if (mounted) setState(() => _error = 'Sem conexão com a fila: $e');
+      if (mounted) setState(() => _error = 'Sem conexão com a fila. ${errorMessage(e)}');
     }
   }
 
@@ -105,7 +106,7 @@ class _QueueWaitingScreenState extends State<QueueWaitingScreen> {
       if (!mounted) return;
       setState(() {
         _leaving = false;
-        _error = 'Não foi possível sair da fila: $e';
+        _error = 'Não foi possível sair da fila. ${errorMessage(e)}';
       });
     }
   }

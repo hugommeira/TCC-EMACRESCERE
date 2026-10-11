@@ -3,8 +3,8 @@ import type { NextRequest } from "next/server";
 import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { createRoomToken, livekitUrl, roomNameFor } from "@/lib/livekit";
-import { toApiError }        from "@/lib/errors";
 import { RL, rateLimit, tooManyRequests } from "@/lib/security";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+      return apiError("AUTH_SESSAO_EXPIRADA");
     }
 
     const rl = rateLimit({ key: `livekit:${session.user.id}`, ...RL.livekitToken });
@@ -20,22 +20,22 @@ export async function GET(req: NextRequest) {
 
     const consultationId = req.nextUrl.searchParams.get("consultationId");
     if (!consultationId) {
-      return NextResponse.json({ message: "consultationId obrigatório" }, { status: 422 });
+      return apiError("PARAMETRO_INVALIDO", { message: "Informe a consulta." });
     }
 
     const c = await prisma.consultation.findUnique({
       where:  { id: consultationId },
       select: { id: true, status: true, patientId: true, doctorId: true, livekitRoom: true },
     });
-    if (!c) return NextResponse.json({ message: "Consulta não encontrada" }, { status: 404 });
+    if (!c) return apiError("CONSULTA_NAO_ENCONTRADA");
 
     const isParticipant =
       c.patientId === session.user.id || c.doctorId === session.user.id;
     if (!isParticipant) {
-      return NextResponse.json({ message: "Você não participa desta consulta" }, { status: 403 });
+      return apiError("CONSULTA_SEM_ACESSO");
     }
     if (c.status !== "IN_PROGRESS") {
-      return NextResponse.json({ message: "Consulta não está em andamento" }, { status: 409 });
+      return apiError("VIDEO_CONSULTA_NAO_INICIADA");
     }
 
     const role: "DOCTOR" | "PATIENT" =
@@ -54,7 +54,6 @@ export async function GET(req: NextRequest) {
       roomName: c.livekitRoom ?? roomNameFor(c.id),
     });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

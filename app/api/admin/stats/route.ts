@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth }         from "@/lib/auth";
 import { prisma }       from "@/lib/prisma";
-import { toApiError }   from "@/lib/errors";
 import type { AdminDashboardStats } from "@/types";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export async function GET() {
   try {
@@ -11,7 +11,7 @@ export async function GET() {
       !session?.user ||
       (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")
     ) {
-      return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO");
     }
 
     const today = new Date();
@@ -47,7 +47,6 @@ export async function GET() {
 
     return NextResponse.json({ data: stats });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

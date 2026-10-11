@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { authConfig } from "@/lib/auth.config";
 import type { Role } from "@prisma/client";
+import { ERROS } from "@/lib/error-catalog";
 
 const { auth } = NextAuth(authConfig);
 
@@ -18,6 +19,7 @@ const PUBLIC_ROUTES = [
   "/api/webhooks",
   "/api/users/register",
   "/api/prescription/validate",
+  "/api/health",   // monitoramento: sem login só mostra o estado geral (lib/health.ts)
   "/prescricao",
   "/termos",
   "/privacidade",
@@ -52,6 +54,14 @@ export default auth((req) => {
 
   const session = req.auth;
   if (!session?.user) {
+    // API sem sessão: 401 em JSON. Redirecionar para o HTML do login fazia o
+    // app (Dio) receber uma página no lugar dos dados e travar no carregamento.
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { message: ERROS.AUTH_SESSAO_EXPIRADA.mensagem, code: "AUTH_SESSAO_EXPIRADA", status: 401 },
+        { status: 401 },
+      );
+    }
     const loginUrl = new URL("/auth/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);

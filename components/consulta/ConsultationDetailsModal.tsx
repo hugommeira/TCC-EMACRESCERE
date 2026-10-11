@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { PrescriptionPdfModal } from "@/components/consulta/PrescriptionPdfModal";
 import { doctorTitle } from "@/lib/utils";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 interface Attachment {
   id:          string;
@@ -131,15 +132,10 @@ export function ConsultationDetailsModal({ open, onClose, consultationId, forPat
     setData(null);
     void (async () => {
       try {
-        const r = await fetch(`/api/consultations/${consultationId}/summary`, { cache: "no-store" });
-        const json = await r.json();
-        if (!r.ok) {
-          setError(json.message ?? "Falha ao carregar consulta");
-          return;
-        }
+        const json = await apiFetch(`/api/consultations/${consultationId}/summary`, { cache: "no-store" });
         setData(json.consultation);
-      } catch {
-        setError("Erro de conexão");
+      } catch (err) {
+        setError(mensagemDeErro(err));
       } finally {
         setLoading(false);
       }

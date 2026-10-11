@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import 'api_client.dart';
+import 'api_error.dart';
 
 /// Usuário da sessão atual, devolvido por AuthService.checkSession().
 class SessionUser {
@@ -86,7 +87,10 @@ class AuthService {
     // /auth/login com "?error=...". Em sucesso, aponta pro callbackUrl sem
     // esse parâmetro.
     final location = loginResponse.headers.value('location') ?? '';
-    final errorCode = Uri.tryParse(location)?.queryParameters['error'];
+    final params = Uri.tryParse(location)?.queryParameters ?? const {};
+    // `code` distingue bloqueio por tentativas (login_bloqueado) e conta
+    // desativada (conta_desativada) da senha errada (CredentialsSignin).
+    final errorCode = params['code'] ?? params['error'];
 
     final statusOk =
         loginResponse.statusCode == 200 || loginResponse.statusCode == 302;
@@ -172,20 +176,14 @@ class AuthService {
     try {
       await dio.post('/api/users/register', data: body);
       return null;
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      final message = (data is Map ? data['message'] as String? : null) ??
-          'Não foi possível concluir o cadastro.';
-      final rawErrors = data is Map ? data['errors'] : null;
-      final fieldErrors = rawErrors is Map
-          ? rawErrors.map(
-              (key, value) => MapEntry(
-                key.toString(),
-                (value as List).map((e) => e.toString()).toList(),
-              ),
-            )
-          : null;
-      return RegisterFailure(message: message, fieldErrors: fieldErrors);
+    } catch (e) {
+      // Sem rede, timeout ou resposta fora do formato também viram mensagem
+      // legível (ApiError), além dos erros de campo do zod.
+      final a = ApiError.from(e, fallback: 'Não foi possível concluir o cadastro.');
+      return RegisterFailure(
+        message: a.message,
+        fieldErrors: a.fieldErrors.isEmpty ? null : a.fieldErrors,
+      );
     }
   }
 

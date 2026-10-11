@@ -10,6 +10,7 @@ import {
 } from "@/components/layout/DashboardShell";
 import { formatCurrency, startOfTodayInAppTimeZone , doctorTitle } from "@/lib/utils";
 import Link               from "next/link";
+import { SystemHealthCard } from "@/components/admin/SystemHealthCard";
 
 export const metadata: Metadata = { title: "Admin – Visão geral" };
 export const dynamic  = "force-dynamic";
@@ -226,6 +227,8 @@ export default async function AdminDashboardPage() {
           </table>
         </div>
       </SectionCard>
+
+      <SystemHealthCard />
     </DashboardShell>
   );
 }

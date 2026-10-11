@@ -6,6 +6,7 @@ import { Badge }  from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { toast }  from "@/components/ui/Toast";
 import { confirmDialog } from "@/components/ui/ConfirmDialog";
+import { apiFetch, mensagemDeErro } from "@/lib/api-client";
 
 /**
  * Ativa/desativa um usuário (POST /api/admin/users/[id]/toggle). A API já
@@ -38,16 +39,11 @@ export function UserActiveToggle({
 
     setBusy(true);
     try {
-      const r = await fetch(`/api/admin/users/${userId}/toggle`, { method: "POST" });
-      const data = await r.json();
-      if (!r.ok) {
-        toast.error(data.message ?? "Não foi possível alterar o status");
-        return;
-      }
-      toast.success(data.message);
+      const data = await apiFetch<{ message?: string }>(`/api/admin/users/${userId}/toggle`, { method: "POST" });
+      toast.success(data?.message ?? "Status alterado");
       router.refresh();
-    } catch {
-      toast.error("Falha de rede ao alterar o status");
+    } catch (err) {
+      toast.error(mensagemDeErro(err));
     } finally {
       setBusy(false);
     }

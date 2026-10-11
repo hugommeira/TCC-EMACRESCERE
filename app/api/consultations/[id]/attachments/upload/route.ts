@@ -7,7 +7,9 @@ import { publish }             from "@/lib/realtime";
 import { buildKey, putObject } from "@/lib/s3";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp, RL, rateLimit, tooManyRequests } from "@/lib/security";
-import { toApiError }          from "@/lib/errors";
+import { apiError, handleRouteError, readFormData } from "@/lib/api-response";
+import { logError } from "@/lib/errors";
+import { MAX_UPLOAD_BYTES } from "@/lib/constants";
 
 export const runtime  = "nodejs";
 export const dynamic  = "force-dynamic";
@@ -26,7 +28,8 @@ const ALLOWED_MIME = new Set<string>([
   "text/plain",
 ]);
 
-const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+// Ver MAX_UPLOAD_BYTES: acima disso a Vercel nem entrega o corpo à rota.
+const MAX_SIZE = MAX_UPLOAD_BYTES;
 
 const VALID_KINDS = new Set(["RECEITA","LAUDO","EXAME","OUTRO"]);
 
@@ -43,7 +46,7 @@ export async function POST(
     if (originErr) return originErr;
 
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    if (!session?.user) return apiError("AUTH_SESSAO_EXPIRADA");
 
     const { id } = await Promise.resolve(ctx.params);
 
@@ -54,28 +57,28 @@ export async function POST(
       where:  { id },
       select: { patientId: true, doctorId: true, status: true },
     });
-    if (!c)                                            return NextResponse.json({ message: "Consulta não encontrada" }, { status: 404 });
+    if (!c)                                            return apiError("CONSULTA_NAO_ENCONTRADA");
     if (c.patientId !== session.user.id && c.doctorId !== session.user.id) {
-      return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+      return apiError("CONSULTA_SEM_ACESSO");
     }
 
-    const form = await req.formData();
+    const form = await readFormData(req);
     const file = form.get("file");
     const kindRaw = String(form.get("kind") ?? "OUTRO");
     const description = String(form.get("description") ?? "").slice(0, 500) || undefined;
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ message: "Arquivo ausente" }, { status: 422 });
+      return apiError("ARQUIVO_AUSENTE");
     }
     if (file.size === 0 || file.size > MAX_SIZE) {
-      return NextResponse.json({ message: "Arquivo inválido ou maior que 50MB" }, { status: 413 });
+      return apiError("ARQUIVO_MUITO_GRANDE");
     }
     const mimeType = file.type || "application/octet-stream";
     if (!ALLOWED_MIME.has(mimeType)) {
-      return NextResponse.json({ message: "Tipo de arquivo não permitido" }, { status: 415 });
+      return apiError("ARQUIVO_TIPO_RECUSADO");
     }
     if (!VALID_KINDS.has(kindRaw)) {
-      return NextResponse.json({ message: "kind inválido" }, { status: 422 });
+      return apiError("DADOS_INVALIDOS", { message: "Tipo de anexo inválido." });
     }
     const kind = kindRaw as "RECEITA" | "LAUDO" | "EXAME" | "OUTRO";
 
@@ -89,11 +92,9 @@ export async function POST(
     try {
       await putObject({ key: s3Key, body: buffer, contentType: mimeType });
     } catch (s3err) {
-      console.error("[attachments/upload] S3 putObject failed:", s3err);
-      return NextResponse.json(
-        { message: `Falha ao enviar pro storage: ${s3err instanceof Error ? s3err.message : "erro desconhecido"}` },
-        { status: 502 },
-      );
+      // O texto técnico do storage vai só para o log (antes ia para a tela).
+      logError("ARQUIVO_ARMAZENAMENTO_FALHOU", s3err, { s3Key });
+      return apiError("ARQUIVO_ARMAZENAMENTO_FALHOU");
     }
 
     const created = await prisma.attachment.create({
@@ -135,7 +136,6 @@ export async function POST(
     return NextResponse.json({ id: created.id }, { status: 201 });
   } catch (error) {
     console.error("[attachments/upload]", error);
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }

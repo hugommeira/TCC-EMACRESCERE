@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { processAsaasWebhook } from "@/services/api/payment";
-import { auditLog } from "@/lib/audit";
+import { auditLog, AuditAction } from "@/lib/audit";
+import { apiError, handleRouteError, readJson } from "@/lib/api-response";
+import { logError } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -17,28 +19,28 @@ export async function POST(req: NextRequest) {
   try {
     const expected = process.env["ASAAS_WEBHOOK_TOKEN"];
     if (!expected) {
-      console.error("[asaas-webhook] ASAAS_WEBHOOK_TOKEN não configurado");
-      return NextResponse.json({ message: "Server misconfigured" }, { status: 500 });
+      logError("WEBHOOK_NAO_CONFIGURADO");
+      return apiError("WEBHOOK_NAO_CONFIGURADO");
     }
 
     const token = req.headers.get("asaas-access-token") ?? "";
     if (!token || !safeEqual(token, expected)) {
       void auditLog({
-        action: "WEBHOOK_AUTH_FAILED",
+        action: AuditAction.WEBHOOK_AUTH_FAILED,
         entity: "Payment",
         ip:    req.headers.get("x-forwarded-for") ?? null,
         userAgent: req.headers.get("user-agent") ?? null,
       });
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+      return apiError("WEBHOOK_TOKEN_INVALIDO");
     }
 
-    const payload = (await req.json()) as {
+    const payload = (await readJson(req)) as {
       event?:   string;
       payment?: { id?: string; status?: string };
     };
 
     if (!payload?.payment?.id || !payload.payment.status) {
-      return NextResponse.json({ message: "Invalid payload" }, { status: 422 });
+      return apiError("WEBHOOK_PAYLOAD_INVALIDO");
     }
 
     // Processa síncrono pra garantir que NOTIFY entrega antes da resposta
@@ -49,7 +51,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (err) {
-    console.error("[asaas-webhook] error:", err);
-    return NextResponse.json({ message: "Internal error" }, { status: 500 });
+    // JSON inválido → 400 (não adianta o Asaas reenviar); banco fora → 503 e
+    // erro inesperado → 500: o Asaas reenvia o evento mais tarde.
+    return handleRouteError(err);
   }
 }

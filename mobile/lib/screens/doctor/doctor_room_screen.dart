@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../consultations/chat/chat_screen.dart';
 import 'patient_weight_sheet.dart';
 import 'prontuario_sheet.dart';
+import '../../services/api_error.dart';
 
 /// Sala de atendimento do MÉDICO: dados do paciente + queixa, chat pelo
 /// roomToken e ações — prontuário (PATCH .../prontuario), receita (no
@@ -129,7 +130,7 @@ class _DoctorRoomScreenState extends State<DoctorRoomScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Não foi possível abrir a consulta: ${snapshot.error}', textAlign: TextAlign.center),
+                  Text('Não foi possível abrir a consulta. ${errorMessage(snapshot.error!)}', textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                   ElevatedButton(onPressed: _reload, child: const Text('Tentar de novo')),
                 ],

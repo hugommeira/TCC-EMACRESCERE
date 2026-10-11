@@ -5,6 +5,7 @@ import { Button, Input, Modal, Alert, toast } from "@/components/ui";
 import { WeightChart, type ChartMetric } from "./WeightChart";
 import { formatWeight, formatWeightDelta, HEIGHT_MIN_CM, HEIGHT_MAX_CM } from "@/lib/bmi";
 import type { WeightHistory, WeightPoint } from "@/services/api/weight";
+import { apiFetch, mensagemComCampo, mensagemDeErro } from "@/lib/api-client";
 
 type RangeKey = "30d" | "90d" | "180d" | "365d" | "all";
 
@@ -49,12 +50,10 @@ export function WeightPanel({
     setErro(null);
     try {
       const qs  = patientId ? `?patientId=${encodeURIComponent(patientId)}` : "";
-      const res = await fetch(`/api/weight${qs}`, { cache: "no-store" });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.message ?? "Não foi possível carregar o acompanhamento.");
-      setData(json.data as WeightHistory);
+      const json = await apiFetch<{ data: WeightHistory }>(`/api/weight${qs}`, { cache: "no-store" });
+      setData(json.data);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro inesperado.");
+      setErro(mensagemDeErro(e));
     } finally {
       setCarregando(false);
     }
@@ -288,25 +287,22 @@ function RegistrarPesoModal({
     e.preventDefault();
     setSalvando(true);
     try {
-      const res = await fetch("/api/weight", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await apiFetch("/api/weight", {
+        method: "POST",
+        body: {
           weightKg: Number(peso.replace(",", ".")),
           // Data sem fuso é lida como UTC pelo servidor (convenção do projeto).
           measuredAt: `${data}T12:00:00.000Z`,
           ...(nota.trim() ? { note: nota.trim() } : {}),
           ...(patientId ? { patientId } : {}),
           ...(consultationId ? { consultationId } : {}),
-        }),
+        },
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.message ?? "Não foi possível registrar.");
       toast.success("Peso registrado.");
       setPeso(""); setNota("");
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao registrar.");
+      toast.error(mensagemComCampo(err));
     } finally {
       setSalvando(false);
     }
@@ -362,20 +358,17 @@ function AlturaMetaModal({
     e.preventDefault();
     setSalvando(true);
     try {
-      const res = await fetch("/api/patient/metrics", {
-        method:  "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await apiFetch("/api/patient/metrics", {
+        method: "PATCH",
+        body: {
           heightCm:     altura.trim() ? Number(altura) : null,
           goalWeightKg: meta.trim() ? Number(meta.replace(",", ".")) : null,
-        }),
+        },
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.message ?? "Não foi possível salvar.");
       toast.success("Perfil atualizado.");
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao salvar.");
+      toast.error(mensagemComCampo(err));
     } finally {
       setSalvando(false);
     }

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSse } from "@/lib/hooks/useSse";
 import { useHeartbeat } from "@/lib/hooks/useHeartbeat";
-import { confirmDialog } from "@/components/ui/ConfirmDialog";
+import { confirmDialog, alertDialog } from "@/components/ui/ConfirmDialog";
+import { apiFetch, codigoDoErro, mensagemDeErro } from "@/lib/api-client";
 import { VideoRoom } from "./VideoRoom";
 import { ChatPanel } from "./ChatPanel";
 import { ProntuarioPanel } from "./ProntuarioPanel";
@@ -73,12 +74,15 @@ export function ConsultationRoom(p: Props) {
     if (status !== "IN_PROGRESS") return;
     const poll = async () => {
       try {
-        const r = await fetch(`/api/queue/position?id=${p.consultationId}`, { cache: "no-store" });
-        if (!r.ok) return;
-        const data = await r.json() as { status?: string; patientLastSeenAt?: string | null };
+        const data = await apiFetch<{ status?: string; patientLastSeenAt?: string | null }>(
+          `/api/queue/position?id=${p.consultationId}`, { cache: "no-store" },
+        );
         if (p.isDoctor && data.patientLastSeenAt) setPatientLastSeen(data.patientLastSeenAt);
         if (data.status && data.status !== "IN_PROGRESS") setStatus("COMPLETED");
-      } catch {}
+      } catch {
+        // Silencioso: tenta de novo em 15 s; falhas seguidas acendem o
+        // aviso de conexão instável (ConnectionBanner).
+      }
     };
     void poll();
     const i = setInterval(poll, 15_000);
@@ -100,14 +104,25 @@ export function ConsultationRoom(p: Props) {
     });
     if (!ok) return;
     setEnding(true);
-    const r = await fetch(`/api/consultations/${p.consultationId}/end`, { method: "POST" });
-    setEnding(false);
-    if (r.ok) {
-      setStatus("COMPLETED");
-      // Médico: volta pra tela de trabalho (a fila, se estiver ligada; senão a
-      // lista de consultas — ver lib/constants.ts).
-      if (p.isDoctor) router.push(DOCTOR_WORK_HREF);
+    try {
+      await apiFetch(`/api/consultations/${p.consultationId}/end`, { method: "POST" });
+      encerrada();
+    } catch (err) {
+      // Já encerrada (ex.: em outra aba): segue como encerrada.
+      if (codigoDoErro(err) === "CONSULTA_NAO_EM_ANDAMENTO") { encerrada(); return; }
+      // Antes uma falha aqui não mostrava nada e, sem rede, o botão ficava
+      // travado em "Encerrando..." para sempre.
+      await alertDialog({ title: "Não foi possível encerrar", message: mensagemDeErro(err) });
+    } finally {
+      setEnding(false);
     }
+  }
+
+  function encerrada() {
+    setStatus("COMPLETED");
+    // Médico: volta pra tela de trabalho (a fila, se estiver ligada; senão a
+    // lista de consultas — ver lib/constants.ts).
+    if (p.isDoctor) router.push(DOCTOR_WORK_HREF);
   }
 
   async function markNoShow() {
@@ -119,21 +134,14 @@ export function ConsultationRoom(p: Props) {
     });
     if (!ok) return;
     setMarking(true);
-    const r = await fetch(`/api/consultations/${p.consultationId}/no-show`, { method: "POST" });
-    if (!r.ok) {
-      const j = await r.json().catch(() => ({} as { message?: string }));
-      await confirmDialog({
-        title:   "Não foi possível marcar",
-        message: j.message ?? "Tente novamente em alguns segundos.",
-        confirmLabel: "OK",
-        cancelLabel:  "",
-        tone: "warning",
-      });
-    } else {
-      setStatus("COMPLETED");
-      if (p.isDoctor) router.push(DOCTOR_WORK_HREF);
+    try {
+      await apiFetch(`/api/consultations/${p.consultationId}/no-show`, { method: "POST" });
+      encerrada();
+    } catch (err) {
+      await alertDialog({ title: "Não foi possível marcar", message: mensagemDeErro(err), okLabel: "OK" });
+    } finally {
+      setMarking(false);
     }
-    setMarking(false);
   }
 
   // 3 min após claim, libera o botão NO_SHOW

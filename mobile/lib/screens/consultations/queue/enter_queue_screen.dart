@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../services/queue_service.dart';
 import '../../../theme/app_theme.dart';
 import 'awaiting_payment_screen.dart';
+import '../../../services/api_error.dart';
 
 /// Entrada na fila on-demand (POST /api/queue/enter): motivo + forma de
 /// pagamento. O backend cria a consulta e a cobrança no Asaas no mesmo
@@ -76,7 +77,7 @@ class _EnterQueueScreenState extends State<EnterQueueScreen> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = 'Não foi possível entrar na fila: $e';
+        _error = 'Não foi possível entrar na fila. ${errorMessage(e)}';
       });
     }
   }

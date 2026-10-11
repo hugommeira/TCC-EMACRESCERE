@@ -1,9 +1,9 @@
 import { NextResponse }       from "next/server";
 import { auth }                from "@/lib/auth";
 import { markNoShow }          from "@/services/api/queue";
-import { toApiError }          from "@/lib/errors";
 import { auditLog, AuditAction } from "@/lib/audit";
 import { checkOrigin, getClientIp } from "@/lib/security";
+import { apiError, handleRouteError } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -17,7 +17,7 @@ export async function POST(
 
     const session = await auth();
     if (!session?.user || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ message: "Apenas médicos" }, { status: 403 });
+      return apiError("AUTH_SEM_PERMISSAO", { message: "Esta ação é exclusiva para médicos." });
     }
 
     const { id } = await Promise.resolve(ctx.params);
@@ -35,7 +35,6 @@ export async function POST(
 
     return NextResponse.json({ id: c.id, status: c.status });
   } catch (error) {
-    const err = toApiError(error);
-    return NextResponse.json(err, { status: err.status });
+    return handleRouteError(error);
   }
 }
