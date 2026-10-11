@@ -39,6 +39,10 @@ export async function GET(req: NextRequest) {
           consultationFee: u.doctorProfile.consultationFee,
           available:       u.doctorProfile.available,
           availableHours:  u.doctorProfile.availableHours,
+          graduationSchool: u.doctorProfile.graduationSchool,
+          graduationYear:   u.doctorProfile.graduationYear,
+          residency:        u.doctorProfile.residency,
+          languages:        u.doctorProfile.languages,
         },
       }));
       return NextResponse.json({ data: { ...result, data } });

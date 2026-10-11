@@ -201,6 +201,12 @@ model PatientProfile {
   heightCm     Int?
   goalWeightKg Decimal? @db.Decimal(5, 2)
 
+  // Contato de emergência (perfil do paciente). Só o próprio paciente e o
+  // médico da consulta veem.
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -217,6 +223,11 @@ model DoctorProfile {
   specialty        String
   subSpecialty     String?
   bio              String?
+  // Formação (perfil do médico), mostrada ao paciente na escolha do médico.
+  graduationSchool String?   // faculdade de medicina
+  graduationYear   Int?
+  residency        String?   // residência / pós-graduação
+  languages        String[]  @default([])
   consultationFee  Decimal  @db.Decimal(10, 2)
   available        Boolean  @default(true)
   availableHours   Json     @default("{}") // { mon: ["08:00","18:00"], ... }

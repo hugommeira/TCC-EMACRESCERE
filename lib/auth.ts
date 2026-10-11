@@ -213,7 +213,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token["id"]   = user.id;
         token["role"] = user.role;
@@ -225,13 +225,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // continuava usando o site/app normalmente com a sessão que já tinha —
       // só o próximo login era barrado. Reconfere `active` (e a role, caso
       // mude) no banco no máximo a cada 60s; inativo => sessão invalidada.
+      // `update()` do useSession (perfil: nome ou foto trocados) força a
+      // releitura na hora; nome e foto vêm junto, para o topo da tela.
       const checkedAt = Number(token["checkedAt"] ?? 0);
-      if (token["id"] && Date.now() - checkedAt > ACTIVE_RECHECK_MS) {
-        let dbUser: { active: boolean; role: Role } | null;
+      if (token["id"] && (trigger === "update" || Date.now() - checkedAt > ACTIVE_RECHECK_MS)) {
+        let dbUser: { active: boolean; role: Role; name: string; avatarUrl: string | null } | null;
         try {
           dbUser = await prisma.user.findUnique({
             where:  { id: token["id"] as string },
-            select: { active: true, role: true },
+            select: { active: true, role: true, name: true, avatarUrl: true },
           });
         } catch (err) {
           // Banco instável: mantém a sessão e reconfere na próxima requisição,
@@ -241,6 +243,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         if (!dbUser || !dbUser.active) return null;
         token["role"]      = dbUser.role;
+        token.name         = dbUser.name;
+        token.picture      = dbUser.avatarUrl;
         token["checkedAt"] = Date.now();
       }
       return token;

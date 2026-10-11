@@ -7,7 +7,14 @@ import {
 } from "@/components/layout/DashboardShell";
 import { DoctorProfileForm }      from "@/components/doctor/DoctorProfileForm";
 import { DoctorScheduleEditor }   from "@/components/doctor/DoctorScheduleEditor";
-import { doctorTitle } from "@/lib/utils";
+import { AvatarUploader }     from "@/components/profile/AvatarUploader";
+import { AccountForm }        from "@/components/profile/AccountForm";
+import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
+import { DoctorEducationForm } from "@/components/profile/DoctorEducationForm";
+import { PrivacyCard }        from "@/components/profile/PrivacyCard";
+import { DoctorSummary }      from "@/components/profile/ProfileSummary";
+import { hasPassword }        from "@/services/api/profile";
+import { doctorTitle, formatPhone } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Meu perfil" };
 export const dynamic = "force-dynamic";
@@ -26,6 +33,7 @@ export default async function DoctorProfilePage() {
   if (!user || !user.doctorProfile) redirect("/dashboard/doctor");
 
   const profile = user.doctorProfile;
+  const temSenha = await hasPassword(user.id);
   const firstName = user.name.split(" ")[0] ?? user.name;
 
   return (
@@ -36,9 +44,20 @@ export default async function DoctorProfilePage() {
         description={`${profile.specialty}${profile.subSpecialty ? ` · ${profile.subSpecialty}` : ""}`}
       />
 
+      <div className="mb-6">
+        <DoctorSummary userId={user.id} />
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Coluna principal */}
         <div className="space-y-6 lg:col-span-2">
+          <SectionCard title="Foto e contato" description="A foto aparece para os pacientes na escolha do médico e na consulta.">
+            <div className="space-y-6">
+              <AvatarUploader name={user.name} initialUrl={user.avatarUrl} />
+              <AccountForm initial={{ name: user.name, phone: user.phone, email: user.email }} />
+            </div>
+          </SectionCard>
+
           <SectionCard title="Informações profissionais" description="Editáveis com auto-save">
             <DoctorProfileForm
               initial={{
@@ -46,6 +65,17 @@ export default async function DoctorProfilePage() {
                 consultationFee: Number(profile.consultationFee),
                 subSpecialty:    profile.subSpecialty,
                 bio:             profile.bio,
+              }}
+            />
+          </SectionCard>
+
+          <SectionCard title="Formação" description="Aparece para o paciente quando ele escolhe o médico.">
+            <DoctorEducationForm
+              initial={{
+                graduationSchool: profile.graduationSchool ?? "",
+                graduationYear:   profile.graduationYear != null ? String(profile.graduationYear) : "",
+                residency:        profile.residency ?? "",
+                languages:        profile.languages,
               }}
             />
           </SectionCard>
@@ -68,7 +98,7 @@ export default async function DoctorProfilePage() {
               <Row label="CRM"          value={`${profile.crm} / ${profile.crmState}`} />
               <Row label="Especialidade" value={profile.specialty} />
               <Row label="E-mail"       value={user.email} />
-              {user.phone && <Row label="Telefone" value={user.phone} />}
+              {user.phone && <Row label="Telefone" value={formatPhone(user.phone)} />}
               <Row label="Consulta"     value={PT_BRL.format(Number(profile.consultationFee))} />
             </dl>
             <p className="mt-4 rounded-lg bg-white/70 px-3 py-2 text-[11px] text-slate-600 ring-1 ring-slate-200">
@@ -76,10 +106,18 @@ export default async function DoctorProfilePage() {
             </p>
           </div>
 
+          <SectionCard title="Senha">
+            <ChangePasswordForm hasPassword={temSenha} />
+          </SectionCard>
+
+          <SectionCard title="Privacidade">
+            <PrivacyCard hasPassword={temSenha} isDoctor />
+          </SectionCard>
+
           <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-xs text-amber-900">
             <p className="font-semibold">Certificado digital</p>
             <p className="mt-1 leading-relaxed">
-              Configure seu certificado A1 ICP-Brasil em{" "}
+              Configure seu certificado digital A1 em{" "}
               <a href="/dashboard/doctor/certificate" className="font-semibold underline">
                 Certificado digital
               </a>{" "}

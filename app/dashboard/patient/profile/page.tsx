@@ -2,95 +2,112 @@ import type { Metadata }  from "next";
 import { redirect }       from "next/navigation";
 import { auth }           from "@/lib/auth";
 import { getUserById }    from "@/services/api/user";
-import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
-import { Card, CardTitle } from "@/components/ui/Card";
-import { Avatar }         from "@/components/ui/Avatar";
-import { formatDate, maskCpf, formatPhone } from "@/lib/utils";
+import { hasPassword }    from "@/services/api/profile";
+import { DashboardShell, PageHeader, SectionCard } from "@/components/layout/DashboardShell";
+import { AvatarUploader }    from "@/components/profile/AvatarUploader";
+import { AccountForm }       from "@/components/profile/AccountForm";
+import { PatientHealthForm } from "@/components/profile/PatientHealthForm";
+import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
+import { EmergencyContactForm } from "@/components/profile/EmergencyContactForm";
+import { PrivacyCard }       from "@/components/profile/PrivacyCard";
+import { PatientSummary }    from "@/components/profile/ProfileSummary";
+import { formatDate, maskCpf } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Meu perfil" };
+export const dynamic = "force-dynamic";
 
 export default async function PatientProfilePage() {
   const session = await auth();
   if (!session?.user) redirect("/auth/login");
 
-  const user    = await getUserById(session.user.id);
+  const [user, temSenha] = await Promise.all([
+    getUserById(session.user.id),
+    hasPassword(session.user.id),
+  ]);
   const profile = user.patientProfile;
 
   return (
     <DashboardShell>
-      <PageHeader title="Meu perfil" description="Suas informações cadastrais" />
+      <PageHeader title="Meu perfil" description="Seus dados de cadastro e de saúde" />
+
+      <div className="mb-6">
+        <PatientSummary userId={user.id} heightCm={profile?.heightCm ?? null} />
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <div className="flex items-center gap-4">
-              <Avatar name={user.name} src={user.avatarUrl} size="xl" />
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-                <p className="text-sm text-gray-500">{user.email}</p>
-                {user.phone && (
-                  <p className="text-sm text-gray-500">{formatPhone(user.phone)}</p>
-                )}
-              </div>
+        <div className="space-y-6 lg:col-span-2">
+          <SectionCard title="Foto e dados pessoais">
+            <div className="space-y-6">
+              <AvatarUploader name={user.name} initialUrl={user.avatarUrl} />
+              <AccountForm initial={{ name: user.name, phone: user.phone, email: user.email }} />
             </div>
+          </SectionCard>
 
-            <div className="mt-6 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4 text-sm">
-              <DataRow label="CPF"           value={user.cpf ? maskCpf(user.cpf) : "—"} />
-              <DataRow label="Cadastrado em" value={formatDate(user.createdAt)} />
-            </div>
-          </Card>
+          <SectionCard
+            title="Informações de saúde"
+            description="O médico vê estes dados no prontuário durante a consulta."
+          >
+            <PatientHealthForm
+              initial={{
+                // Dia no fuso de Brasília (a data é guardada à meia-noite de lá).
+                birthDate:    profile?.birthDate
+                  ? new Date(profile.birthDate.getTime() - 3 * 3600_000).toISOString().slice(0, 10)
+                  : "",
+                gender:       profile?.gender ?? "",
+                bloodType:    profile?.bloodType ?? "",
+                heightCm:     profile?.heightCm != null ? String(profile.heightCm) : "",
+                goalWeightKg: profile?.goalWeightKg != null ? String(Number(profile.goalWeightKg)).replace(".", ",") : "",
+                allergies:    (profile?.allergies as string[] | undefined) ?? [],
+                medications:  (profile?.medications as string[] | undefined) ?? [],
+                notes:        profile?.notes ?? "",
+              }}
+            />
+          </SectionCard>
 
-          {profile && (
-            <Card>
-              <CardTitle className="mb-4">Informações médicas</CardTitle>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <DataRow label="Data de nascimento" value={profile.birthDate ? formatDate(profile.birthDate) : "—"} />
-                <DataRow label="Gênero"             value={profile.gender ?? "—"} />
-                <DataRow label="Tipo sanguíneo"     value={profile.bloodType ?? "—"} />
-                <DataRow
-                  label="Alergias"
-                  value={(profile.allergies as string[]).length > 0
-                    ? (profile.allergies as string[]).join(", ")
-                    : "Nenhuma registrada"}
-                  className="col-span-2"
-                />
-                <DataRow
-                  label="Medicamentos em uso"
-                  value={(profile.medications as string[]).length > 0
-                    ? (profile.medications as string[]).join(", ")
-                    : "Nenhum registrado"}
-                  className="col-span-2"
-                />
-                {profile.notes && (
-                  <DataRow label="Observações" value={profile.notes} className="col-span-2" />
-                )}
-              </div>
-            </Card>
-          )}
+          <SectionCard
+            title="Contato de emergência"
+            description="Quem avisar se algo acontecer durante a consulta. O médico da consulta também vê."
+          >
+            <EmergencyContactForm
+              initial={{
+                name:     profile?.emergencyContactName ?? null,
+                phone:    profile?.emergencyContactPhone ?? null,
+                relation: profile?.emergencyContactRelation ?? null,
+              }}
+            />
+          </SectionCard>
         </div>
 
-        <div>
-          <Card>
-            <CardTitle className="mb-3">Editar perfil</CardTitle>
-            <p className="text-sm text-gray-500">
-              Funcionalidade de edição disponível em breve.
+        <aside className="space-y-6">
+          <SectionCard title="Sua conta">
+            <dl className="space-y-3 text-sm">
+              <Row label="CPF"           value={user.cpf ? maskCpf(user.cpf) : "—"} />
+              <Row label="Cadastrado em" value={formatDate(user.createdAt)} />
+              <Row label="Login"         value={temSenha ? "E-mail e senha" : "Conta Google"} />
+            </dl>
+            <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-600 ring-1 ring-slate-200">
+              CPF e e-mail identificam a sua conta e não podem ser trocados aqui. Para corrigir, fale com o suporte.
             </p>
-          </Card>
-        </div>
+          </SectionCard>
+
+          <SectionCard title="Senha">
+            <ChangePasswordForm hasPassword={temSenha} />
+          </SectionCard>
+
+          <SectionCard title="Privacidade">
+            <PrivacyCard hasPassword={temSenha} isDoctor={false} />
+          </SectionCard>
+        </aside>
       </div>
     </DashboardShell>
   );
 }
 
-function DataRow({
-  label, value, className = "",
-}: {
-  label: string; value: string; className?: string;
-}) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className={className}>
-      <p className="text-xs font-medium text-gray-500">{label}</p>
-      <p className="mt-0.5 text-gray-900">{value}</p>
+    <div className="flex justify-between gap-3">
+      <dt className="text-slate-500">{label}</dt>
+      <dd className="text-right font-medium text-slate-900">{value}</dd>
     </div>
   );
 }

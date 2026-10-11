@@ -14,6 +14,7 @@ interface DoctorCardProps {
 export function DoctorCard({ doctor, onSelect, selected }: DoctorCardProps) {
   const profile = doctor.doctorProfile;
   if (!profile) return null;
+  const languages = profile.languages ?? [];
 
   return (
     <Card
@@ -42,6 +43,19 @@ export function DoctorCard({ doctor, onSelect, selected }: DoctorCardProps) {
               CRM {profile.crm}/{profile.crmState}
             </span>
           </div>
+
+          {(profile.graduationSchool || profile.residency || languages.length > 0) && (
+            <ul className="mt-2 space-y-0.5 text-xs text-gray-600">
+              {profile.graduationSchool && (
+                <li>
+                  Formado(a) em {profile.graduationSchool}
+                  {profile.graduationYear ? ` (${profile.graduationYear})` : ""}
+                </li>
+              )}
+              {profile.residency && <li>{profile.residency}</li>}
+              {languages.length > 0 && <li>Atende também em: {languages.join(", ")}</li>}
+            </ul>
+          )}
 
           {profile.bio && (
             <p className="mt-2 text-sm text-gray-600 line-clamp-2">{profile.bio}</p>

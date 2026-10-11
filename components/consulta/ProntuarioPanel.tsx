@@ -5,6 +5,8 @@ import { useSse } from "@/lib/hooks/useSse";
 import { doctorTitle, doctorFirstName } from "@/lib/utils";
 import { ApiError, apiFetch, mensagemDeErro } from "@/lib/api-client";
 import { ERROS } from "@/lib/error-catalog";
+import type { HistoricoConsulta } from "@/lib/prontuario-history";
+import { formatPhone } from "@/lib/utils";
 
 /** Espera antes de tentar salvar de novo depois de uma falha temporária. */
 const RETRY_MS = 5_000;
@@ -30,6 +32,8 @@ export function ProntuarioPanel({
   patientMedications,
   allergies,
   doctorName,
+  history = [],
+  emergencyContact = null,
 }: {
   consultationId:     string;
   initial:            Prontuario;
@@ -42,6 +46,8 @@ export function ProntuarioPanel({
   patientMedications: string[];
   allergies:          string[];
   doctorName?:        string | null;
+  history?:           HistoricoConsulta[];
+  emergencyContact?:  { name: string; phone: string | null; relation: string | null } | null;
 }) {
   const [data,     setData]     = useState<Prontuario>(initial);
   const [status,   setStatus]   = useState<SaveStatus>("idle");
@@ -167,6 +173,15 @@ export function ProntuarioPanel({
             </div>
           )}
 
+          {isDoctor && emergencyContact && (
+            <p className="mt-2 rounded-lg bg-white/70 px-2 py-1.5 text-[11px] text-slate-700 ring-1 ring-brand-100/60">
+              <span className="font-semibold uppercase tracking-wider text-slate-500">Emergência: </span>
+              {emergencyContact.name}
+              {emergencyContact.relation ? ` (${emergencyContact.relation})` : ""}
+              {emergencyContact.phone ? ` · ${formatPhone(emergencyContact.phone)}` : ""}
+            </p>
+          )}
+
           {allergies.length > 0 && (
             <p className="mt-2 rounded-lg bg-amber-50 px-2 py-1 text-[11px] text-amber-900 ring-1 ring-amber-200">
               ⚠ Alergias: {allergies.join(", ")}
@@ -200,9 +215,103 @@ export function ProntuarioPanel({
           field={field("notes")}
           internalOnly
         />
+
+        {isDoctor && <HistoryList history={history} />}
       </div>
     </div>
   );
+}
+
+// ─── Histórico de consultas anteriores (só médico) ───────────────────────────
+
+function HistoryList({ history }: { history: HistoricoConsulta[] }) {
+  const [open, setOpen] = useState<string | null>(null);
+
+  return (
+    <section aria-labelledby="historico-titulo" className="border-t border-slate-200 pt-4">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <h4 id="historico-titulo" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Histórico do paciente
+        </h4>
+        <span className="text-[10px] italic text-slate-400">(visível só ao médico)</span>
+      </div>
+
+      {history.length === 0 ? (
+        <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm italic text-slate-400">
+          Primeira consulta deste paciente com você.
+        </p>
+      ) : (
+        <>
+          <p className="mb-2 text-[11px] text-slate-500">
+            {history.length === 1 ? "1 consulta anterior" : `${history.length} consultas anteriores`} com você.
+          </p>
+          <ul className="space-y-2">
+            {history.map((h) => {
+              const expanded = open === h.id;
+              return (
+                <li key={h.id} className="rounded-xl border border-slate-200 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(expanded ? null : h.id)}
+                    aria-expanded={expanded}
+                    className="flex w-full cursor-pointer items-start justify-between gap-3 px-3 py-2 text-left"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-xs font-semibold text-slate-800">{formatDay(h.date)}</span>
+                      <span className="mt-0.5 block truncate text-[11px] text-slate-500">
+                        {h.diagnosis || h.chiefComplaint || "Sem registro"}
+                      </span>
+                    </span>
+                    <svg viewBox="0 0 24 24" className={`mt-0.5 h-4 w-4 flex-none text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+
+                  {expanded && (
+                    <dl className="space-y-2 border-t border-slate-100 px-3 py-2 text-[12px]">
+                      <HistoryField label="Queixa principal" value={h.chiefComplaint} />
+                      <HistoryField label="Diagnóstico"      value={h.diagnosis} />
+                      <HistoryField label="Conduta clínica"  value={h.conduct} />
+                      {h.medications.length > 0 && (
+                        <div>
+                          <dt className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Receita emitida</dt>
+                          <dd className="mt-0.5">
+                            <ul className="list-disc pl-4 text-slate-700">
+                              {h.medications.map((m, i) => <li key={i}>{m}</li>)}
+                            </ul>
+                          </dd>
+                        </div>
+                      )}
+                      <HistoryField label="Notas internas"   value={h.notes} />
+                    </dl>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+    </section>
+  );
+}
+
+function HistoryField({ label, value }: { label: string; value: string | null }) {
+  if (!value) return null;
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</dt>
+      <dd className="mt-0.5 whitespace-pre-wrap text-slate-700">{value}</dd>
+    </div>
+  );
+}
+
+function formatDay(iso: string | null): string {
+  if (!iso) return "Data não registrada";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(iso));
 }
 
 // ─── Badge de status do save ─────────────────────────────────────────────────

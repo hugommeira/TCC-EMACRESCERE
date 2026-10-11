@@ -9,6 +9,7 @@ import { apiFetch, codigoDoErro, mensagemDeErro } from "@/lib/api-client";
 import { VideoRoom } from "./VideoRoom";
 import { ChatPanel } from "./ChatPanel";
 import { ProntuarioPanel } from "./ProntuarioPanel";
+import type { HistoricoConsulta } from "@/lib/prontuario-history";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { PrescriptionPanel } from "./PrescriptionPanel";
 import { WeightPanel } from "@/components/weight";
@@ -32,6 +33,9 @@ interface Props {
   claimedAt:        string | null;
   patientLastSeenAt: string | null;
   initialUpdatedAt: string | null;
+  /** Consultas anteriores com este médico; vazio para o paciente. */
+  history:          HistoricoConsulta[];
+  emergencyContact: { name: string; phone: string | null; relation: string | null } | null;
   initialProntuario: {
     chiefComplaint: string | null;
     diagnosis:      string | null;
@@ -314,6 +318,8 @@ function TabContent({
           patientMedications={p.patientMedications}
           allergies={p.allergies}
           doctorName={p.doctorName}
+          history={p.history}
+          emergencyContact={p.emergencyContact}
         />
       )}
       {tab === "peso" && (

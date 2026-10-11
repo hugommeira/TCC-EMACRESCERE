@@ -4,6 +4,7 @@ import { auth }   from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ConsultationRoom } from "@/components/consulta/ConsultationRoom";
 import { DOCTOR_WORK_HREF } from "@/lib/constants";
+import type { HistoricoConsulta } from "@/lib/prontuario-history";
 
 export const metadata: Metadata = { title: "Consulta" };
 export const dynamic = "force-dynamic";
@@ -43,6 +44,9 @@ export default async function ConsultaPage({
               bloodType:   true,
               allergies:   true,
               medications: true,
+              emergencyContactName:     true,
+              emergencyContactPhone:    true,
+              emergencyContactRelation: true,
             },
           },
         },
@@ -68,6 +72,49 @@ export default async function ConsultaPage({
     redirect(isPatient ? `/dashboard/patient/queue/${id}` : DOCTOR_WORK_HREF);
   }
 
+  // Histórico clínico: consultas concluídas deste paciente com ESTE médico.
+  // Só o médico recebe (props de componente cliente vão no payload da página)
+  // e só as dele, como o prontuário de um consultório: o médico não lê o que
+  // outro profissional registrou.
+  let history: HistoricoConsulta[] = [];
+  if (isDoctor) {
+    const past = await prisma.consultation.findMany({
+      where: {
+        patientId: c.patientId,
+        doctorId:  session.user.id,
+        status:    "COMPLETED",
+        id:        { not: c.id },
+      },
+      orderBy: { createdAt: "desc" },
+      take:    20,
+      select: {
+        id: true, startedAt: true, scheduledAt: true, createdAt: true,
+        chiefComplaint: true, diagnosis: true, conduct: true, notes: true,
+        prescription: {
+          select: {
+            status: true,
+            items: {
+              orderBy: { order: "asc" },
+              select: { name: true, dosage: true, frequency: true, duration: true },
+            },
+          },
+        },
+      },
+    });
+    history = past.map((h) => ({
+      id:             h.id,
+      date:           (h.startedAt ?? h.scheduledAt ?? h.createdAt).toISOString(),
+      chiefComplaint: h.chiefComplaint,
+      diagnosis:      h.diagnosis,
+      conduct:        h.conduct,
+      notes:          h.notes,
+      medications:    h.prescription?.status === "ISSUED"
+        ? h.prescription.items.map((i) =>
+            [i.name, i.dosage, i.frequency, i.duration].filter(Boolean).join(" · "))
+        : [],
+    }));
+  }
+
   return (
     <ConsultationRoom
       consultationId={c.id}
@@ -87,6 +134,17 @@ export default async function ConsultaPage({
       claimedAt={c.claimedAt?.toISOString() ?? null}
       patientLastSeenAt={c.patientLastSeenAt?.toISOString() ?? null}
       initialUpdatedAt={c.updatedAt?.toISOString() ?? null}
+      history={history}
+      emergencyContact={
+        // Só o médico recebe (o paciente já sabe o próprio contato).
+        isDoctor && c.patient.patientProfile?.emergencyContactName
+          ? {
+              name:     c.patient.patientProfile.emergencyContactName,
+              phone:    c.patient.patientProfile.emergencyContactPhone,
+              relation: c.patient.patientProfile.emergencyContactRelation,
+            }
+          : null
+      }
       initialProntuario={{
         chiefComplaint: c.chiefComplaint,
         diagnosis:      c.diagnosis,

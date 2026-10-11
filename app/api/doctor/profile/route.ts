@@ -5,6 +5,7 @@ import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { checkOrigin }       from "@/lib/security";
 import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
+import { doctorEducationSchema } from "@/lib/validations/profile";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,7 @@ const hoursSchema = z.object({
   sun: slotSchema.optional(),
 });
 
-const updateSchema = z.object({
+const updateSchema = doctorEducationSchema.extend({
   bio:             z.string().max(2000).optional(),
   subSpecialty:    z.string().max(120).optional(),
   consultationFee: z.number().nonnegative().max(100000).optional(),
@@ -40,6 +41,7 @@ const updateSchema = z.object({
 const PROFILE_SELECT = {
   id: true, crm: true, crmState: true, specialty: true, subSpecialty: true,
   bio: true, consultationFee: true, available: true, availableHours: true,
+  graduationSchool: true, graduationYear: true, residency: true, languages: true,
   approvalStatus: true, approvalNote: true, approvedAt: true,
   crmVerifiedAt: true, crmVerification: true,
 } as const;
@@ -89,6 +91,9 @@ export async function PATCH(req: NextRequest) {
     if (parsed.data.consultationFee !== undefined) data["consultationFee"] = parsed.data.consultationFee;
     if (parsed.data.available       !== undefined) data["available"]       = parsed.data.available;
     if (parsed.data.availableHours  !== undefined) data["availableHours"]  = parsed.data.availableHours;
+    for (const k of ["graduationSchool", "graduationYear", "residency", "languages"] as const) {
+      if (parsed.data[k] !== undefined) data[k] = parsed.data[k];
+    }
 
     const updated = await prisma.doctorProfile.update({
       where: { userId: session.user.id },

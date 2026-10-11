@@ -60,6 +60,9 @@ export function Avatar({ name, src, size = "md", className }: AvatarProps) {
           fill
           className="object-cover"
           sizes={`${px}px`}
+          // Foto enviada pelo usuário (/api/avatar/...) exige login: o
+          // otimizador do Next busca sem os cookies e receberia 401.
+          unoptimized={src.startsWith("/api/")}
         />
       </div>
     );

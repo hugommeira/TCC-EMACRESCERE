@@ -3,7 +3,7 @@
 > Arquivo gerado por `npx tsx scripts/gerar-catalogo-erros.ts` a partir de
 > `lib/error-catalog.ts`. Não edite à mão: mude o catálogo e gere de novo.
 
-São 110 erros catalogados, 10 peças críticas mapeadas e 14 problemas conhecidos registrados.
+São 116 erros catalogados, 10 peças críticas mapeadas e 14 problemas conhecidos registrados.
 
 ## Como funciona
 
@@ -23,7 +23,7 @@ Colunas: **HTTP** 0 = erro que só existe no site/app (nunca vem da API); 200 = 
 |---|---|
 | Geral (qualquer rota) | 8 |
 | Autenticação e sessão | 13 |
-| Cadastro e usuários | 6 |
+| Cadastro e usuários | 12 |
 | Administração | 2 |
 | Agendamento | 6 |
 | Consultas | 13 |
@@ -81,6 +81,12 @@ Colunas: **HTTP** 0 = erro que só existe no site/app (nunca vem da API); 200 = 
 | `USUARIO_CRM_INVALIDO` | 422 | aviso | CRM não encontrado no conselho. | Confira o número e a UF do CRM. | Cadastro de médico recusado. | Verificação de CRM (simulada em services/external/cfm.ts) não encontrou o registro. | não |
 | `USUARIO_CRM_SUSPENSO` | 422 | erro | Este CRM consta como suspenso no conselho. | Regularize o registro no conselho antes de se cadastrar. | Cadastro de médico recusado. | Verificação de CRM retornou situação SUSPENSO. | não |
 | `USUARIO_NAO_ENCONTRADO` | 404 | aviso | Usuário não encontrado. | Atualize a lista. | A rota responde 404. | ID inexistente ou usuário removido. | não |
+| `PERFIL_SENHA_ATUAL_INCORRETA` | 422 | aviso | A senha atual está incorreta. | Digite a senha que você usa hoje para entrar. | Troca de senha recusada e registrada na auditoria. | bcrypt.compare da senha atual falhou na troca de senha do perfil. | não |
+| `PERFIL_SEM_SENHA` | 409 | info | Sua conta entra pelo Google e não tem senha para trocar. | Continue entrando com o Google, ou use "Esqueci minha senha" para criar uma. | Troca de senha recusada. | Usuário sem conta credentials (só login social). | não |
+| `PERFIL_FOTO_INVALIDA` | 415 | aviso | Envie uma foto em JPG, PNG ou WebP. | Escolha outra imagem. | Envio da foto recusado. | MIME ou assinatura do arquivo fora de JPEG/PNG/WebP. | não |
+| `PERFIL_FOTO_GRANDE` | 413 | aviso | Foto grande demais. O limite é 2 MB. | Escolha uma foto menor. | Envio da foto recusado. | Arquivo acima de 2 MB (o site já reduz a foto antes de enviar). | não |
+| `PERFIL_DESATIVAR_COM_CONSULTAS` | 409 | aviso | Você tem consultas marcadas ou em andamento. Conclua ou cancele antes de desativar a conta. | Veja a lista de consultas e resolva as pendentes. | Desativação recusada; nada muda na conta. | Há consulta SCHEDULED, WAITING ou IN_PROGRESS do usuário. | não |
+| `PERFIL_CONFIRMACAO_INVALIDA` | 422 | aviso | Digite DESATIVAR para confirmar. | Escreva a palavra exatamente como pedido. | Desativação recusada. | Conta sem senha (login social) não digitou a confirmação. | não |
 
 ### Administração
 

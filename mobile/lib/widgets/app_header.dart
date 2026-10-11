@@ -80,11 +80,14 @@ class GreenHeader extends StatelessWidget {
                           shape: BoxShape.circle,
                           color: Colors.white.withValues(alpha: 0.18),
                           border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
-                          image: user?.image != null
+                          // Foto enviada no site vem como caminho relativo
+                          // (/api/avatar/...) e exige o cookie: por ora o
+                          // app mostra o ícone nesse caso.
+                          image: _hasNetworkImage(user?.image)
                               ? DecorationImage(image: NetworkImage(user!.image!), fit: BoxFit.cover)
                               : null,
                         ),
-                        child: user?.image == null
+                        child: !_hasNetworkImage(user?.image)
                             ? const Icon(Icons.person_rounded, color: Colors.white, size: 26)
                             : null,
                       ),
@@ -139,3 +142,5 @@ class GreenHeader extends StatelessWidget {
     );
   }
 }
+
+bool _hasNetworkImage(String? url) => url != null && url.startsWith('http');

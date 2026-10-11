@@ -137,19 +137,22 @@ export const forgotPasswordSchema = z.object({
     .max(254),
 });
 
+/** Regras de senha nova (redefinição e troca no perfil). */
+export const strongPasswordSchema = z
+  .string({ required_error: "Senha obrigatória" })
+  .min(8, "Mínimo 8 caracteres")
+  .max(128, "Senha muito longa")
+  .regex(/[A-Z]/, "Deve conter ao menos uma letra maiúscula")
+  .regex(/[0-9]/, "Deve conter ao menos um número")
+  .refine(
+    (p) => !COMMON_WEAK_PASSWORDS.has(p.toLowerCase()),
+    "Senha muito comum, escolha outra",
+  );
+
 export const resetPasswordSchema = z
   .object({
     token: z.string({ required_error: "Token obrigatório" }).min(1),
-    password: z
-      .string({ required_error: "Senha obrigatória" })
-      .min(8, "Mínimo 8 caracteres")
-      .max(128, "Senha muito longa")
-      .regex(/[A-Z]/, "Deve conter ao menos uma letra maiúscula")
-      .regex(/[0-9]/, "Deve conter ao menos um número")
-      .refine(
-        (p) => !COMMON_WEAK_PASSWORDS.has(p.toLowerCase()),
-        "Senha muito comum, escolha outra",
-      ),
+    password: strongPasswordSchema,
     confirmPassword: z.string({ required_error: "Confirmação obrigatória" }),
   })
   .refine((d) => d.password === d.confirmPassword, {

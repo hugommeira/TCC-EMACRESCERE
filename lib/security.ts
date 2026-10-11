@@ -141,5 +141,9 @@ export const RL = {
   prontuario:   { limit: 120, windowSec: 60 },        // alto: auto-save
   weight:       { limit: 20,  windowSec: 60 },        // registro de peso
   weightUpdate: { limit: 30,  windowSec: 60 * 10 },   // altura/meta no perfil
+  profile:      { limit: 30,  windowSec: 60 * 10 },   // salvar dados do perfil
+  avatar:       { limit: 10,  windowSec: 60 * 10 },   // trocar/remover foto
+  changePassword: { limit: 5, windowSec: 60 * 15 },   // senha atual errada conta (troca e desativação)
+  dataExport:   { limit: 5,   windowSec: 60 * 60 },   // exportar meus dados (consulta pesada)
   generic:      { limit: 100, windowSec: 60 },
 } as const;
