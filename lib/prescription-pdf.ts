@@ -1,6 +1,7 @@
 import "server-only";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import type { PDFFont } from "pdf-lib";
+import type { PDFFont, PDFImage } from "pdf-lib";
+import QRCode from "qrcode";
 import { doctorTitle } from "@/lib/utils";
 
 export interface PrescriptionData {
@@ -107,8 +108,15 @@ export async function generatePrescriptionPdf(data: PrescriptionData): Promise<B
   const numVias =
     data.type === "COMUM" ? 1 : 2;
 
+  // QR para a mesma página de validação pública que já sai escrita no
+  // rodapé (/prescricao/[id]): nenhum dado novo fica exposto. Entra antes
+  // da assinatura, então a assinatura também cobre o QR.
+  const qr = data.validationUrl
+    ? await pdf.embedPng(await QRCode.toBuffer(data.validationUrl, { margin: 1, width: 240, errorCorrectionLevel: "M" }))
+    : null;
+
   for (let via = 1; via <= numVias; via++) {
-    drawPage(pdf, data, { font, fontBold, fontIt }, via, numVias);
+    drawPage(pdf, data, { font, fontBold, fontIt }, via, numVias, qr);
   }
 
   const bytes = await pdf.save();
@@ -121,6 +129,7 @@ function drawPage(
   fonts: { font: PDFFont; fontBold: PDFFont; fontIt: PDFFont },
   viaNum: number,
   totalVias: number,
+  qr: PDFImage | null = null,
 ) {
   const page = pdf.addPage([595.28, 841.89]); // A4
   const { width, height } = page.getSize();
@@ -309,6 +318,19 @@ function drawPage(
     const url = `Validar receita: ${data.validationUrl}`;
     page.drawText(url, {
       x: margin, y: footerY - 6, size: 7, font: fonts.font, color: slate600,
+    });
+  }
+
+  // QR de validação (canto direito, abaixo do número da receita)
+  if (qr) {
+    const size = 54;
+    const qx = width - margin - size;
+    const qy = footerY - 30;
+    page.drawImage(qr, { x: qx, y: qy, width: size, height: size });
+    const legenda = "Confira a receita";
+    const lw = fonts.font.widthOfTextAtSize(legenda, 6);
+    page.drawText(legenda, {
+      x: qx + (size - lw) / 2, y: qy - 8, size: 6, font: fonts.font, color: slate600,
     });
   }
 
