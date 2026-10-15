@@ -114,13 +114,22 @@ e-mail, em memória: reiniciar o dev server zera. Roteiro da banca em
   notas na sala (`app/consulta`). As notas internas do médico nunca chegam ao
   paciente. Agendamento: `lib/scheduling.ts` (funções puras, fuso fixo -03:00,
   slots de 60 min, consulta não paga segura o horário por 30 min). Pagamento
-  confirmado pelo webhook do Asaas (`app/api/webhooks/asaas`).
+  confirmado pelo webhook do Asaas (`app/api/webhooks/asaas`). Chat: envio
+  durante a consulta e por 24 h depois de concluída, leitura sempre; regra
+  única em `lib/chat-access.ts`, usada pelas duas pilhas de chat
+  (`app/api/chat/[roomToken]/*` e `app/api/consultations/[id]/messages`).
 - **Receita.** `lib/prescription-pdf.ts` gera o PDF e `lib/sign-pdf.ts` assina com
   o certificado do médico (`MedicalCertificate`; o .pfx e a senha são cifrados com
   `lib/crypto.ts` em `services/api/certificate.ts`);
   validação pública em `app/api/prescription/validate` e `app/prescricao/[id]`.
+  O PDF traz um QR code para essa página (biblioteca `qrcode`), desenhado antes
+  da assinatura.
 - **Peso e IMC.** Tabela `WeightRecord` (`/dashboard/patient/peso` e aba Peso na
   sala). O IMC não é coluna: é calculado em `lib/bmi.ts`.
+- **Outras medidas.** Tabela `BodyMeasurement` (cintura, quadril, gordura,
+  massa magra), tipo em texto validado por `lib/measures.ts`; RCEst e RCQ são
+  calculados na leitura. Mesmo acesso do peso (`assertCanAccess`). Só valores
+  medidos: sem fórmulas de estimativa, metas, sequências ou lembretes.
 - **Arquivos** (certificados, PDFs, anexos): `lib/s3.ts` usa S3 se as `S3_*`
   existirem; sem elas (situação atual) guarda no banco, tabela `stored_files`.
 - **Schema** em `prisma/schema.prisma` (modelo `User` com `Role`,

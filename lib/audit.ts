@@ -83,6 +83,8 @@ export const AuditAction = {
   ATTACHMENT_UPLOADED:     "attachment.uploaded",
   WEIGHT_RECORDED:         "weight.recorded",
   WEIGHT_DELETED:          "weight.deleted",
+  MEASUREMENT_RECORDED:    "measurement.recorded",
+  MEASUREMENT_DELETED:     "measurement.deleted",
   RATE_LIMIT_HIT:          "security.rate_limit",
   WEBHOOK_AUTH_FAILED:     "security.webhook_auth_failed",
 } as const;

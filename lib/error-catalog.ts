@@ -579,6 +579,11 @@ export const ERROS = {
     "Atualize a lista.",
     "A rota responde 404.",
     "Registro apagado em outra aba."),
+  MEDIDA_NAO_ENCONTRADA: e("PESO", 404, "aviso",
+    "Medida não encontrada.",
+    "Atualize a lista.",
+    "A rota responde 404.",
+    "Registro de BodyMeasurement apagado em outra aba."),
 
   // ─── VIDEO ──────────────────────────────────────────────────────────────────
   VIDEO_NAO_CONFIGURADO: e("VIDEO", 503, "critico",

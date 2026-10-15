@@ -14,6 +14,7 @@ import type { HistoricoConsulta } from "@/lib/prontuario-history";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { PrescriptionPanel } from "./PrescriptionPanel";
 import { WeightPanel } from "@/components/weight";
+import { MeasuresPanel } from "@/components/measures/MeasuresPanel";
 import { DOCTOR_WORK_HREF } from "@/lib/constants";
 
 interface Props {
@@ -343,12 +344,17 @@ function TabContent({
         />
       )}
       {tab === "peso" && (
-        <div className="h-full overflow-y-auto p-4">
+        <div className="h-full space-y-4 overflow-y-auto p-4">
           <WeightPanel
             patientId={p.patientId}
             {...(p.isDoctor ? { patientName: p.patientName } : {})}
             mode={p.isDoctor ? "doctor" : "patient"}
             consultationId={p.consultationId}
+          />
+          <MeasuresPanel
+            patientId={p.patientId}
+            mode={p.isDoctor ? "doctor" : "patient"}
+            {...(p.isDoctor ? { consultationId: p.consultationId } : {})}
           />
         </div>
       )}

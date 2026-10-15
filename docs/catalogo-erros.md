@@ -3,7 +3,7 @@
 > Arquivo gerado por `npx tsx scripts/gerar-catalogo-erros.ts` a partir de
 > `lib/error-catalog.ts`. Não edite à mão: mude o catálogo e gere de novo.
 
-São 117 erros catalogados, 10 peças críticas mapeadas e 14 problemas conhecidos registrados.
+São 118 erros catalogados, 10 peças críticas mapeadas e 14 problemas conhecidos registrados.
 
 ## Como funciona
 
@@ -32,7 +32,7 @@ Colunas: **HTTP** 0 = erro que só existe no site/app (nunca vem da API); 200 = 
 | Receitas | 6 |
 | Certificado digital e assinatura | 10 |
 | Arquivos e anexos | 7 |
-| Peso e IMC | 3 |
+| Peso e IMC | 4 |
 | Videochamada | 6 |
 | Rede e conexão (só no site/app) | 4 |
 | Infraestrutura (só no log) | 4 |
@@ -198,6 +198,7 @@ Colunas: **HTTP** 0 = erro que só existe no site/app (nunca vem da API); 200 = 
 | `PESO_PACIENTE_NAO_VINCULADO` | 403 | erro | Você não atende este paciente. | Acesse pelo atendimento do paciente. | Leitura/registro recusados. | Médico sem consulta com o paciente. | não |
 | `PESO_PACIENTE_NAO_ENCONTRADO` | 404 | aviso | Paciente não encontrado. | Atualize a página. | A rota responde 404. | ID de paciente inexistente. | não |
 | `PESO_REGISTRO_NAO_ENCONTRADO` | 404 | aviso | Registro de peso não encontrado. | Atualize a lista. | A rota responde 404. | Registro apagado em outra aba. | não |
+| `MEDIDA_NAO_ENCONTRADA` | 404 | aviso | Medida não encontrada. | Atualize a lista. | A rota responde 404. | Registro de BodyMeasurement apagado em outra aba. | não |
 
 ### Videochamada
 
