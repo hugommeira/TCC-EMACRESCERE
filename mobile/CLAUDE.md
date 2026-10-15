@@ -4,7 +4,7 @@
 Emacrescere é uma plataforma de telemedicina com consulta agendada para
 acompanhamento de tratamento de emagrecimento. Esta pasta (`mobile/`) é o APP MOBILE, com as
 interfaces de PACIENTE e de MÉDICO (a do médico entrou em 2026-09-11). O
-administrador ("farmácia") usa apenas o site web (Next.js, a raiz deste mesmo
+administrador usa apenas o site web (Next.js, a raiz deste mesmo
 repositório), que também é o backend de tudo.
 
 ## Onde o app mora (decisão de 2026-10-03)
@@ -34,7 +34,8 @@ repositório), que também é o backend de tudo.
 - Videochamada: LiveKit
 - Chat: SSE (Server-Sent Events) no backend — avaliar como consumir no Flutter
   (polling, cliente SSE, ou WebSocket se disponível)
-- Prescrição digital: assinatura ICP-Brasil (gerada pelo backend/médico; o
+- Prescrição digital: assinatura digital com o certificado do médico (de teste,
+  sem validade jurídica; gerada pelo backend/médico; o
   app do paciente apenas visualiza/baixa a prescrição)
 
 ## Escopo: a fila on-demand está ESCONDIDA
@@ -107,7 +108,7 @@ analisador marcar como `dead_code` justamente o código que queremos preservar.
   paciente.
 - DoctorRoomScreen: chat pelo roomToken + prontuário (PATCH
   /api/consultations/[id]/prontuario) + Encerrar (POST .../end). Receita
-  continua só no site (precisa do certificado ICP-Brasil).
+  continua só no site (precisa do certificado digital do médico).
 - Pra testar o médico no Chrome sem cadastrar: conta seed dr.silva (já
   APPROVED por default). O cadastro de médico só funciona depois que o
   site for deployado com o commit 1077d17 e `npx prisma db push` rodado —

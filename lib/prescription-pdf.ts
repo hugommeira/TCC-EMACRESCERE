@@ -295,8 +295,9 @@ function drawPage(
     { x: margin, y: footerY + 36, size: 8, font: fonts.font, color: slate600 },
   );
 
-  // Assinatura digital ICP-Brasil
-  page.drawText("Assinatura digital ICP-Brasil:", {
+  // Assinatura digital com o certificado do médico (de teste na demonstração:
+  // não afirmar ICP-Brasil, ver CLAUDE.md)
+  page.drawText("Assinado digitalmente por:", {
     x: margin, y: footerY + 20, size: 8, font: fonts.fontBold, color: slate900,
   });
   page.drawText(`${doctorTitle(data.doctorName)} — CRM ${data.doctorCrm}/${data.doctorCrmState}`, {

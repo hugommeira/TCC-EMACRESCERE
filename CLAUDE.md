@@ -16,8 +16,12 @@ quebrar o que já funciona custa mais do que faltar funcionalidade.
   ou 3D pode sugerir o contrário nem prometer resultado. Também não há
   "farmácias parceiras" (não existe parceria).
 - A receita é emitida na própria plataforma e assinada com o certificado digital
-  do médico. Não é pelo Portal do CFM e não se promete ICP-Brasil (o certificado
-  de teste não é).
+  do médico. Não é pelo Portal do CFM. Limitação conhecida: os certificados da
+  demonstração são de teste, sem validade jurídica, e a Resolução CFM 2.299/2021
+  exige ICP-Brasil na receita digital; a receita da plataforma é demonstrativa.
+  Nenhum texto (site, app, PDF) afirma ICP-Brasil nem que o sistema cumpre a
+  norma. A validade da receita de GLP-1 (180 dias, tipo COMUM) está pendente de
+  confirmação médica (decisão D9 em `docs/planejamento-novas-implementacoes.md`).
 - Textos do site só afirmam o que o código faz. Sem números, depoimentos ou
   parcerias inventados.
 - Paciente e médico são experiências **diferentes** (o médico usa o tom escuro).

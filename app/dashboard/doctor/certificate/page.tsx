@@ -14,9 +14,9 @@ export default async function CertificatePage() {
   return (
     <DashboardShell>
       <PageHeader
-        badge="ICP-Brasil A1"
+        badge="Certificado A1"
         title="Certificado digital"
-        description="Necessário para emitir e assinar receitas conforme CFM 2.314/2022."
+        description="Necessário para emitir e assinar receitas na plataforma."
       />
       <div className="mx-auto max-w-2xl">
         <CertificateManager />

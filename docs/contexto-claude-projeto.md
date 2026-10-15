@@ -45,7 +45,9 @@
   prometer resultado. Não existem "farmácias parceiras".
 - A receita é emitida **na própria plataforma**, assinada com o certificado
   digital do médico. Não é pelo Portal do CFM. Não se promete ICP-Brasil: os
-  médicos de demonstração usam certificado de teste, sem validade jurídica.
+  médicos de demonstração usam certificado de teste, sem validade jurídica, e a
+  Resolução CFM 2.299/2021 exige ICP-Brasil na receita digital. A receita é
+  demonstrativa; nenhum texto afirma que o sistema cumpre a norma.
 - Textos só afirmam o que o sistema faz. Sem números, depoimentos ou parcerias
   inventados (os depoimentos da página inicial são histórias ilustrativas
   rotuladas como tal).
