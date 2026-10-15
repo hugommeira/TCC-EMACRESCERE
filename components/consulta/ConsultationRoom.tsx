@@ -9,6 +9,7 @@ import { apiFetch, codigoDoErro, mensagemDeErro } from "@/lib/api-client";
 import { VideoRoom } from "./VideoRoom";
 import { ChatPanel } from "./ChatPanel";
 import { ProntuarioPanel } from "./ProntuarioPanel";
+import { getChatAccess } from "@/lib/chat-access";
 import type { HistoricoConsulta } from "@/lib/prontuario-history";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { PrescriptionPanel } from "./PrescriptionPanel";
@@ -55,6 +56,14 @@ export function ConsultationRoom(p: Props) {
   const router = useRouter();
   const [tab, setTab]       = useState<TabKey>(p.isDoctor ? "prontuario" : "chat");
   const [status, setStatus] = useState(p.initialStatus);
+  // Status real e fim, para a regra do chat (envio por 24 h após concluir;
+  // falta/cancelada fecha). `status` acima só distingue sala ativa/encerrada.
+  const [chatState, setChatState] = useState<{ status: string; endedAt: string | null }>(
+    { status: p.initialStatus, endedAt: p.endedAt },
+  );
+  function fecharChat(realStatus: string) {
+    setChatState((prev) => ({ status: realStatus, endedAt: prev.endedAt ?? new Date().toISOString() }));
+  }
   const [ending, setEnding] = useState(false);
   const [marking, setMarking] = useState(false);
   const [patientLastSeen, setPatientLastSeen] = useState<string | null>(p.patientLastSeenAt);
@@ -82,7 +91,10 @@ export function ConsultationRoom(p: Props) {
           `/api/queue/position?id=${p.consultationId}`, { cache: "no-store" },
         );
         if (p.isDoctor && data.patientLastSeenAt) setPatientLastSeen(data.patientLastSeenAt);
-        if (data.status && data.status !== "IN_PROGRESS") setStatus("COMPLETED");
+        if (data.status && data.status !== "IN_PROGRESS") {
+          setStatus("COMPLETED");
+          fecharChat(data.status);
+        }
       } catch {
         // Silencioso: tenta de novo em 15 s; falhas seguidas acendem o
         // aviso de conexão instável (ConnectionBanner).
@@ -94,8 +106,8 @@ export function ConsultationRoom(p: Props) {
   }, [p.isDoctor, p.consultationId, status]);
 
   useSse(`/api/realtime/consultation/${p.consultationId}`, {
-    "consultation.ended":   () => setStatus("COMPLETED"),
-    "consultation.no_show": () => setStatus("COMPLETED"),
+    "consultation.ended":   () => { setStatus("COMPLETED"); fecharChat("COMPLETED"); },
+    "consultation.no_show": () => { setStatus("COMPLETED"); fecharChat("NO_SHOW"); },
   });
 
   async function endConsult() {
@@ -122,8 +134,9 @@ export function ConsultationRoom(p: Props) {
     }
   }
 
-  function encerrada() {
+  function encerrada(realStatus: "COMPLETED" | "NO_SHOW" = "COMPLETED") {
     setStatus("COMPLETED");
+    fecharChat(realStatus);
     // Médico: volta pra tela de trabalho (a fila, se estiver ligada; senão a
     // lista de consultas — ver lib/constants.ts).
     if (p.isDoctor) router.push(DOCTOR_WORK_HREF);
@@ -140,7 +153,7 @@ export function ConsultationRoom(p: Props) {
     setMarking(true);
     try {
       await apiFetch(`/api/consultations/${p.consultationId}/no-show`, { method: "POST" });
-      encerrada();
+      encerrada("NO_SHOW");
     } catch (err) {
       await alertDialog({ title: "Não foi possível marcar", message: mensagemDeErro(err), okLabel: "OK" });
     } finally {
@@ -250,7 +263,7 @@ export function ConsultationRoom(p: Props) {
             Peso tem gráfico e tabela) e empurra abas e cartões pra fora da tela */}
         <aside className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white max-lg:landscape:border-l lg:border-l lg:border-slate-200">
           <Tabs tab={tab} setTab={setTab} isDoctor={p.isDoctor} />
-          <TabContent p={p} tab={tab} status={status} />
+          <TabContent p={p} tab={tab} status={status} chatState={chatState} />
         </aside>
       </div>
     </div>
@@ -294,15 +307,22 @@ function Tab({
 // ─── Conteúdo da aba ──────────────────────────────────────────────────────────
 
 function TabContent({
-  p, tab, status,
-}: { p: Props; tab: TabKey; status: "IN_PROGRESS" | "COMPLETED" }) {
+  p, tab, status, chatState,
+}: {
+  p: Props; tab: TabKey; status: "IN_PROGRESS" | "COMPLETED";
+  chatState: { status: string; endedAt: string | null };
+}) {
+  // Recalculado a cada render (a sala re-renderiza a cada 10 s): o envio
+  // fecha sozinho quando passam as 24 h.
+  const chat = getChatAccess(chatState);
   return (
     <div className="flex-1 overflow-hidden">
       {tab === "chat" && (
         <ChatPanel
           consultationId={p.consultationId}
           myUserId={p.myUserId}
-          disabled={status === "COMPLETED"}
+          disabled={!chat.canSend}
+          sendUntil={chat.sendUntil}
         />
       )}
       {tab === "prontuario" && (

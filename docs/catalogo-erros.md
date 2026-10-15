@@ -3,7 +3,7 @@
 > Arquivo gerado por `npx tsx scripts/gerar-catalogo-erros.ts` a partir de
 > `lib/error-catalog.ts`. Não edite à mão: mude o catálogo e gere de novo.
 
-São 116 erros catalogados, 10 peças críticas mapeadas e 14 problemas conhecidos registrados.
+São 117 erros catalogados, 10 peças críticas mapeadas e 14 problemas conhecidos registrados.
 
 ## Como funciona
 
@@ -28,7 +28,7 @@ Colunas: **HTTP** 0 = erro que só existe no site/app (nunca vem da API); 200 = 
 | Agendamento | 6 |
 | Consultas | 13 |
 | Pagamentos e webhook do Asaas | 15 |
-| Chat | 3 |
+| Chat | 4 |
 | Receitas | 6 |
 | Certificado digital e assinatura | 10 |
 | Arquivos e anexos | 7 |
@@ -149,7 +149,8 @@ Colunas: **HTTP** 0 = erro que só existe no site/app (nunca vem da API); 200 = 
 | Código | HTTP | Severidade | O usuário vê | O que ele deve fazer | Como o sistema reage | Causa | Repetir resolve? |
 |---|---|---|---|---|---|---|---|
 | `CHAT_SALA_NAO_ENCONTRADA` | 404 | aviso | Sala de conversa não encontrada. | Volte para a consulta. | A rota responde 404. | roomToken inexistente. | não |
-| `CHAT_FORA_DA_CONSULTA` | 409 | info | O chat só fica disponível durante a consulta. | Aguarde o médico iniciar a consulta. | Mensagem não é enviada. | Envio fora dos status WAITING/IN_PROGRESS. | não |
+| `CHAT_FORA_DA_CONSULTA` | 409 | info | O chat só fica disponível durante a consulta. | Aguarde o médico iniciar a consulta. | Mensagem não é enviada. | Envio com a consulta ainda não iniciada (fora de WAITING/IN_PROGRESS e da janela pós-consulta). | não |
+| `CHAT_ENCERRADO` | 409 | info | O chat desta consulta fechou 24 h depois do atendimento. | Se precisar, agende uma nova consulta. As mensagens antigas continuam visíveis. | Mensagem não é enviada; o histórico continua disponível para leitura. | Consulta COMPLETED há mais de CHAT_APOS_CONSULTA_HORAS (lib/chat-access.ts). | não |
 | `CHAT_ENVIO_FALHOU` | 0 | aviso | Sua mensagem não foi enviada. | Toque em enviar de novo (o texto foi mantido). | O texto volta para a caixa de mensagem. | Falha de rede ou do servidor ao enviar. | sim |
 
 ### Receitas

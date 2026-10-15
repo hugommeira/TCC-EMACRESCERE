@@ -13,6 +13,10 @@ interface ChatWindowProps {
   currentUserId:  string;
   currentUserName: string;
   otherUserName:  string;
+  /** false: só leitura (regra em lib/chat-access.ts). */
+  canSend?:       boolean;
+  /** Fim da janela de envio após a consulta (ISO), para o aviso. */
+  sendUntil?:     string | null;
 }
 
 export function ChatWindow({
@@ -21,6 +25,8 @@ export function ChatWindow({
   currentUserId,
   currentUserName,
   otherUserName,
+  canSend = true,
+  sendUntil = null,
 }: ChatWindowProps) {
   const { messages, isConnected, isSending, error, sendMessage } = useChat({
     consultationId,
@@ -92,7 +98,21 @@ export function ChatWindow({
       )}
 
       {/* Input */}
+      {!canSend ? (
+        <div className="border-t border-gray-200 p-3 text-center text-xs text-gray-500">
+          Chat encerrado. As mensagens continuam aqui para consulta.
+        </div>
+      ) : (
       <div className="border-t border-gray-200 p-3">
+        {sendUntil && (
+          <p className="mb-2 text-center text-[11px] text-gray-500">
+            Consulta encerrada: você pode mandar mensagens até{" "}
+            {new Intl.DateTimeFormat("pt-BR", {
+              day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+              timeZone: "America/Sao_Paulo",
+            }).format(new Date(sendUntil)).replace(", ", " às ")}.
+          </p>
+        )}
         <div className="flex items-end gap-2">
           <Avatar name={currentUserName} size="sm" />
           <div className="flex-1 relative">
@@ -127,6 +147,7 @@ export function ChatWindow({
           Enter para enviar · Shift+Enter para nova linha
         </p>
       </div>
+      )}
     </div>
   );
 }

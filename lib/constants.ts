@@ -39,6 +39,8 @@ export const MAX_CONSULTATION_FEE = 2000; // R$ 2.000,00
 // ─── Chat ─────────────────────────────────────────────────────────────────────
 export const MAX_MESSAGE_LENGTH    = 2000;
 export const CHAT_HISTORY_LIMIT    = 100;
+/** Horas em que o chat aceita mensagem depois do fim da consulta (lib/chat-access.ts). */
+export const CHAT_APOS_CONSULTA_HORAS = 24;
 export const SSE_KEEPALIVE_INTERVAL = 30_000; // 30s
 
 // ─── Prescrição ───────────────────────────────────────────────────────────────

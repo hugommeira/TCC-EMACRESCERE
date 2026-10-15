@@ -6,6 +6,7 @@ import { prisma }            from "@/lib/prisma";
 import { publish }           from "@/lib/realtime";
 import { checkOrigin, RL, rateLimit, tooManyRequests } from "@/lib/security";
 import { apiError, validationError, handleRouteError, readJson, intParam } from "@/lib/api-response";
+import { chatBlockedCode, getChatAccess } from "@/lib/chat-access";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,7 @@ const sendSchema = z.object({
 async function authorize(consultationId: string, userId: string) {
   const c = await prisma.consultation.findUnique({
     where: { id: consultationId },
-    select: { patientId: true, doctorId: true, status: true },
+    select: { patientId: true, doctorId: true, status: true, endedAt: true, updatedAt: true },
   });
   if (!c) return { ok: false as const, err: "CONSULTA_NAO_ENCONTRADA" as const };
   if (c.patientId !== userId && c.doctorId !== userId) {
@@ -74,9 +75,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
     const az     = await authorize(id, session.user.id);
     if (!az.ok)  return apiError(az.err);
-    if (az.consultation.status !== "IN_PROGRESS") {
-      const encerrada = az.consultation.status === "COMPLETED" || az.consultation.status === "CANCELLED" || az.consultation.status === "NO_SHOW";
-      return apiError(encerrada ? "CONSULTA_ENCERRADA" : "CONSULTA_NAO_INICIADA");
+    // Durante a consulta e por 24 h depois dela (lib/chat-access.ts).
+    const access = getChatAccess(az.consultation);
+    if (!access.canSend) {
+      return apiError(access.reason === "NAO_INICIADA" ? "CONSULTA_NAO_INICIADA" : chatBlockedCode(access.reason));
     }
 
     const body   = await readJson(req);
