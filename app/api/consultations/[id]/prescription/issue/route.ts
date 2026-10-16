@@ -4,7 +4,7 @@ import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { checkOrigin, getClientIp } from "@/lib/security";
 import { auditLog, AuditAction } from "@/lib/audit";
-import { issuePrescription } from "@/services/api/prescription";
+import { appBaseUrlFromEnv, issuePrescription } from "@/services/api/prescription";
 import { apiError, handleRouteError } from "@/lib/api-response";
 import { assertEncryptionKey } from "@/lib/crypto";
 
@@ -32,10 +32,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     });
     if (!p) return apiError("RECEITA_NAO_ENCONTRADA", { message: "Crie a receita antes de emitir." });
 
+    const appBaseUrl = appBaseUrlFromEnv();
     const issued = await issuePrescription({
       prescriptionId: p.id,
       doctorId:       session.user.id,
-      ...(process.env["NEXT_PUBLIC_APP_URL"] ? { appBaseUrl: process.env["NEXT_PUBLIC_APP_URL"] } : {}),
+      ...(appBaseUrl ? { appBaseUrl } : {}),
     });
 
     auditLog({

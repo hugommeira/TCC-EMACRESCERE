@@ -26,7 +26,7 @@ export default async function AdminCertificatesPage() {
   return (
     <DashboardShell>
       <PageHeader
-        badge="ICP-Brasil"
+        badge="Certificado A1"
         title="Certificados digitais"
         description="Visão geral dos certificados A1 cadastrados pelos médicos."
       />

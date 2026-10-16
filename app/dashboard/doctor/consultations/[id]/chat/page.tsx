@@ -4,6 +4,7 @@ import { naoEncontradoOuLanca } from "@/lib/page-errors";
 import { auth }           from "@/lib/auth";
 import { getConsultationById } from "@/services/api/consultation";
 import { ChatWindow }     from "@/components/chat/ChatWindow";
+import { getChatAccess } from "@/lib/chat-access";
 import Link               from "next/link";
 import { Card, CardTitle } from "@/components/ui/Card";
 
@@ -27,6 +28,8 @@ export default async function DoctorChatPage({ params }: Props) {
   if (!consultation.roomToken) notFound();
 
   const patientName = consultation.patient.name;
+  // Mesma regra do paciente: depois do prazo, só leitura.
+  const chat = getChatAccess(consultation);
 
   return (
     <div className="h-[calc(100vh-4rem)] p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -38,6 +41,8 @@ export default async function DoctorChatPage({ params }: Props) {
           currentUserId={session.user.id}
           currentUserName={session.user.name}
           otherUserName={patientName}
+          canSend={chat.canSend}
+          sendUntil={chat.sendUntil?.toISOString() ?? null}
         />
       </div>
 

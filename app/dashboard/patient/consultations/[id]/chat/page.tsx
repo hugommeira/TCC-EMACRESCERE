@@ -4,6 +4,7 @@ import { naoEncontradoOuLanca } from "@/lib/page-errors";
 import { auth }           from "@/lib/auth";
 import { getConsultationById } from "@/services/api/consultation";
 import { ChatWindow }     from "@/components/chat/ChatWindow";
+import { getChatAccess } from "@/lib/chat-access";
 
 export const metadata: Metadata = { title: "Sala de consulta" };
 
@@ -24,10 +25,9 @@ export default async function PatientChatPage({ params }: Props) {
 
   if (!consultation.roomToken) notFound();
 
-  if (
-    consultation.status !== "IN_PROGRESS" &&
-    consultation.status !== "WAITING"
-  ) {
+  // Aberto durante a consulta e por 24 h depois dela (lib/chat-access.ts).
+  const chat = getChatAccess(consultation);
+  if (!chat.canSend) {
     redirect(`/dashboard/patient/consultations/${params.id}`);
   }
 
@@ -54,6 +54,7 @@ export default async function PatientChatPage({ params }: Props) {
           currentUserId={session.user.id}
           currentUserName={session.user.name}
           otherUserName={otherName}
+          sendUntil={chat.sendUntil?.toISOString() ?? null}
         />
       </div>
     </div>

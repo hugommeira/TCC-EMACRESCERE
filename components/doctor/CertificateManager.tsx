@@ -164,7 +164,7 @@ export function CertificateManager() {
       <form onSubmit={submit} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
         <div>
           <h2 className="font-display text-lg font-semibold text-slate-900">
-            {cert ? "Substituir certificado" : "Carregar certificado A1 (ICP-Brasil)"}
+            {cert ? "Substituir certificado" : "Carregar certificado A1 (.pfx)"}
           </h2>
           <p className="mt-1 text-xs text-slate-500">
             Arquivo <strong>.pfx</strong> ou <strong>.p12</strong> emitido por Autoridade Certificadora credenciada (Serasa, Certisign, Soluti, etc).

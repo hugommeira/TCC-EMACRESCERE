@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 import { AppError } from "@/lib/errors";
+import { chatBlockedCode, getChatAccess } from "@/lib/chat-access";
 import type { ChatMessage } from "@/types";
 import type { MessageType } from "@prisma/client";
 
@@ -56,9 +57,9 @@ export async function sendMessage(
     throw new AppError("CONSULTA_SEM_ACESSO");
   }
 
-  if (consultation.status !== "IN_PROGRESS" && consultation.status !== "WAITING") {
-    throw new AppError("CHAT_FORA_DA_CONSULTA");
-  }
+  // Durante a consulta e por 24 h depois dela (lib/chat-access.ts).
+  const access = getChatAccess(consultation);
+  if (!access.canSend) throw new AppError(chatBlockedCode(access.reason));
 
   const message = await prisma.message.create({
     data: {
@@ -155,6 +156,17 @@ export async function markMessagesAsRead(
   consultationId: string,
   readerId: string,
 ): Promise<void> {
+  // Só quem participa da consulta marca como lidas (antes qualquer usuário
+  // logado com o roomToken conseguia).
+  const consultation = await prisma.consultation.findUnique({
+    where:  { id: consultationId },
+    select: { patientId: true, doctorId: true },
+  });
+  if (!consultation) throw new AppError("CONSULTA_NAO_ENCONTRADA");
+  if (consultation.patientId !== readerId && consultation.doctorId !== readerId) {
+    throw new AppError("CONSULTA_SEM_ACESSO");
+  }
+
   await prisma.message.updateMany({
     where: {
       consultationId,

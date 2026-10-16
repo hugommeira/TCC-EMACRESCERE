@@ -34,7 +34,7 @@ export default function TermosPage() {
         <li>O cadastro de paciente é livre, gratuito e exige CPF e e-mail válidos.</li>
         <li>Você deve ter 18 anos ou mais (ou estar acompanhado de responsável legal).</li>
         <li>Os dados informados devem ser verdadeiros, completos e atualizados.</li>
-        <li>Médicos e farmácias parceiras são cadastrados pela equipe Emacrescere após validação documental (CRM/ANVISA).</li>
+        <li>Médicos são cadastrados e aprovados pela equipe Emacrescere após conferência do CRM.</li>
       </ul>
 
       <h2>4. Telemedicina e responsabilidade médica</h2>
@@ -50,9 +50,9 @@ export default function TermosPage() {
       <p>
         A Emacrescere <strong>não vende medicamentos</strong>. Caso o seu médico
         decida prescrever, a aquisição ocorre exclusivamente em farmácias
-        autorizadas pela ANVISA, mediante apresentação da receita válida. As
-        farmácias parceiras são empresas independentes, responsáveis por suas
-        próprias práticas comerciais e logísticas.
+        autorizadas pela ANVISA, mediante apresentação da receita válida. A
+        Emacrescere não indica farmácias nem tem parceria com nenhuma: você
+        escolhe onde apresentar a receita.
       </p>
 
       <h2>6. Pagamentos</h2>
@@ -101,7 +101,7 @@ export default function TermosPage() {
       <p>
         A Emacrescere atua como facilitadora tecnológica e não se responsabiliza
         por eventos clínicos decorrentes da prática médica, pela disponibilidade
-        de medicamentos nas farmácias parceiras ou por interrupções
+        de medicamentos nas farmácias ou por interrupções
         eventuais do serviço por motivos técnicos, de força maior ou
         manutenção programada.
       </p>

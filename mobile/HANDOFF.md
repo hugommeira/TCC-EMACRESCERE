@@ -12,7 +12,7 @@ acompanhamento de tratamento de emagrecimento (a fila on-demand foi descartada):
 agenda com um médico específico, paga (Pix/cartão/boleto via Asaas), conversa por chat/vídeo, recebe
 prontuário e receita digital assinada.
 
-Três perfis: **PACIENTE** e **MÉDICO** (app Flutter + site), **ADMIN** ("farmácia", só no
+Três perfis: **PACIENTE** e **MÉDICO** (app Flutter + site), **ADMIN** (só no
 site — aprova médicos, vê pagamentos/receita, gerencia usuários).
 
 ## Um repositório só (desde 2026-10-03)
@@ -70,7 +70,8 @@ Atenção: a pasta `app/` do site **não** é o aplicativo — é a pasta de rot
 - **Chat**: originalmente SSE via `pg LISTEN/NOTIFY`, mas **não entrega de forma confiável em
   produção (Neon serverless + Vercel)** — hoje tudo tem fallback de polling (5s no chat, 8s na
   fila, 15s no status da sala).
-- **Prescrição digital**: assinatura ICP-Brasil (certificado .pfx do médico, criptografado
+- **Prescrição digital**: assinatura digital com o certificado .pfx do médico (de teste, sem
+  validade jurídica; criptografado
   AES-256-GCM, armazenado em S3). App só visualiza/baixa; emissão só pelo site.
 - **Storage**: S3-compatível (Contabo Object Storage) — usado pra certificados .pfx, PDFs de
   receita assinada e anexos de consulta.

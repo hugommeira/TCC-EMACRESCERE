@@ -16,8 +16,12 @@ quebrar o que já funciona custa mais do que faltar funcionalidade.
   ou 3D pode sugerir o contrário nem prometer resultado. Também não há
   "farmácias parceiras" (não existe parceria).
 - A receita é emitida na própria plataforma e assinada com o certificado digital
-  do médico. Não é pelo Portal do CFM e não se promete ICP-Brasil (o certificado
-  de teste não é).
+  do médico. Não é pelo Portal do CFM. Limitação conhecida: os certificados da
+  demonstração são de teste, sem validade jurídica, e a Resolução CFM 2.299/2021
+  exige ICP-Brasil na receita digital; a receita da plataforma é demonstrativa.
+  Nenhum texto (site, app, PDF) afirma ICP-Brasil nem que o sistema cumpre a
+  norma. A validade da receita de GLP-1 (180 dias, tipo COMUM) está pendente de
+  confirmação médica (decisão D9 em `docs/planejamento-novas-implementacoes.md`).
 - Textos do site só afirmam o que o código faz. Sem números, depoimentos ou
   parcerias inventados.
 - Paciente e médico são experiências **diferentes** (o médico usa o tom escuro).
@@ -31,6 +35,8 @@ quebrar o que já funciona custa mais do que faltar funcionalidade.
   `emacrescere_app` (pasta local na máquina do Hugo) é só histórico: não
   editar e não sincronizar — não existe mais subtree. Regras do app em
   `mobile/CLAUDE.md`; o build da Vercel ignora commits que só tocam `mobile/`.
+  Funcionalidade que entra só no site vai para `mobile/PENDENCIAS-DO-SITE.md`
+  (lista do que o app ainda precisa receber).
 - `/app/` no site é a **versão web do app** (build do Flutter em `public/app/`,
   usada no iPhone). A pasta `app/` da raiz é a de rotas do Next.js, não o app.
 
@@ -110,13 +116,24 @@ e-mail, em memória: reiniciar o dev server zera. Roteiro da banca em
   notas na sala (`app/consulta`). As notas internas do médico nunca chegam ao
   paciente. Agendamento: `lib/scheduling.ts` (funções puras, fuso fixo -03:00,
   slots de 60 min, consulta não paga segura o horário por 30 min). Pagamento
-  confirmado pelo webhook do Asaas (`app/api/webhooks/asaas`).
+  confirmado pelo webhook do Asaas (`app/api/webhooks/asaas`). Chat: envio
+  durante a consulta e por 24 h depois de concluída, leitura sempre; regra
+  única em `lib/chat-access.ts`, usada pelas duas pilhas de chat
+  (`app/api/chat/[roomToken]/*` e `app/api/consultations/[id]/messages`).
+  Consulta paga e marcada: "Salvar na agenda" com link do Google Agenda e
+  `.ics` com lembretes (`lib/calendar.ts`, `/api/consultations/[id]/calendar`).
 - **Receita.** `lib/prescription-pdf.ts` gera o PDF e `lib/sign-pdf.ts` assina com
   o certificado do médico (`MedicalCertificate`; o .pfx e a senha são cifrados com
   `lib/crypto.ts` em `services/api/certificate.ts`);
   validação pública em `app/api/prescription/validate` e `app/prescricao/[id]`.
+  O PDF traz um QR code para essa página (biblioteca `qrcode`), desenhado antes
+  da assinatura.
 - **Peso e IMC.** Tabela `WeightRecord` (`/dashboard/patient/peso` e aba Peso na
   sala). O IMC não é coluna: é calculado em `lib/bmi.ts`.
+- **Outras medidas.** Tabela `BodyMeasurement` (cintura, quadril, gordura,
+  massa magra), tipo em texto validado por `lib/measures.ts`; RCEst e RCQ são
+  calculados na leitura. Mesmo acesso do peso (`assertCanAccess`). Só valores
+  medidos: sem fórmulas de estimativa, metas, sequências ou lembretes.
 - **Arquivos** (certificados, PDFs, anexos): `lib/s3.ts` usa S3 se as `S3_*`
   existirem; sem elas (situação atual) guarda no banco, tabela `stored_files`.
 - **Schema** em `prisma/schema.prisma` (modelo `User` com `Role`,

@@ -133,6 +133,8 @@ model User {
   messages          Message[]
   weightRecords     WeightRecord[] @relation("PatientWeightRecords")
   weightRecorded    WeightRecord[] @relation("WeightRecordedBy")
+  bodyMeasurements         BodyMeasurement[] @relation("PatientBodyMeasurements")
+  bodyMeasurementsRecorded BodyMeasurement[] @relation("BodyMeasurementRecordedBy")
 
   @@map("users")
 }
@@ -561,6 +563,33 @@ model WeightRecord {
   @@index([patientId, measuredAt])
   @@index([consultationId])
   @@map("weight_records")
+}
+
+// Medidas do corpo além do peso (cintura, quadril, gordura, massa magra).
+// `type` é texto validado pelo registro em lib/measures.ts (sem enum, para
+// acrescentar medida sem alterar enum no banco). Relações como RCEst e RCQ
+// são calculadas na leitura, como o IMC.
+model BodyMeasurement {
+  id         String       @id @default(cuid())
+  patientId  String
+  type       String
+  value      Decimal      @db.Decimal(6, 2)
+  measuredAt DateTime
+  note       String?
+  source     WeightSource @default(PATIENT)
+
+  recordedById   String?
+  consultationId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient    User  @relation("PatientBodyMeasurements",   fields: [patientId],    references: [id], onDelete: Cascade)
+  recordedBy User? @relation("BodyMeasurementRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([patientId, type, measuredAt])
+  @@index([consultationId])
+  @@map("body_measurements")
 }
 
 model AuditLog {

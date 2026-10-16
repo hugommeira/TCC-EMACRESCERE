@@ -49,7 +49,7 @@ export interface WeightHistory {
  * Devolve o papel de quem pediu, porque o registro do médico é gravado com
  * source = DOCTOR.
  */
-async function assertCanAccess(
+export async function assertCanAccess(
   patientId:   string,
   requesterId: string,
   requesterRole: string,

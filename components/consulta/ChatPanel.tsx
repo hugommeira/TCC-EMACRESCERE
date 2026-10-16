@@ -24,10 +24,13 @@ export function ChatPanel({
   consultationId,
   myUserId,
   disabled,
+  sendUntil = null,
 }: {
   consultationId: string;
   myUserId:       string;
   disabled?:      boolean;
+  /** Fim da janela de envio após a consulta (lib/chat-access.ts). */
+  sendUntil?:     Date | null;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input,    setInput]    = useState("");
@@ -161,6 +164,13 @@ export function ChatPanel({
       </div>
 
       <form onSubmit={send} className="flex-none border-t border-slate-200 p-3">
+        {(disabled || sendUntil) && (
+          <p className="mb-2 text-center text-[11px] text-slate-500">
+            {disabled
+              ? "Chat encerrado. As mensagens continuam aqui para consulta."
+              : `Consulta encerrada: você pode mandar mensagens até ${formatarPrazo(sendUntil)}.`}
+          </p>
+        )}
         {sendError && (
           <p role="alert" className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">
             {sendError}
@@ -172,7 +182,7 @@ export function ChatPanel({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={disabled}
-            placeholder={disabled ? "Consulta encerrada" : "Digite sua mensagem..."}
+            placeholder={disabled ? "Chat encerrado" : "Digite sua mensagem..."}
             className="flex-1 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/15 disabled:opacity-50"
           />
           <button
@@ -189,4 +199,12 @@ export function ChatPanel({
       </form>
     </div>
   );
+}
+
+function formatarPrazo(d: Date | null): string {
+  if (!d) return "";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  }).format(d).replace(", ", " às ");
 }

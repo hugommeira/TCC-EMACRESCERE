@@ -10,7 +10,7 @@ const FEATURES = [
   "Agenda com as consultas marcadas",
   "Prontuário e exames enviados pelo paciente",
   "Prescrição com busca na base da ANVISA",
-  "Receita assinada com o seu certificado A1 (ICP-Brasil)",
+  "Receita assinada com o seu certificado digital A1",
 ];
 
 export function ForDoctors() {
@@ -84,7 +84,7 @@ export function ForDoctors() {
               />
               <div>
                 <p className="text-sm font-semibold leading-tight text-white">Receita assinada</p>
-                <p className="text-xs text-white/70">Certificado ICP-Brasil</p>
+                <p className="text-xs text-white/70">Certificado digital A1</p>
               </div>
             </div>
           </Reveal>

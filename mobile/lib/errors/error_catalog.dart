@@ -18,6 +18,7 @@ const Map<String, String> kErrorMessages = {
   'AUTH_EMAIL_SENHA_INCORRETOS': 'E-mail e senha incorretos.',
   'AUTH_LOGIN_BLOQUEADO': 'Muitas tentativas de login. Aguarde 15 minutos e tente de novo.',
   'AUTH_CONTA_DESATIVADA': 'Sua conta está desativada. Fale com a equipe Emacrescere.',
+  'CHAT_ENCERRADO': 'O chat desta consulta fechou 24 h depois do atendimento.',
   'LIMITE_REQUISICOES': 'Muitas tentativas em pouco tempo. Aguarde alguns instantes.',
 };
 

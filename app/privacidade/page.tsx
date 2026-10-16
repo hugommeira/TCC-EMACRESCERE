@@ -50,7 +50,7 @@ export default function PrivacidadePage() {
       <h2>4. Com quem compartilhamos</h2>
       <ul>
         <li><strong>Médicos:</strong> apenas o profissional responsável pelo seu atendimento acessa seu prontuário.</li>
-        <li><strong>Farmácias parceiras:</strong> somente quando você decide adquirir um medicamento prescrito.</li>
+        <li><strong>Farmácias:</strong> não compartilhamos seus dados com farmácias; você apresenta a receita onde quiser.</li>
         <li><strong>Provedores de pagamento:</strong> processadores certificados (não armazenamos dados de cartão).</li>
         <li><strong>Autoridades:</strong> quando exigido por lei ou ordem judicial.</li>
       </ul>

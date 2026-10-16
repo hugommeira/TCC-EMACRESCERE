@@ -85,6 +85,17 @@ const nextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      // O PDF da receita abre num iframe da própria página
+      // (PrescriptionPdfModal). Com DENY / frame-ancestors 'none' o navegador
+      // recusava ("recusou a conexão"). Aqui só a mesma origem pode embutir;
+      // por vir depois, estas chaves substituem as de cima nesta rota.
+      {
+        source: "/api/prescriptions/:id/pdf",
+        headers: [
+          { key: "X-Frame-Options",         value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+        ],
+      },
     ];
   },
 };

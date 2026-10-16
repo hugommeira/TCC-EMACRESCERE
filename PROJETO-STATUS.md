@@ -44,6 +44,10 @@ na página inicial, login, cadastro e painel do paciente.
   médico, PDF e validação pública em `/prescricao/{id}`.
 - **Peso e IMC** (`WeightRecord`): página do paciente e aba na sala. O IMC é
   calculado na leitura (`lib/bmi.ts`), não é coluna.
+- **Perfil** (11/10): foto, edição de dados e saúde, contato de emergência,
+  formação do médico, troca de senha, baixar meus dados e desativar conta. No
+  prontuário, o médico vê o histórico das consultas anteriores dele com o
+  paciente.
 - **Admin:** aprovação de médicos, consultas, pagamentos, receitas,
   certificados, auditoria.
 - **App** (`mobile/`): paciente e médico; Android por APK, iPhone pela versão web
@@ -75,6 +79,29 @@ na página inicial, login, cadastro e painel do paciente.
   gera prévia fora da `main`, commit só em `mobile/` não builda o site. Ao juntar
   várias branches, o merge que mexe no site vai por último.
 
+### Na branch `pacotes-out26` (15/10/2026, aguardando merge)
+
+Pacote leve do `docs/planejamento-novas-implementacoes.md` (decisões D1, D2,
+D6 e D8 respondidas lá):
+
+- **P0, textos:** sem "farmácias parceiras" nos Termos e na Privacidade;
+  nenhum texto (site, PDF) afirma ICP-Brasil.
+- **P1, chat:** envio liberado por 24 h depois da consulta concluída
+  (`lib/chat-access.ts`, erro `CHAT_ENCERRADO`); leitura sempre liberada;
+  "marcar como lido" agora confere se o usuário participa da consulta.
+- **QR code no PDF da receita**, apontando para `/prescricao/[id]` (o mesmo
+  endereço já impresso), desenhado antes da assinatura.
+- **Salvar na agenda** (16/10): na consulta confirmada, Google Agenda e
+  arquivo `.ics` com lembretes de 1 dia e 30 min.
+- **Correções** (16/10): o PDF da receita abre na janela de visualização
+  (antes o navegador recusava, também no site publicado); ações funcionam na
+  prévia da Vercel; o link e o QR de validação não dependem só de
+  `NEXT_PUBLIC_APP_URL`.
+- **App:** o que falta levar ao Flutter está em `mobile/PENDENCIAS-DO-SITE.md`.
+- **Medidas do corpo** (tabela `body_measurements`, já criada no Neon):
+  cintura, quadril, gordura corporal e massa magra, com RCEst e RCQ calculados
+  no servidor. Só no site (página "Peso e medidas" e aba Peso da sala).
+
 ## Pendências
 
 **Antes da banca**
@@ -88,6 +115,17 @@ na página inicial, login, cadastro e painel do paciente.
    `medico.teste@emacrescere.test` (conta de teste que ficou aprovada).
 5. Calendário sugerido: congelar funcionalidades em 20/10 e, depois disso, só
    correções e preparação da demonstração.
+
+**Trabalhos futuros (do planejamento de 13–14/10)**
+
+- P3: suporte e reposição de consulta interrompida sem novo pagamento.
+- P4 completo: token próprio na receita e estado "dispensada" (o QR atual usa
+  a página de validação pública por id).
+- P5: tipos de profissional (endocrinologista, clínico, nutricionista) e filas.
+- D9: validade da receita de GLP-1 (hoje 180 dias, tipo COMUM) — confirmar com
+  o médico responsável antes de mudar.
+- Medidas: pressão arterial (limiares precisam de validação médica), sintomas,
+  e as medidas no app Flutter.
 
 **Depois, se houver tempo**
 
