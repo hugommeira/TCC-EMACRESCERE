@@ -91,6 +91,13 @@ D6 e D8 respondidas lá):
   "marcar como lido" agora confere se o usuário participa da consulta.
 - **QR code no PDF da receita**, apontando para `/prescricao/[id]` (o mesmo
   endereço já impresso), desenhado antes da assinatura.
+- **Salvar na agenda** (16/10): na consulta confirmada, Google Agenda e
+  arquivo `.ics` com lembretes de 1 dia e 30 min.
+- **Correções** (16/10): o PDF da receita abre na janela de visualização
+  (antes o navegador recusava, também no site publicado); ações funcionam na
+  prévia da Vercel; o link e o QR de validação não dependem só de
+  `NEXT_PUBLIC_APP_URL`.
+- **App:** o que falta levar ao Flutter está em `mobile/PENDENCIAS-DO-SITE.md`.
 - **Medidas do corpo** (tabela `body_measurements`, já criada no Neon):
   cintura, quadril, gordura corporal e massa magra, com RCEst e RCQ calculados
   no servidor. Só no site (página "Peso e medidas" e aba Peso da sala).

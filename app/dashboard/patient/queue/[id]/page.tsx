@@ -10,6 +10,8 @@ import { ScheduledConsultationWatcher } from "@/components/patient/ScheduledCons
 import { ScheduledPaymentForm }       from "@/components/patient/ScheduledPaymentForm";
 import { CancelConsultationButton }   from "@/components/patient/CancelConsultationButton";
 import { CancellationPolicy }         from "@/components/patient/CancellationPolicy";
+import { AddToCalendar }              from "@/components/patient/AddToCalendar";
+import { appBaseUrlFromEnv }          from "@/services/api/prescription";
 import { doctorTitle, formatCurrency, formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 
@@ -213,6 +215,12 @@ function ScheduledConsultationView({ c }: { c: ScheduledProps }) {
           <div className="rounded-2xl bg-brand-50/70 p-4 text-sm text-brand-900 ring-1 ring-brand-100">
             Pagamento de {formatCurrency(fee)} confirmado. Chegando a hora, o aviso também aparece no sino do painel.
           </div>
+          <AddToCalendar
+            consultationId={c.id}
+            scheduledAt={c.scheduledAt}
+            doctorLabel={doctorName}
+            baseUrl={appBaseUrlFromEnv()}
+          />
           <CancelConsultationButton consultationId={c.id} scheduledAt={c.scheduledAt.toISOString()} paid />
           <CancellationPolicy />
           <ScheduledConsultationWatcher consultationId={c.id} status={c.status} paymentStatus={payStatus} />

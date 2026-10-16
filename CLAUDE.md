@@ -35,6 +35,8 @@ quebrar o que já funciona custa mais do que faltar funcionalidade.
   `emacrescere_app` (pasta local na máquina do Hugo) é só histórico: não
   editar e não sincronizar — não existe mais subtree. Regras do app em
   `mobile/CLAUDE.md`; o build da Vercel ignora commits que só tocam `mobile/`.
+  Funcionalidade que entra só no site vai para `mobile/PENDENCIAS-DO-SITE.md`
+  (lista do que o app ainda precisa receber).
 - `/app/` no site é a **versão web do app** (build do Flutter em `public/app/`,
   usada no iPhone). A pasta `app/` da raiz é a de rotas do Next.js, não o app.
 
@@ -118,6 +120,8 @@ e-mail, em memória: reiniciar o dev server zera. Roteiro da banca em
   durante a consulta e por 24 h depois de concluída, leitura sempre; regra
   única em `lib/chat-access.ts`, usada pelas duas pilhas de chat
   (`app/api/chat/[roomToken]/*` e `app/api/consultations/[id]/messages`).
+  Consulta paga e marcada: "Salvar na agenda" com link do Google Agenda e
+  `.ics` com lembretes (`lib/calendar.ts`, `/api/consultations/[id]/calendar`).
 - **Receita.** `lib/prescription-pdf.ts` gera o PDF e `lib/sign-pdf.ts` assina com
   o certificado do médico (`MedicalCertificate`; o .pfx e a senha são cifrados com
   `lib/crypto.ts` em `services/api/certificate.ts`);

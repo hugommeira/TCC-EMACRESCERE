@@ -32,10 +32,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     });
     if (!p) return apiError("RECEITA_NAO_ENCONTRADA", { message: "Crie a receita antes de emitir." });
 
+    const appBaseUrl = appBaseUrlFromEnv();
     const issued = await issuePrescription({
       prescriptionId: p.id,
       doctorId:       session.user.id,
-      ...(appBaseUrlFromEnv() ? { appBaseUrl: appBaseUrlFromEnv() } : {}),
+      ...(appBaseUrl ? { appBaseUrl } : {}),
     });
 
     auditLog({
