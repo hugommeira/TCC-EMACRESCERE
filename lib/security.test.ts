@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { rateLimit } from "@/lib/security";
+import { checkOrigin, rateLimit } from "@/lib/security";
 
 describe("rateLimit", () => {
   beforeEach(() => {
@@ -56,5 +56,26 @@ describe("rateLimit", () => {
 
     expect(blockedA.ok).toBe(false);
     expect(okB.ok).toBe(true);
+  });
+});
+
+describe("checkOrigin", () => {
+  const req = (origin: string) => new Request("https://x.test/api", { method: "POST", headers: { origin } });
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("aceita o site oficial e recusa outro domínio", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://tcc-emacrescere.vercel.app");
+    expect(checkOrigin(req("https://tcc-emacrescere.vercel.app"))).toBeNull();
+    expect(checkOrigin(req("https://outro-site.com"))?.status).toBe(403);
+  });
+
+  it("aceita o endereço da prévia da Vercel (deploy e branch)", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://tcc-emacrescere.vercel.app");
+    vi.stubEnv("VERCEL_URL", "tcc-emacrescere-abc123.vercel.app");
+    vi.stubEnv("VERCEL_BRANCH_URL", "tcc-emacrescere-git-pacotes-out26.vercel.app");
+    expect(checkOrigin(req("https://tcc-emacrescere-abc123.vercel.app"))).toBeNull();
+    expect(checkOrigin(req("https://tcc-emacrescere-git-pacotes-out26.vercel.app"))).toBeNull();
+    expect(checkOrigin(req("https://tcc-emacrescere-outra.vercel.app"))?.status).toBe(403);
   });
 });

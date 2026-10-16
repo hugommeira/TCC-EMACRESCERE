@@ -235,8 +235,16 @@ async function signWithDoctorCertificate(
   }
 }
 
-function appBaseUrlFromEnv(): string | undefined {
-  return process.env["NEXT_PUBLIC_APP_URL"] || undefined;
+/**
+ * Endereço do site para o link e o QR de validação no PDF. Sem
+ * NEXT_PUBLIC_APP_URL, usa o domínio do deploy na Vercel; sem nenhum dos
+ * dois, o PDF sai sem link e sem QR.
+ */
+export function appBaseUrlFromEnv(): string | undefined {
+  const env = process.env["NEXT_PUBLIC_APP_URL"];
+  if (env) return env.replace(/\/$/, "");
+  const vercel = process.env["VERCEL_URL"];
+  return vercel ? `https://${vercel}` : undefined;
 }
 
 export async function issuePrescription(input: {

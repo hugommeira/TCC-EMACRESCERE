@@ -4,7 +4,7 @@ import { auth }              from "@/lib/auth";
 import { prisma }            from "@/lib/prisma";
 import { checkOrigin, getClientIp } from "@/lib/security";
 import { auditLog, AuditAction } from "@/lib/audit";
-import { issuePrescription } from "@/services/api/prescription";
+import { appBaseUrlFromEnv, issuePrescription } from "@/services/api/prescription";
 import { apiError, handleRouteError } from "@/lib/api-response";
 import { assertEncryptionKey } from "@/lib/crypto";
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     const issued = await issuePrescription({
       prescriptionId: p.id,
       doctorId:       session.user.id,
-      ...(process.env["NEXT_PUBLIC_APP_URL"] ? { appBaseUrl: process.env["NEXT_PUBLIC_APP_URL"] } : {}),
+      ...(appBaseUrlFromEnv() ? { appBaseUrl: appBaseUrlFromEnv() } : {}),
     });
 
     auditLog({

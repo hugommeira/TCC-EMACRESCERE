@@ -84,6 +84,12 @@ function allowedOrigins(): Set<string> {
   const set = new Set<string>();
   const env = process.env["NEXT_PUBLIC_APP_URL"];
   if (env) set.add(env.replace(/\/$/, ""));
+  // O próprio endereço do deploy na Vercel (prévias de branch e o domínio
+  // do deploy): sem isso, toda ação numa prévia era recusada, porque
+  // NEXT_PUBLIC_APP_URL aponta para o site oficial.
+  for (const host of [process.env["VERCEL_URL"], process.env["VERCEL_BRANCH_URL"]]) {
+    if (host) set.add(`https://${host}`);
+  }
   // dev
   set.add("http://localhost:3000");
   set.add("http://127.0.0.1:3000");
