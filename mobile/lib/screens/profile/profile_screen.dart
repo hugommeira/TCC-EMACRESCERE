@@ -8,6 +8,7 @@ import '../../utils/formatters.dart';
 import '../../widgets/curved_header_scaffold.dart';
 import '../startup/startup_gate.dart';
 import 'edit_profile_sheet.dart';
+import 'change_password_sheet.dart';
 import '../../widgets/theme_setting_card.dart';
 import '../../services/api_error.dart';
 
@@ -63,6 +64,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (saved == true) await _load();
   }
 
+  Future<void> _changePassword() async {
+    final changed = await ChangePasswordSheet.show(context);
+    if (changed == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Senha trocada.')));
+    }
+  }
+
   Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -86,10 +94,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     await AuthService.logout();
     if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const StartupGate()),
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const StartupGate()), (route) => false);
   }
 
   String _joinOrEmpty(List<String> items, String emptyLabel) =>
@@ -132,13 +140,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _FieldView(label: 'Telefone', value: profile.phone ?? 'Não informado'),
             _FieldView(
               label: 'Data de nascimento',
-              value: profile.birthDate != null ? formatDateOnly(profile.birthDate!) : 'Não informado',
+              value: profile.birthDate != null
+                  ? formatDateOnly(profile.birthDate!)
+                  : 'Não informado',
             ),
-            _FieldView(
-              label: 'Sexo',
-              value: _genderLabel(profile.gender),
-              last: true,
-            ),
+            _FieldView(label: 'Sexo', value: _genderLabel(profile.gender), last: true),
           ],
         ),
         const SizedBox(height: 16),
@@ -157,9 +163,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _FieldView(
               label: 'Observações',
               value: (profile.notes == null || profile.notes!.isEmpty) ? 'Nenhuma' : profile.notes!,
+            ),
+            _FieldView(
+              label: 'Altura',
+              value: profile.heightCm != null ? '${profile.heightCm} cm' : 'Não informada',
+            ),
+            _FieldView(
+              label: 'Meta de peso',
+              value: profile.goalWeightKg != null
+                  ? '${formatDecimal(profile.goalWeightKg!)} kg'
+                  : 'Não definida',
               last: true,
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        _SectionCard(
+          title: 'Contato de emergência',
+          children: [
+            if ((profile.emergencyContactName ?? '').isEmpty)
+              const _FieldView(label: 'Contato', value: 'Não informado', last: true)
+            else ...[
+              _FieldView(
+                label: 'Nome',
+                value: [
+                  profile.emergencyContactName!,
+                  if ((profile.emergencyContactRelation ?? '').isNotEmpty)
+                    '(${profile.emergencyContactRelation})',
+                ].join(' '),
+              ),
+              _FieldView(
+                label: 'Telefone',
+                value: profile.emergencyContactPhone ?? 'Não informado',
+                last: true,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: _changePassword,
+          icon: const Icon(Icons.lock_reset_rounded, size: 18),
+          label: const Text('Trocar senha'),
         ),
         const SizedBox(height: 24),
         const ThemeSettingCard(),
