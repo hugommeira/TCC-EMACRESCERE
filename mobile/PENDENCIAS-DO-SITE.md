@@ -39,14 +39,23 @@ Ao levar um item para o app, marcar como feito e anotar a data.
   durante a consulta e por 24 h depois de concluída; depois disso responde
   `409 CHAT_ENCERRADO`. A leitura do histórico continua liberada. O app já
   mostra o erro num aviso ao enviar; falta: esconder ou desabilitar a caixa de
-  mensagem fora do prazo e mostrar "Você pode mandar mensagens até ..."
-  (regra em `lib/chat-access.ts` do site; o app pode só reagir ao código).
+  mensagem fora do prazo e mostrar "Você pode mandar mensagens até ...".
+  **O servidor informa o prazo** (17/10): `GET /api/chat/{roomToken}/messages`
+  devolve `{ data: [...], access: { canSend, sendUntil, reason } }`. O app só
+  mostra: tranca a caixa quando `canSend` é falso e escreve o prazo quando
+  `sendUntil` existir e `canSend` for verdadeiro (`reason` é `ATIVA`,
+  `POS_CONSULTA`, `ENCERRADO`, `CANCELADA` ou `NAO_INICIADA`). Não refazer a
+  conta das 24 h no Dart. Se um envio voltar 409 (`CHAT_ENCERRADO`,
+  `CONSULTA_ENCERRADA` ou `CHAT_FORA_DA_CONSULTA`), trancar a caixa na hora.
+  "Marcar como lido" só vale para quem participa da consulta: ignorar o erro.
   Testar: mandar mensagem numa consulta encerrada há menos de 24 h.
 - [ ] **Contato de emergência no prontuário** (médico): o site mostra no
   cartão do paciente da sala. No app, `prontuario_sheet.dart`.
-- [ ] **Histórico de consultas anteriores** no prontuário (médico): o site
-  monta na página da sala (`app/consulta/[id]/page.tsx`); para o app seria
-  preciso uma rota que devolva esse histórico (ainda não existe).
+- [ ] **Histórico de consultas anteriores** no prontuário (médico):
+  `GET /api/consultations/{id}/history` (17/10) devolve `{ data: [...] }` com
+  `id`, `date` (ISO), `chiefComplaint`, `diagnosis`, `conduct`, `notes` e
+  `medications` (lista de textos). Só o médico da consulta (403 para os
+  outros) e só as consultas dele com o paciente. Tela: `prontuario_sheet.dart`.
 
 ## Acompanhamento (15/10/2026, branch `pacotes-out26`)
 

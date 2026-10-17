@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { sendMessage, getMessageHistory } from "@/services/api/chat";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { getChatAccess } from "@/lib/chat-access";
 import { apiError, validationError, handleRouteError, readJson } from "@/lib/api-response";
 
 const sendSchema = z.object({
@@ -30,7 +31,18 @@ export async function GET(
     }
 
     const messages = await getMessageHistory(consultation.id, session.user.id);
-    return NextResponse.json({ data: messages });
+    // Quem pode mandar mensagem e até quando (regra única em lib/chat-access.ts).
+    // O app só mostra: tranca a caixa quando canSend é falso e escreve o prazo
+    // quando há sendUntil, sem refazer a conta das 24 h.
+    const access = getChatAccess(consultation);
+    return NextResponse.json({
+      data: messages,
+      access: {
+        canSend:   access.canSend,
+        sendUntil: access.sendUntil ? access.sendUntil.toISOString() : null,
+        reason:    access.reason,
+      },
+    });
   } catch (error) {
     return handleRouteError(error);
   }
