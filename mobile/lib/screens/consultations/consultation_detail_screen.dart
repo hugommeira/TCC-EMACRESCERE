@@ -30,6 +30,7 @@ class ConsultationDetailScreen extends StatefulWidget {
 class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
   late Future<Consultation> _future;
   bool _downloadingPdf = false;
+  bool _savingCalendar = false;
 
   /// Aba aberta: null = ainda não escolhida (abre na Receita quando há receita
   /// assinada, senão no Resumo).
@@ -62,6 +63,38 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Não foi possível baixar a prescrição. ${errorMessage(e)}')));
     } finally {
       if (mounted) setState(() => _downloadingPdf = false);
+    }
+  }
+
+  /// "Salvar na agenda": o .ics do servidor, aberto pelo app de agenda do
+  /// aparelho. Na web (iPhone) o próprio navegador baixa e oferece adicionar
+  /// à agenda; o pedido sai da mesma origem, com o cookie da sessão.
+  Future<void> _saveToCalendar(String consultationId) async {
+    if (kIsWeb) {
+      await launchUrl(
+        Uri.parse('${ApiClient.siteUrl}/api/consultations/$consultationId/calendar'),
+        // Na mesma janela: no app da Tela de Início, uma janela nova abriria o
+        // Safari, que não tem o cookie da sessão.
+        webOnlyWindowName: '_self',
+      );
+      return;
+    }
+
+    setState(() => _savingCalendar = true);
+    try {
+      final bytes = await ConsultationService.downloadCalendar(consultationId);
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/consulta-emacrescere-$consultationId.ics');
+      await file.writeAsBytes(bytes);
+      if (!mounted) return;
+      await launchUrl(Uri.file(file.path), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Não foi possível salvar na agenda. ${errorMessage(e)}')),
+      );
+    } finally {
+      if (mounted) setState(() => _savingCalendar = false);
     }
   }
 
@@ -148,7 +181,11 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
                 onDownload: () => _downloadPdf(c.prescriptionId!),
                 onValidate: () => _openValidation(c.prescriptionId!),
               ),
-              _ => _SummaryTab(consultation: c),
+              _ => _SummaryTab(
+                consultation: c,
+                savingCalendar: _savingCalendar,
+                onSaveCalendar: () => _saveToCalendar(c.id),
+              ),
             },
           ),
         ),
@@ -206,9 +243,23 @@ class _Header extends StatelessWidget {
 }
 
 class _SummaryTab extends StatelessWidget {
-  const _SummaryTab({required this.consultation});
+  const _SummaryTab({
+    required this.consultation,
+    required this.savingCalendar,
+    required this.onSaveCalendar,
+  });
 
   final Consultation consultation;
+  final bool savingCalendar;
+  final VoidCallback onSaveCalendar;
+
+  /// Como no site: só a consulta paga e ainda marcada (o servidor confere de
+  /// novo ao entregar o arquivo).
+  bool get _canSaveCalendar =>
+      consultation.scheduledAt != null &&
+      (consultation.status == ConsultationStatus.scheduled ||
+          consultation.status == ConsultationStatus.waiting) &&
+      (consultation.payment?.isPaid ?? false);
 
   @override
   Widget build(BuildContext context) {
@@ -248,6 +299,31 @@ class _SummaryTab extends StatelessWidget {
             ),
           ),
         ),
+        if (_canSaveCalendar) ...[
+          const SizedBox(height: 14),
+          Rise(
+            delay: const Duration(milliseconds: 80),
+            child: DsCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Salvar na sua agenda', style: AppType.title(18, ds.title)),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Para não esquecer o dia e a hora. O arquivo já vem com lembretes.',
+                    style: TextStyle(fontFamily: AppType.sans, fontSize: 13, height: 1.4, color: ds.muted),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: savingCalendar ? null : onSaveCalendar,
+                    icon: const Icon(Icons.event_available_rounded, size: 18),
+                    label: Text(savingCalendar ? 'Preparando...' : 'Salvar na agenda'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

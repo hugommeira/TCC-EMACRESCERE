@@ -91,6 +91,18 @@ class ConsultationService {
     return response.data!;
   }
 
+  /// Arquivo .ics da consulta marcada (GET /api/consultations/{id}/calendar,
+  /// exige sessão; lembretes de 1 dia e 30 min já vêm no arquivo). O servidor
+  /// recusa (CONSULTA_ENCERRADA) se ela não estiver mais marcada.
+  static Future<List<int>> downloadCalendar(String consultationId) async {
+    final dio = await ApiClient.instance;
+    final response = await dio.get<List<int>>(
+      '/api/consultations/$consultationId/calendar',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data!;
+  }
+
   /// Médicos disponíveis pra agendamento (GET /api/users?doctors=true).
   static Future<List<Doctor>> getDoctors({String? search}) async {
     final dio = await ApiClient.instance;
