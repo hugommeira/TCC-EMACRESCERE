@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../errors/error_catalog.dart';
 import '../../../models/chat_message.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/chat_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/api_error.dart';
@@ -41,6 +42,9 @@ class _ChatScreenState extends State<ChatScreen> {
   List<ChatMessage> _messages = [];
   ChatAccess? _access;
 
+  /// Id do usuário logado (sessão), para saber quais mensagens são minhas.
+  String? _myId;
+
   /// Código do catálogo quando um envio foi recusado (409) antes de o GET
   /// seguinte trazer o `access` novo.
   String? _blockedCode;
@@ -57,6 +61,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _init() async {
+    // Quem está logado decide o lado das bolhas (paciente ou médico).
+    final myId = (await AuthService.checkSession())?.id;
+    if (mounted) setState(() => _myId = myId);
     await _load();
     // Marcar como lido é detalhe: se o servidor recusar (só paciente ou
     // médico da consulta podem), o chat continua normal.
@@ -177,7 +184,9 @@ class _ChatScreenState extends State<ChatScreen> {
       itemCount: _messages.length,
       itemBuilder: (context, index) {
         final message = _messages[index];
-        final isMine = message.sender.role == 'PATIENT';
+        // "Minha" é quem mandou ser o usuário logado: comparar pelo papel
+        // invertia os lados na sala do médico.
+        final isMine = _myId != null && message.sender.id == _myId;
         return _MessageBubble(message: message, isMine: isMine);
       },
     );
