@@ -16,14 +16,14 @@ Ao levar um item para o app, marcar como feito e anotar a data.
   ícone quando a foto é relativa (`_hasNetworkImage` em
   `lib/widgets/app_header.dart`). Para mostrar: montar a URL com a base da
   API e mandar o cookie no `NetworkImage(headers: ...)`.
-- [ ] **Editar perfil.** `PATCH /api/profile`: nome e telefone (todos) e, para
+- [x] **Editar perfil.** *(feito no app em 17/10/2026, commit `b0d24ab`)* `PATCH /api/profile`: nome e telefone (todos) e, para
   paciente, nascimento, sexo, tipo sanguíneo, alergias, medicamentos,
   observações, altura (`heightCm`), meta de peso (`goalWeightKg`) e contato de
   emergência (`emergencyContactName`, `emergencyContactPhone`,
   `emergencyContactRelation`). Campo vazio (`""`) apaga. O
   `edit_profile_sheet.dart` ainda usa `PATCH /api/users/{id}` (continua
   funcionando, mas sem os campos novos).
-- [ ] **Trocar senha.** `POST /api/profile/password` com `currentPassword`,
+- [x] **Trocar senha.** *(feito no app em 17/10/2026, commit `b0d24ab`)* `POST /api/profile/password` com `currentPassword`,
   `newPassword`, `confirmPassword`. Erro `PERFIL_SENHA_ATUAL_INCORRETA` (422)
   e `PERFIL_SEM_SENHA` (conta só Google).
 - [ ] **Formação do médico.** `PATCH /api/doctor/profile` aceita
