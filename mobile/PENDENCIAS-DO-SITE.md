@@ -9,7 +9,7 @@ Ao levar um item para o app, marcar como feito e anotar a data.
 
 ## Perfil (11/10/2026)
 
-- [ ] **Foto de perfil.** O site envia e remove a foto (`POST` / `DELETE
+- [x] **Foto de perfil.** *(feito no app em 17/10/2026, commit `8717303`)* O site envia e remove a foto (`POST` / `DELETE
   /api/profile/avatar`, multipart com `file`, JPG/PNG/WebP até 2 MB). A foto é
   servida em `/api/avatar/{userId}?v=...` e **exige o cookie de sessão**; o
   `avatarUrl` vem como caminho relativo. Hoje o cabeçalho do app mostra o
