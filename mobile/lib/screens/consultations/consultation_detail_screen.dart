@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -57,13 +58,31 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
       final file = File('${dir.path}/receita-$prescriptionId.pdf');
       await file.writeAsBytes(bytes);
       if (!mounted) return;
-      await launchUrl(Uri.file(file.path), mode: LaunchMode.externalApplication);
+      await _openSavedFile(file.path, 'application/pdf');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Não foi possível baixar a prescrição. ${errorMessage(e)}')));
     } finally {
       if (mounted) setState(() => _downloadingPdf = false);
     }
+  }
+
+  /// Entrega um arquivo salvo na pasta do app a outro app (leitor de PDF,
+  /// agenda). No Android 7+ um `file://` direto é recusado
+  /// (FileUriExposedException), por isso o open_filex, que passa o arquivo
+  /// pelo FileProvider.
+  Future<void> _openSavedFile(String path, String mimeType) async {
+    final result = await OpenFilex.open(path, type: mimeType);
+    if (result.type == ResultType.done || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.type == ResultType.noAppToOpen
+              ? 'Nenhum app do celular abre este arquivo.'
+              : 'Não foi possível abrir o arquivo.',
+        ),
+      ),
+    );
   }
 
   /// "Salvar na agenda": o .ics do servidor, aberto pelo app de agenda do
@@ -87,7 +106,7 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
       final file = File('${dir.path}/consulta-emacrescere-$consultationId.ics');
       await file.writeAsBytes(bytes);
       if (!mounted) return;
-      await launchUrl(Uri.file(file.path), mode: LaunchMode.externalApplication);
+      await _openSavedFile(file.path, 'text/calendar');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
