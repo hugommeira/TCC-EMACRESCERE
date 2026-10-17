@@ -19,6 +19,8 @@ const Map<String, String> kErrorMessages = {
   'AUTH_LOGIN_BLOQUEADO': 'Muitas tentativas de login. Aguarde 15 minutos e tente de novo.',
   'AUTH_CONTA_DESATIVADA': 'Sua conta está desativada. Fale com a equipe Emacrescere.',
   'CHAT_ENCERRADO': 'O chat desta consulta fechou 24 h depois do atendimento.',
+  'CHAT_FORA_DA_CONSULTA': 'O chat só fica disponível durante a consulta.',
+  'CONSULTA_ENCERRADA': 'Esta consulta já foi encerrada.',
   'LIMITE_REQUISICOES': 'Muitas tentativas em pouco tempo. Aguarde alguns instantes.',
 };
 

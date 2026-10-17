@@ -8,6 +8,8 @@ import '../../utils/formatters.dart';
 import '../../widgets/curved_header_scaffold.dart';
 import '../startup/startup_gate.dart';
 import 'edit_profile_sheet.dart';
+import 'change_password_sheet.dart';
+import '../../widgets/user_avatar.dart';
 import '../../widgets/theme_setting_card.dart';
 import '../../services/api_error.dart';
 
@@ -63,6 +65,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (saved == true) await _load();
   }
 
+  Future<void> _changePhoto() async {
+    final profile = _profile;
+    if (profile == null) return;
+    final result = await AvatarSheet.show(context, hasPhoto: profile.avatarUrl != null);
+    if (result == AvatarSheet.unchanged) return;
+    await _load();
+  }
+
+  Future<void> _changePassword() async {
+    final changed = await ChangePasswordSheet.show(context);
+    if (changed == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Senha trocada.')));
+    }
+  }
+
   Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -86,10 +103,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     await AuthService.logout();
     if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const StartupGate()),
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const StartupGate()), (route) => false);
   }
 
   String _joinOrEmpty(List<String> items, String emptyLabel) =>
@@ -123,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return CurvedHeaderScaffold(
       user: _user,
       onRefresh: _load,
-      overlapCard: _IdentityCard(profile: profile, onEdit: _editHealthInfo),
+      overlapCard: _IdentityCard(profile: profile, onEdit: _editHealthInfo, onPhoto: _changePhoto),
       children: [
         _SectionCard(
           title: 'Dados pessoais',
@@ -132,13 +149,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _FieldView(label: 'Telefone', value: profile.phone ?? 'Não informado'),
             _FieldView(
               label: 'Data de nascimento',
-              value: profile.birthDate != null ? formatDateOnly(profile.birthDate!) : 'Não informado',
+              value: profile.birthDate != null
+                  ? formatDateOnly(profile.birthDate!)
+                  : 'Não informado',
             ),
-            _FieldView(
-              label: 'Sexo',
-              value: _genderLabel(profile.gender),
-              last: true,
-            ),
+            _FieldView(label: 'Sexo', value: _genderLabel(profile.gender), last: true),
           ],
         ),
         const SizedBox(height: 16),
@@ -157,9 +172,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _FieldView(
               label: 'Observações',
               value: (profile.notes == null || profile.notes!.isEmpty) ? 'Nenhuma' : profile.notes!,
+            ),
+            _FieldView(
+              label: 'Altura',
+              value: profile.heightCm != null ? '${profile.heightCm} cm' : 'Não informada',
+            ),
+            _FieldView(
+              label: 'Meta de peso',
+              value: profile.goalWeightKg != null
+                  ? '${formatDecimal(profile.goalWeightKg!)} kg'
+                  : 'Não definida',
               last: true,
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        _SectionCard(
+          title: 'Contato de emergência',
+          children: [
+            if ((profile.emergencyContactName ?? '').isEmpty)
+              const _FieldView(label: 'Contato', value: 'Não informado', last: true)
+            else ...[
+              _FieldView(
+                label: 'Nome',
+                value: [
+                  profile.emergencyContactName!,
+                  if ((profile.emergencyContactRelation ?? '').isNotEmpty)
+                    '(${profile.emergencyContactRelation})',
+                ].join(' '),
+              ),
+              _FieldView(
+                label: 'Telefone',
+                value: profile.emergencyContactPhone ?? 'Não informado',
+                last: true,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: _changePassword,
+          icon: const Icon(Icons.lock_reset_rounded, size: 18),
+          label: const Text('Trocar senha'),
         ),
         const SizedBox(height: 24),
         const ThemeSettingCard(),
@@ -185,10 +239,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 /// Card sobreposto ao header: nome, e-mail, telefone e o botão Editar.
 /// Altura livre — o texto quebra linha à vontade.
 class _IdentityCard extends StatelessWidget {
-  const _IdentityCard({required this.profile, required this.onEdit});
+  const _IdentityCard({required this.profile, required this.onEdit, required this.onPhoto});
 
   final UserProfile profile;
   final VoidCallback onEdit;
+  final VoidCallback onPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -199,13 +254,52 @@ class _IdentityCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(profile.name, style: textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(profile.email, style: textTheme.bodyMedium),
-            if (profile.phone != null && profile.phone!.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(profile.phone!, style: textTheme.bodySmall),
-            ],
+            Row(
+              children: [
+                Tooltip(
+                  message: 'Trocar foto',
+                  child: InkWell(
+                    onTap: onPhoto,
+                    customBorder: const CircleBorder(),
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: context.colors.brand100,
+                          ),
+                          child: UserAvatar(url: profile.avatarUrl, size: 60),
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: CircleAvatar(
+                            radius: 11,
+                            backgroundColor: context.colors.brand600,
+                            child: const Icon(Icons.photo_camera_rounded, size: 13, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(profile.name, style: textTheme.titleMedium),
+                      const SizedBox(height: 4),
+                      Text(profile.email, style: textTheme.bodyMedium),
+                      if (profile.phone != null && profile.phone!.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(profile.phone!, style: textTheme.bodySmall),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,

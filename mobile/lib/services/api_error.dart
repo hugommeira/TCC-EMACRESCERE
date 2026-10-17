@@ -54,6 +54,8 @@ class ApiError implements Exception {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      // Existe no dio do pubspec.lock; sem este caso o switch não compila.
+      case DioExceptionType.transformTimeout:
         return ApiError('REDE_TEMPO_ESGOTADO', messageForCode('REDE_TEMPO_ESGOTADO'));
       case DioExceptionType.connectionError:
       case DioExceptionType.badCertificate:

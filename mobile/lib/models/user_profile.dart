@@ -15,6 +15,12 @@ class UserProfile {
     this.allergies = const [],
     this.medications = const [],
     this.notes,
+    this.heightCm,
+    this.goalWeightKg,
+    this.emergencyContactName,
+    this.emergencyContactPhone,
+    this.emergencyContactRelation,
+    this.avatarUrl,
     this.role = 'PATIENT',
     this.doctorProfile,
   });
@@ -30,6 +36,14 @@ class UserProfile {
   final List<String> allergies;
   final List<String> medications;
   final String? notes;
+  final int? heightCm;
+  final double? goalWeightKg;
+  final String? emergencyContactName;
+  final String? emergencyContactPhone;
+  final String? emergencyContactRelation;
+
+  /// Relativo (`/api/avatar/...`, exige o cookie) ou URL completa (Google).
+  final String? avatarUrl;
 
   /// PATIENT | DOCTOR | ADMIN | SUPER_ADMIN
   final String role;
@@ -54,6 +68,13 @@ class UserProfile {
       medications:
           (profile?['medications'] as List?)?.map((e) => e.toString()).toList() ?? const [],
       notes: profile?['notes'] as String?,
+      heightCm: (profile?['heightCm'] as num?)?.toInt(),
+      // Decimal no banco: o Prisma pode serializar como texto.
+      goalWeightKg: _toDouble(profile?['goalWeightKg']),
+      emergencyContactName: profile?['emergencyContactName'] as String?,
+      emergencyContactPhone: profile?['emergencyContactPhone'] as String?,
+      emergencyContactRelation: profile?['emergencyContactRelation'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
       role: json['role'] as String? ?? 'PATIENT',
       doctorProfile: json['doctorProfile'] != null
           ? DoctorProfile.fromJson(json['doctorProfile'] as Map<String, dynamic>)
@@ -61,3 +82,5 @@ class UserProfile {
     );
   }
 }
+
+double? _toDouble(Object? v) => v is num ? v.toDouble() : (v is String ? double.tryParse(v) : null);

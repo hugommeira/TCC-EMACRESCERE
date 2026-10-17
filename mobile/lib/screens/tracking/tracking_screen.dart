@@ -6,6 +6,7 @@ import '../../models/weight_entry.dart';
 import '../../services/weight_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/measures_card.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/ui.dart';
 import '../shell/main_shell.dart';
@@ -25,6 +26,7 @@ class TrackingScreen extends StatefulWidget {
 
 class _TrackingScreenState extends State<TrackingScreen> with TabVisibilityMixin<TrackingScreen> {
   WeightHistory? _history;
+  final _measuresKey = GlobalKey<MeasuresCardState>();
   bool _loading = true;
   String? _erro;
 
@@ -68,6 +70,9 @@ class _TrackingScreenState extends State<TrackingScreen> with TabVisibilityMixin
         _history = history;
         _loading = false;
       });
+      // Outras medidas: o cartão carrega sozinho; aqui só acompanha o
+      // recarregar da aba (o médico pode ter registrado na consulta).
+      _measuresKey.currentState?.reload();
     } on WeightFailure catch (e) {
       if (!mounted) return;
       setState(() {
@@ -262,6 +267,8 @@ class _TrackingScreenState extends State<TrackingScreen> with TabVisibilityMixin
                 child: _HistoryCard(entries: entries, onDelete: _apagarPesagem),
               ),
             ],
+            const SizedBox(height: 14),
+            MeasuresCard(key: _measuresKey),
           ],
         ),
       );

@@ -2,14 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../errors/error_catalog.dart';
 import '../../../models/chat_message.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/chat_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/api_error.dart';
+import '../../../utils/formatters.dart';
 
 /// Chat real de uma consulta (roomToken vem do backend). Atualiza via
 /// polling — o backend também expõe SSE em .../stream, dá pra trocar
 /// depois se quisermos tempo real de verdade.
+///
+/// Envio: durante a consulta e por 24 h depois dela; leitura sempre. Quem
+/// decide é o servidor (`access` do GET): a caixa tranca quando `canSend` é
+/// falso e mostra o prazo quando há `sendUntil`.
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key, required this.roomToken, this.title, this.embedded = false});
 
@@ -26,10 +33,21 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
+/// Recusas de envio do servidor que fecham a caixa (lib/chat-access.ts).
+const _closingCodes = {'CHAT_ENCERRADO', 'CONSULTA_ENCERRADA', 'CHAT_FORA_DA_CONSULTA'};
+
 class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   List<ChatMessage> _messages = [];
+  ChatAccess? _access;
+
+  /// Id do usuário logado (sessão), para saber quais mensagens são minhas.
+  String? _myId;
+
+  /// Código do catálogo quando um envio foi recusado (409) antes de o GET
+  /// seguinte trazer o `access` novo.
+  String? _blockedCode;
   bool _loading = true;
   bool _sending = false;
   String? _error;
@@ -43,17 +61,28 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _init() async {
+    // Quem está logado decide o lado das bolhas (paciente ou médico).
+    final myId = (await AuthService.checkSession())?.id;
+    if (mounted) setState(() => _myId = myId);
     await _load();
-    await ChatService.markRead(widget.roomToken);
+    // Marcar como lido é detalhe: se o servidor recusar (só paciente ou
+    // médico da consulta podem), o chat continua normal.
+    try {
+      await ChatService.markRead(widget.roomToken);
+    } catch (_) {}
   }
 
   Future<void> _load({bool silent = false}) async {
     if (!silent) setState(() => _loading = true);
     try {
-      final messages = await ChatService.getMessages(widget.roomToken);
+      final thread = await ChatService.getThread(widget.roomToken);
       if (!mounted) return;
       setState(() {
-        _messages = messages;
+        _messages = thread.messages;
+        if (thread.access != null) {
+          _access = thread.access;
+          _blockedCode = thread.access!.canSend ? null : thread.access!.blockedCode;
+        }
         _loading = false;
         _error = null;
       });
@@ -85,9 +114,16 @@ class _ChatScreenState extends State<ChatScreen> {
       await _load(silent: true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível enviar. ${errorMessage(e)}')),
-      );
+      final error = ApiError.from(e);
+      if (_closingCodes.contains(error.code)) {
+        // O prazo acabou enquanto a tela estava aberta: tranca a caixa. O
+        // texto fica guardado no campo e o histórico continua visível.
+        setState(() => _blockedCode = error.code);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Não foi possível enviar. ${error.message}')));
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -106,7 +142,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final content = Column(
       children: [
         Expanded(child: _buildBody()),
-        _Composer(controller: _controller, sending: _sending, onSend: _send),
+        if (_blockedCode != null)
+          _ClosedNotice(message: messageForCode(_blockedCode!))
+        else ...[
+          if (_access?.sendUntil != null) _DeadlineNotice(until: _access!.sendUntil!),
+          _Composer(controller: _controller, sending: _sending, onSend: _send),
+        ],
       ],
     );
     if (widget.embedded) return content;
@@ -143,7 +184,9 @@ class _ChatScreenState extends State<ChatScreen> {
       itemCount: _messages.length,
       itemBuilder: (context, index) {
         final message = _messages[index];
-        final isMine = message.sender.role == 'PATIENT';
+        // "Minha" é quem mandou ser o usuário logado: comparar pelo papel
+        // invertia os lados na sala do médico.
+        final isMine = _myId != null && message.sender.id == _myId;
         return _MessageBubble(message: message, isMine: isMine);
       },
     );
@@ -215,6 +258,78 @@ class _Composer extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.send),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Faixa acima da caixa na janela de 24 h depois da consulta.
+class _DeadlineNotice extends StatelessWidget {
+  const _DeadlineNotice({required this.until});
+
+  final DateTime until;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: [
+          Icon(Icons.schedule_rounded, size: 16, color: context.colors.gray600),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'Você pode mandar mensagens até ${formatDate(until)} às ${formatTime(until)}.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.gray600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// No lugar da caixa quando o envio está fechado: a mensagem do catálogo e o
+/// lembrete de que o histórico continua aqui.
+class _ClosedNotice extends StatelessWidget {
+  const _ClosedNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return SafeArea(
+      top: false,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.colors.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: context.colors.gray200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.lock_outline_rounded, size: 18, color: context.colors.gray600),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(message, style: textTheme.bodyMedium),
+                  const SizedBox(height: 2),
+                  Text(
+                    'As mensagens antigas continuam aqui.',
+                    style: textTheme.bodySmall?.copyWith(color: context.colors.gray600),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

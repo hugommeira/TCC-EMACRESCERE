@@ -60,6 +60,8 @@ dependencies:
   # Videochamada na sala da consulta (o mesmo LiveKit do site; o token vem de
   # GET /api/livekit/token). Traz o flutter_webrtc.
   livekit_client: ^2.13.0
+  image_picker: ^1.2.4
+  open_filex: ^5.0.0
 
 dev_dependencies:
   flutter_test:

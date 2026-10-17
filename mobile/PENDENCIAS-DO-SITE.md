@@ -9,21 +9,21 @@ Ao levar um item para o app, marcar como feito e anotar a data.
 
 ## Perfil (11/10/2026)
 
-- [ ] **Foto de perfil.** O site envia e remove a foto (`POST` / `DELETE
+- [x] **Foto de perfil.** *(feito no app em 17/10/2026, commit `8717303`)* O site envia e remove a foto (`POST` / `DELETE
   /api/profile/avatar`, multipart com `file`, JPG/PNG/WebP até 2 MB). A foto é
   servida em `/api/avatar/{userId}?v=...` e **exige o cookie de sessão**; o
   `avatarUrl` vem como caminho relativo. Hoje o cabeçalho do app mostra o
   ícone quando a foto é relativa (`_hasNetworkImage` em
   `lib/widgets/app_header.dart`). Para mostrar: montar a URL com a base da
   API e mandar o cookie no `NetworkImage(headers: ...)`.
-- [ ] **Editar perfil.** `PATCH /api/profile`: nome e telefone (todos) e, para
+- [x] **Editar perfil.** *(feito no app em 17/10/2026, commit `b0d24ab`)* `PATCH /api/profile`: nome e telefone (todos) e, para
   paciente, nascimento, sexo, tipo sanguíneo, alergias, medicamentos,
   observações, altura (`heightCm`), meta de peso (`goalWeightKg`) e contato de
   emergência (`emergencyContactName`, `emergencyContactPhone`,
   `emergencyContactRelation`). Campo vazio (`""`) apaga. O
   `edit_profile_sheet.dart` ainda usa `PATCH /api/users/{id}` (continua
   funcionando, mas sem os campos novos).
-- [ ] **Trocar senha.** `POST /api/profile/password` com `currentPassword`,
+- [x] **Trocar senha.** *(feito no app em 17/10/2026, commit `b0d24ab`)* `POST /api/profile/password` com `currentPassword`,
   `newPassword`, `confirmPassword`. Erro `PERFIL_SENHA_ATUAL_INCORRETA` (422)
   e `PERFIL_SEM_SENHA` (conta só Google).
 - [ ] **Formação do médico.** `PATCH /api/doctor/profile` aceita
@@ -35,7 +35,7 @@ Ao levar um item para o app, marcar como feito e anotar a data.
 
 ## Consulta e chat (15/10/2026, branch `pacotes-out26`)
 
-- [ ] **Chat por 24 h depois da consulta.** O servidor agora aceita mensagem
+- [x] **Chat por 24 h depois da consulta.** *(feito no app em 17/10/2026, commit `18f4ed6`, branch `app-pendencias-site`)* O servidor agora aceita mensagem
   durante a consulta e por 24 h depois de concluída; depois disso responde
   `409 CHAT_ENCERRADO`. A leitura do histórico continua liberada. O app já
   mostra o erro num aviso ao enviar; falta: esconder ou desabilitar a caixa de
@@ -59,7 +59,7 @@ Ao levar um item para o app, marcar como feito e anotar a data.
 
 ## Acompanhamento (15/10/2026, branch `pacotes-out26`)
 
-- [ ] **Outras medidas.** `GET /api/measurements?patientId=` devolve
+- [x] **Outras medidas.** *(feito no app em 17/10/2026, commit `852a618`)* `GET /api/measurements?patientId=` devolve
   `series` por tipo (`waist`, `hip`, `body_fat`, `lean_mass`) e `derived`
   (`waistToHeight`, `waistToHip`, `heightCm`), já calculados no servidor.
   `POST /api/measurements` com `type`, `value` e opcionais `note`,
@@ -69,7 +69,7 @@ Ao levar um item para o app, marcar como feito e anotar a data.
 
 ## Agendamento (16/10/2026, branch `pacotes-out26`)
 
-- [ ] **Salvar na agenda.** Na consulta confirmada (paga), o site mostra
+- [x] **Salvar na agenda.** *(feito no app em 17/10/2026, commit `734a4e7`; só o `.ics`, sem o link do Google Agenda)* Na consulta confirmada (paga), o site mostra
   "Google Agenda" (link montado em `lib/calendar.ts`) e um arquivo `.ics`
   com lembretes de 1 dia e 30 min (`GET /api/consultations/{id}/calendar`,
   exige sessão). No app: abrir o `.ics` com o app de agenda do aparelho

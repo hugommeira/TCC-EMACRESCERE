@@ -4,6 +4,10 @@ import '../../constants.dart';
 import '../../models/doctor_profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/doctor_service.dart';
+import '../../services/user_service.dart';
+import '../profile/change_password_sheet.dart';
+import '../profile/edit_profile_sheet.dart';
+import '../../widgets/user_avatar.dart';
 import '../../utils/formatters.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/curved_header_scaffold.dart';
@@ -23,6 +27,10 @@ class DoctorProfileScreen extends StatefulWidget {
 
 class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   SessionUser? _user;
+
+  /// Foto trocada nesta tela (a sessão só atualiza em até 60 s).
+  String? _avatarOverride;
+  bool _avatarChanged = false;
   DoctorProfile? _profile;
   bool _loading = true;
   bool _toggling = false;
@@ -57,6 +65,39 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     }
   }
 
+  /// Nome e telefone (PATCH /api/profile). O resto do perfil do médico é
+  /// editado no site.
+  Future<void> _editAccount() async {
+    final id = _user?.id;
+    if (id == null) return;
+    try {
+      final account = await UserService.getProfile(id);
+      if (!mounted) return;
+      final saved = await EditProfileSheet.show(context, account);
+      if (saved == true) await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(e))));
+    }
+  }
+
+  Future<void> _changePhoto() async {
+    final current = _avatarChanged ? _avatarOverride : _user?.image;
+    final result = await AvatarSheet.show(context, hasPhoto: current != null);
+    if (result == AvatarSheet.unchanged || !mounted) return;
+    setState(() {
+      _avatarChanged = true;
+      _avatarOverride = result;
+    });
+  }
+
+  Future<void> _changePassword() async {
+    final changed = await ChangePasswordSheet.show(context);
+    if (changed == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Senha trocada.')));
+    }
+  }
+
   Future<void> _setAvailable(bool value) async {
     setState(() => _toggling = true);
     try {
@@ -78,10 +119,13 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           kQueueEnabled
               ? 'Você deixa de receber pacientes da fila enquanto estiver fora.'
               : 'Suas consultas marcadas continuam na agenda — você só precisa '
-                  'entrar de novo para atender.',
+                    'entrar de novo para atender.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: context.colors.danger600),
             onPressed: () => Navigator.of(context).pop(true),
@@ -94,10 +138,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
     await AuthService.logout();
     if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const StartupGate()),
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const StartupGate()), (route) => false);
   }
 
   @override
@@ -137,10 +181,36 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_user?.name ?? '', style: textTheme.titleMedium),
-              const SizedBox(height: 2),
-              Text(profile.specialty, style: textTheme.bodyMedium),
-              Text(profile.crmLabel, style: textTheme.bodySmall),
+              Row(
+                children: [
+                  Tooltip(
+                    message: 'Trocar foto',
+                    child: InkWell(
+                      onTap: _changePhoto,
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        decoration: BoxDecoration(shape: BoxShape.circle, color: context.colors.brand100),
+                        child: UserAvatar(
+                          url: _avatarChanged ? _avatarOverride : _user?.image,
+                          size: 56,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_user?.name ?? '', style: textTheme.titleMedium),
+                        const SizedBox(height: 2),
+                        Text(profile.specialty, style: textTheme.bodyMedium),
+                        Text(profile.crmLabel, style: textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 14),
               Row(
                 children: [
@@ -149,7 +219,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   Expanded(
                     child: Text(
                       'Credenciado pela Emacrescere',
-                      style: textTheme.bodySmall?.copyWith(color: context.colors.brand800, fontWeight: FontWeight.w600),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: context.colors.brand800,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -169,9 +242,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             subtitle: Text(
               profile.available
                   ? (kQueueEnabled
-                      ? 'Você aparece para os pacientes e pode pegar da fila.'
-                      : 'Você aparece na lista de médicos e os pacientes podem '
-                          'marcar nos seus horários.')
+                        ? 'Você aparece para os pacientes e pode pegar da fila.'
+                        : 'Você aparece na lista de médicos e os pacientes podem '
+                              'marcar nos seus horários.')
                   : 'Você não aparece para os pacientes agendarem.',
               style: textTheme.bodySmall,
             ),
@@ -192,7 +265,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   _Field(label: 'Subespecialidade', value: profile.subSpecialty!),
                 _Field(
                   label: 'Valor da consulta',
-                  value: fee != null ? 'R\$ ${fee.toStringAsFixed(2).replaceAll('.', ',')}' : 'Não definido',
+                  value: fee != null
+                      ? 'R\$ ${fee.toStringAsFixed(2).replaceAll('.', ',')}'
+                      : 'Não definido',
                 ),
                 _Field(label: 'E-mail', value: _user?.email ?? '', last: true),
               ],
@@ -204,6 +279,18 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           'Bio, valor e horários são editados no site (painel do médico).',
           style: textTheme.bodySmall,
           textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: _editAccount,
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: const Text('Editar nome e telefone'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _changePassword,
+          icon: const Icon(Icons.lock_reset_rounded, size: 18),
+          label: const Text('Trocar senha'),
         ),
         const SizedBox(height: 20),
         const ThemeSettingCard(),

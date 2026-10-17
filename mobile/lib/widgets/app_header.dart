@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'motion.dart';
 import 'ui.dart';
+import 'user_avatar.dart';
 
 /// Header das abas: degradê da marca, avatar + saudação, e o símbolo do
 /// logo em marca d'água no canto. Curva embaixo pra o card sobreposto.
@@ -80,16 +81,14 @@ class GreenHeader extends StatelessWidget {
                           shape: BoxShape.circle,
                           color: Colors.white.withValues(alpha: 0.18),
                           border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
-                          // Foto enviada no site vem como caminho relativo
-                          // (/api/avatar/...) e exige o cookie: por ora o
-                          // app mostra o ícone nesse caso.
-                          image: _hasNetworkImage(user?.image)
-                              ? DecorationImage(image: NetworkImage(user!.image!), fit: BoxFit.cover)
-                              : null,
                         ),
-                        child: !_hasNetworkImage(user?.image)
-                            ? const Icon(Icons.person_rounded, color: Colors.white, size: 26)
-                            : null,
+                        // Foto relativa (/api/avatar/...) exige o cookie: o
+                        // UserAvatar baixa pelo ApiClient.
+                        child: UserAvatar(
+                          url: user?.image,
+                          size: 45,
+                          placeholder: const Icon(Icons.person_rounded, color: Colors.white, size: 26),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -143,4 +142,3 @@ class GreenHeader extends StatelessWidget {
   }
 }
 
-bool _hasNetworkImage(String? url) => url != null && url.startsWith('http');
