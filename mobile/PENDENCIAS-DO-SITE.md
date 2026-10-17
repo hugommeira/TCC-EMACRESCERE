@@ -35,7 +35,7 @@ Ao levar um item para o app, marcar como feito e anotar a data.
 
 ## Consulta e chat (15/10/2026, branch `pacotes-out26`)
 
-- [ ] **Chat por 24 h depois da consulta.** O servidor agora aceita mensagem
+- [x] **Chat por 24 h depois da consulta.** *(feito no app em 17/10/2026, commit `18f4ed6`, branch `app-pendencias-site`)* O servidor agora aceita mensagem
   durante a consulta e por 24 h depois de concluída; depois disso responde
   `409 CHAT_ENCERRADO`. A leitura do histórico continua liberada. O app já
   mostra o erro num aviso ao enviar; falta: esconder ou desabilitar a caixa de
