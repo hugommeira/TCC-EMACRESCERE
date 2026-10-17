@@ -69,7 +69,7 @@ Ao levar um item para o app, marcar como feito e anotar a data.
 
 ## Agendamento (16/10/2026, branch `pacotes-out26`)
 
-- [ ] **Salvar na agenda.** Na consulta confirmada (paga), o site mostra
+- [x] **Salvar na agenda.** *(feito no app em 17/10/2026, commit `734a4e7`; só o `.ics`, sem o link do Google Agenda)* Na consulta confirmada (paga), o site mostra
   "Google Agenda" (link montado em `lib/calendar.ts`) e um arquivo `.ics`
   com lembretes de 1 dia e 30 min (`GET /api/consultations/{id}/calendar`,
   exige sessão). No app: abrir o `.ics` com o app de agenda do aparelho
