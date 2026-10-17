@@ -20,6 +20,7 @@ class UserProfile {
     this.emergencyContactName,
     this.emergencyContactPhone,
     this.emergencyContactRelation,
+    this.avatarUrl,
     this.role = 'PATIENT',
     this.doctorProfile,
   });
@@ -40,6 +41,9 @@ class UserProfile {
   final String? emergencyContactName;
   final String? emergencyContactPhone;
   final String? emergencyContactRelation;
+
+  /// Relativo (`/api/avatar/...`, exige o cookie) ou URL completa (Google).
+  final String? avatarUrl;
 
   /// PATIENT | DOCTOR | ADMIN | SUPER_ADMIN
   final String role;
@@ -70,6 +74,7 @@ class UserProfile {
       emergencyContactName: profile?['emergencyContactName'] as String?,
       emergencyContactPhone: profile?['emergencyContactPhone'] as String?,
       emergencyContactRelation: profile?['emergencyContactRelation'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
       role: json['role'] as String? ?? 'PATIENT',
       doctorProfile: json['doctorProfile'] != null
           ? DoctorProfile.fromJson(json['doctorProfile'] as Map<String, dynamic>)

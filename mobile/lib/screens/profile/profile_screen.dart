@@ -9,6 +9,7 @@ import '../../widgets/curved_header_scaffold.dart';
 import '../startup/startup_gate.dart';
 import 'edit_profile_sheet.dart';
 import 'change_password_sheet.dart';
+import '../../widgets/user_avatar.dart';
 import '../../widgets/theme_setting_card.dart';
 import '../../services/api_error.dart';
 
@@ -62,6 +63,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (profile == null) return;
     final saved = await EditProfileSheet.show(context, profile);
     if (saved == true) await _load();
+  }
+
+  Future<void> _changePhoto() async {
+    final profile = _profile;
+    if (profile == null) return;
+    final result = await AvatarSheet.show(context, hasPhoto: profile.avatarUrl != null);
+    if (result == AvatarSheet.unchanged) return;
+    await _load();
   }
 
   Future<void> _changePassword() async {
@@ -131,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return CurvedHeaderScaffold(
       user: _user,
       onRefresh: _load,
-      overlapCard: _IdentityCard(profile: profile, onEdit: _editHealthInfo),
+      overlapCard: _IdentityCard(profile: profile, onEdit: _editHealthInfo, onPhoto: _changePhoto),
       children: [
         _SectionCard(
           title: 'Dados pessoais',
@@ -230,10 +239,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 /// Card sobreposto ao header: nome, e-mail, telefone e o botão Editar.
 /// Altura livre — o texto quebra linha à vontade.
 class _IdentityCard extends StatelessWidget {
-  const _IdentityCard({required this.profile, required this.onEdit});
+  const _IdentityCard({required this.profile, required this.onEdit, required this.onPhoto});
 
   final UserProfile profile;
   final VoidCallback onEdit;
+  final VoidCallback onPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -244,13 +254,52 @@ class _IdentityCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(profile.name, style: textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(profile.email, style: textTheme.bodyMedium),
-            if (profile.phone != null && profile.phone!.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(profile.phone!, style: textTheme.bodySmall),
-            ],
+            Row(
+              children: [
+                Tooltip(
+                  message: 'Trocar foto',
+                  child: InkWell(
+                    onTap: onPhoto,
+                    customBorder: const CircleBorder(),
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: context.colors.brand100,
+                          ),
+                          child: UserAvatar(url: profile.avatarUrl, size: 60),
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: CircleAvatar(
+                            radius: 11,
+                            backgroundColor: context.colors.brand600,
+                            child: const Icon(Icons.photo_camera_rounded, size: 13, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(profile.name, style: textTheme.titleMedium),
+                      const SizedBox(height: 4),
+                      Text(profile.email, style: textTheme.bodyMedium),
+                      if (profile.phone != null && profile.phone!.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(profile.phone!, style: textTheme.bodySmall),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,

@@ -7,6 +7,7 @@ import '../../services/doctor_service.dart';
 import '../../services/user_service.dart';
 import '../profile/change_password_sheet.dart';
 import '../profile/edit_profile_sheet.dart';
+import '../../widgets/user_avatar.dart';
 import '../../utils/formatters.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/curved_header_scaffold.dart';
@@ -26,6 +27,10 @@ class DoctorProfileScreen extends StatefulWidget {
 
 class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   SessionUser? _user;
+
+  /// Foto trocada nesta tela (a sessão só atualiza em até 60 s).
+  String? _avatarOverride;
+  bool _avatarChanged = false;
   DoctorProfile? _profile;
   bool _loading = true;
   bool _toggling = false;
@@ -74,6 +79,16 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(e))));
     }
+  }
+
+  Future<void> _changePhoto() async {
+    final current = _avatarChanged ? _avatarOverride : _user?.image;
+    final result = await AvatarSheet.show(context, hasPhoto: current != null);
+    if (result == AvatarSheet.unchanged || !mounted) return;
+    setState(() {
+      _avatarChanged = true;
+      _avatarOverride = result;
+    });
   }
 
   Future<void> _changePassword() async {
@@ -166,10 +181,36 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_user?.name ?? '', style: textTheme.titleMedium),
-              const SizedBox(height: 2),
-              Text(profile.specialty, style: textTheme.bodyMedium),
-              Text(profile.crmLabel, style: textTheme.bodySmall),
+              Row(
+                children: [
+                  Tooltip(
+                    message: 'Trocar foto',
+                    child: InkWell(
+                      onTap: _changePhoto,
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        decoration: BoxDecoration(shape: BoxShape.circle, color: context.colors.brand100),
+                        child: UserAvatar(
+                          url: _avatarChanged ? _avatarOverride : _user?.image,
+                          size: 56,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_user?.name ?? '', style: textTheme.titleMedium),
+                        const SizedBox(height: 2),
+                        Text(profile.specialty, style: textTheme.bodyMedium),
+                        Text(profile.crmLabel, style: textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 14),
               Row(
                 children: [
