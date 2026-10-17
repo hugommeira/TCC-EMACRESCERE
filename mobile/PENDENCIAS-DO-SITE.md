@@ -59,7 +59,7 @@ Ao levar um item para o app, marcar como feito e anotar a data.
 
 ## Acompanhamento (15/10/2026, branch `pacotes-out26`)
 
-- [ ] **Outras medidas.** `GET /api/measurements?patientId=` devolve
+- [x] **Outras medidas.** *(feito no app em 17/10/2026, commit `852a618`)* `GET /api/measurements?patientId=` devolve
   `series` por tipo (`waist`, `hip`, `body_fat`, `lean_mass`) e `derived`
   (`waistToHeight`, `waistToHip`, `heightCm`), já calculados no servidor.
   `POST /api/measurements` com `type`, `value` e opcionais `note`,
