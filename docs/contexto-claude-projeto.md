@@ -146,8 +146,8 @@ Senha de todas: **`Demo@12345`**.
 
 - Tudo o que foi desenvolvido está na `main` e no ar; nenhuma prévia tem
   trabalho pendente.
-- No ar: página inicial redesenhada (fotos próprias, 3D no desktop, seção do app com
-  Android e iPhone e QR codes), login com Google, agendamento com pagamento,
+- No ar: página inicial redesenhada (fotos próprias, 3D no desktop, seção "Nosso
+  Aplicativo" com APK, versão web e QR codes), login com Google, agendamento com pagamento,
   sala de consulta, receita assinada, peso e IMC, painel do admin, app web para
   iPhone.
 - Feito em 05/10: menus de notificações e conta corrigidos no celular; botão

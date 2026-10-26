@@ -6,7 +6,7 @@ web) e da responsividade no celular. Objetivo: decidir se o sistema está
 
 - Site: https://tcc-emacrescere.vercel.app
 - App Android (APK): https://tcc-emacrescere.vercel.app/app.apk
-- App iPhone (web): https://tcc-emacrescere.vercel.app/app/
+- App web (Android e iPhone): https://tcc-emacrescere.vercel.app/app/
 
 Cada item tem um código (ex.: `PAC-12`). Marque `[x]` quando passar. Quando
 falhar, abra um relatório de defeito com o código (modelo na seção 0.5).
@@ -120,8 +120,8 @@ Severidade:
 - [ ] `PUB-03` Botões **Entrar** e **Criar conta / Cadastrar** levam a `/auth/login` e `/auth/register`.
 - [ ] `PUB-04` No desktop aparecem os modelos 3D (coração, celular, selo); eles giram/animam sem travar a rolagem.
 - [ ] `PUB-05` No celular o topo é só texto (sem o celular 3D) e o botão de cadastro aparece na primeira tela, sem rolar.
-- [ ] `PUB-06` Seção **App** (`/#app`): dois QR codes (Android e iPhone). O QR do Android abre `/app.apk`; o do iPhone abre `/app/`. Teste lendo com a câmera de um celular.
-- [ ] `PUB-07` Link/botão de download do APK baixa o arquivo `emacrescere.apk`.
+- [ ] `PUB-06` Seção **Nosso Aplicativo** (`/#app`): no desktop, dois QR codes. O de **Baixar APK (Android)** abre `/app.apk`; o de **Nosso Aplicativo Web** abre `/app/`. Teste lendo com a câmera de um celular. No celular os QR codes não aparecem, só os botões.
+- [ ] `PUB-07` O botão **Baixar APK (Android)** baixa o arquivo `emacrescere.apk` e os 3 passos de instalação aparecem logo abaixo dele; **Nosso Aplicativo Web** abre `/app/`.
 - [ ] `PUB-08` FAQ: as 7 perguntas abrem e fecham; a da política de cancelamento diz "24 h ou mais = reembolso integral; menos de 24 h ou falta = sem reembolso; médico cancela = integral".
 - [ ] `PUB-09` Botão **Voltar ao topo** aparece depois de rolar e leva ao topo.
 - [ ] `PUB-10` No celular, a barra fixa de chamada para cadastro (rodapé) aparece e não cobre conteúdo importante.
@@ -626,7 +626,7 @@ para depois da banca. Se encontrar um deles, anote só se o comportamento for
 - Anexos acima de ~4,5 MB não passam (limite da Vercel; S3 não configurado).
 - Login com Facebook sem credenciais; e-mail (Resend) em modo sandbox.
 - No app ainda faltam: formação do médico, baixar dados/desativar conta, contato de emergência e histórico no prontuário do médico.
-- Contraste do botão verde padrão (3,8:1).
+- Contraste do botão verde padrão (3,8:1) e dos botões em degradê da página inicial (~2,5:1).
 
 ---
 

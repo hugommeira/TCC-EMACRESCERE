@@ -51,7 +51,8 @@ dia útil e sem choque de horário — no dia da banca sempre haverá consultas
 ## Roteiro (≈12 min)
 
 **1. Visitante → paciente (2 min)**
-- Landing: proposta, como funciona, modelos 3D, seção do app (Android e iPhone),
+- Landing: proposta, como funciona, modelos 3D, seção "Nosso Aplicativo" (APK
+  para Android; versão web para Android e iPhone),
   política de cancelamento nas dúvidas.
 - Cadastro de paciente (telefone é opcional) → login. Mostrar também o botão
   **Continuar com Google** (ver "Antes da apresentação").

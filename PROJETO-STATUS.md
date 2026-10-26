@@ -32,7 +32,7 @@ na página inicial, login, cadastro e painel do paciente.
 ### O que está no ar
 
 - **Página inicial** redesenhada (fotos próprias, modelos 3D no desktop, seção
-  do app com Android e iPhone e QR codes, botão "Voltar ao topo"). No celular,
+  "Nosso Aplicativo" com APK, versão web e QR codes, botão "Voltar ao topo"). No celular,
   o topo é só texto, para o botão de cadastro caber na primeira tela.
 - **Cadastro e login:** e-mail/senha, **Google (ativo)**, Facebook (pronto, sem
   credenciais); recuperação de senha por e-mail (Resend sandbox).

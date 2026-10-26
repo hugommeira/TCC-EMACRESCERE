@@ -5,7 +5,7 @@ atendimento **só por consulta agendada**. TCC da Escola Técnica Pandiá
 Calógeras (Técnico de Informática, Equipe 6). Banca: 03/11/2026.
 
 - Site: **https://tcc-emacrescere.vercel.app**
-- App no iPhone (versão web): **https://tcc-emacrescere.vercel.app/app/**
+- App web (Android e iPhone): **https://tcc-emacrescere.vercel.app/app/**
 - App Android (APK): **https://tcc-emacrescere.vercel.app/app.apk**
 - Design: [Figma do projeto](https://www.figma.com/design/4qVl5xVi3V3eREAm4xELvN)
 - Estado atual e pendências: [`PROJETO-STATUS.md`](PROJETO-STATUS.md) ·
@@ -58,8 +58,9 @@ Repositório: https://github.com/hugommeira/TCC-EMACRESCERE
   log de auditoria.
 - **Público:** página inicial, Termos, Privacidade e validação de receita pelo
   link ou QR code impresso no PDF (`/prescricao/{id}`), sem login.
-- **App** (Flutter, em `mobile/`): paciente e médico no celular. Android por
-  APK; iPhone pela versão web do próprio app, instalada pelo Safari. No app,
+- **App** (Flutter, em `mobile/`): paciente e médico no celular. Android pelo
+  APK ou pela versão web; iPhone pela versão web do próprio app, instalada pelo
+  Safari. No app,
   receita só é visualizada/baixada (emissão é pelo site), cartão de crédito
   abre o site, e não há login com Google nem painel de administração.
 
@@ -409,9 +410,10 @@ Commit + push e a Vercel serve o arquivo (headers em `vercel.json`). O SVG do
 QR (`public/qr-app.svg`) só precisa ser gerado de novo se a URL do site mudar
 (foi gerado com o pacote Dart `qr`, conteúdo = URL acima).
 
-### iPhone
+### Versão web (Android e iPhone)
 
-Não há app na App Store: no iPhone roda a versão web do próprio app, servida
+Não há app na App Store: no iPhone roda a versão web do próprio app (que também
+funciona no Android), servida
 pelo site em **`https://tcc-emacrescere.vercel.app/app/`** (arquivos em
 `public/app/`; build e cópia descritos em `mobile/HANDOFF.md`, seção "Versão web
 (iPhone)").
@@ -423,7 +425,11 @@ Para instalar no iPhone:
 3. Tocar em **Adicionar à Tela de Início** e depois em **Adicionar**.
 4. Abrir pelo ícone (tela cheia) e entrar com a mesma conta do site.
 
-O QR do iPhone (`public/qr-app-iphone.svg`, conteúdo
+No Android, pelo Chrome: menu **⋮** → **Adicionar à tela inicial** (ou
+**Instalar app**, se aparecer; o `public/app/manifest.json` tem nome, ícones e
+`display: standalone`).
+
+O QR da versão web (`public/qr-app-iphone.svg`, conteúdo
 `https://tcc-emacrescere.vercel.app/app/`) foi gerado sem acrescentar
 dependência ao projeto, nas mesmas cores do QR do Android:
 
