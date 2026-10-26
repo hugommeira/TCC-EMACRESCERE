@@ -11,25 +11,62 @@ Calógeras (Técnico de Informática, Equipe 6). Banca: 03/11/2026.
 - Estado atual e pendências: [`PROJETO-STATUS.md`](PROJETO-STATUS.md) ·
   roteiro da banca: [`docs/roteiro-demonstracao.md`](docs/roteiro-demonstracao.md)
 
+## Sumário
+
+- [Equipe](#equipe)
+- [O que o sistema faz](#o-que-o-sistema-faz)
+- [Stack](#stack)
+- [Estrutura do repositório](#estrutura-do-repositório)
+- [Setup local](#setup-local) · [Scripts](#scripts) · [Verificação antes de enviar](#verificação-antes-de-enviar)
+- [Autenticação](#autenticação)
+- [Contas de teste](#contas-de-teste)
+- [Pagamentos (Asaas)](#pagamentos-asaas)
+- [Deploy (Vercel)](#deploy-vercel)
+- [Tempo real e chat](#tempo-real-e-chat)
+- [Arquivos](#arquivos-certificados-pdfs-anexos)
+- [Erros e saúde do sistema](#erros-e-saúde-do-sistema)
+- [App: Android (APK) e iPhone (web)](#app-android-apk-e-iphone-web--qr-codes)
+- [Documentação](#documentação)
+- [Limitações conhecidas](#limitações-conhecidas-trabalho-futuro)
+
+## Equipe
+
+| Pessoa | Responsabilidade |
+|---|---|
+| Hugo Meira Maia | site (todo o repositório fora de `mobile/`), GitHub, Vercel, Neon e serviços; faz os merges na `main` |
+| Julia | app Flutter (`mobile/`) |
+
+Repositório: https://github.com/hugommeira/TCC-EMACRESCERE
+
 ## O que o sistema faz
 
 - **Paciente:** cadastro (e-mail/senha ou Google), agenda consulta com um médico
   em horário livre da agenda dele, paga (Pix, cartão ou boleto, via Asaas),
-  entra na consulta por vídeo, conversa por chat, recebe receita digital
-  assinada e acompanha **peso e IMC** num gráfico.
-- **Médico:** cadastro com CRM (aprovado pela equipe), agenda própria, sala da
-  consulta com vídeo, chat, prontuário com salvamento automático, aba de peso do
+  salva a consulta na agenda (Google Agenda ou `.ics`), entra na consulta por
+  vídeo, conversa por chat (durante a consulta e por 24 h depois), recebe
+  receita digital assinada e acompanha **peso, IMC e outras medidas** (cintura,
+  quadril, gordura corporal, massa magra) em gráficos.
+- **Médico:** cadastro com CRM (aprovado pela equipe), agenda própria, valor da
+  consulta, sala com vídeo, chat, prontuário com salvamento automático e
+  histórico das consultas anteriores com o paciente, aba de peso e medidas do
   paciente e emissão de receita assinada com o certificado digital dele.
-- **Administração:** aprova médicos, acompanha consultas, pagamentos, receitas,
-  certificados e o log de auditoria.
-- **Público:** validação de receita pelo link impresso no PDF (`/prescricao/{id}`),
-  sem login.
+- **Perfil (todos):** foto, dados pessoais e de saúde, contato de emergência,
+  formação (médico), troca de senha, **baixar meus dados** (JSON) e **desativar
+  conta** (LGPD).
+- **Administração:** aprova ou reprova médicos, ativa/desativa usuários,
+  acompanha consultas, pagamentos, receitas, certificados, saúde do sistema e o
+  log de auditoria.
+- **Público:** página inicial, Termos, Privacidade e validação de receita pelo
+  link ou QR code impresso no PDF (`/prescricao/{id}`), sem login.
 - **App** (Flutter, em `mobile/`): paciente e médico no celular. Android por
-  APK; iPhone pela versão web do próprio app, instalada pelo Safari.
+  APK; iPhone pela versão web do próprio app, instalada pelo Safari. No app,
+  receita só é visualizada/baixada (emissão é pelo site), cartão de crédito
+  abre o site, e não há login com Google nem painel de administração.
 
 A plataforma **não vende, não indica e não entrega medicamentos**: toda conduta
 é decisão do médico. A fila de atendimento imediato (on-demand) foi descartada
-pelo grupo; o código ficou desligado em `QUEUE_ENABLED` (`lib/constants.ts`).
+pelo grupo; o código ficou desligado em `QUEUE_ENABLED` (`lib/constants.ts`) e
+`kQueueEnabled` (app).
 
 ## Stack
 
@@ -44,7 +81,7 @@ pelo grupo; o código ficou desligado em `QUEUE_ENABLED` (`lib/constants.ts`).
 | Vídeo         | LiveKit Cloud                                               |
 | E-mail        | Resend (modo sandbox)                                       |
 | Tempo real    | SSE + consulta periódica (ver [Tempo real](#tempo-real-e-chat)) |
-| Testes        | Vitest                                                      |
+| Testes        | Vitest (site) e `flutter test` (app)                        |
 | App           | Flutter (`mobile/`)                                         |
 | Deploy        | Vercel (região `gru1`), automático a cada push na `main`    |
 
@@ -56,36 +93,43 @@ pelo grupo; o código ficou desligado em `QUEUE_ENABLED` (`lib/constants.ts`).
 ```
 TCC-EMACRESCERE/
 ├── app/                        # Next.js App Router (rotas; NÃO é o aplicativo)
-│   ├── api/                    # Route handlers: admin, auth, chat, checkout,
-│   │                           #   consultations, doctor(s), files, followup,
-│   │                           #   livekit, medications, notifications, patient,
-│   │                           #   prescription(s), realtime, users, webhooks,
-│   │                           #   weight (queue/ e dev/ existem, desligados)
-│   ├── auth/                   # login, cadastro (paciente e médico), senha
+│   ├── api/                    # Route handlers: admin, auth, avatar, chat, checkout,
+│   │                           #   consultations, doctor(s), files, followup, health,
+│   │                           #   livekit, measurements, medications, notifications,
+│   │                           #   patient, prescription(s), profile, realtime, users,
+│   │                           #   webhooks, weight (queue/ e dev/ existem, desligados)
+│   ├── auth/                   # login, cadastro (paciente e médico), esqueci/redefinir
+│   │                           #   senha, erro, acesso negado
 │   ├── consulta/[id]/          # sala da consulta (vídeo, chat, prontuário, peso, receita)
 │   ├── dashboard/
-│   │   ├── patient/            # início, agendar, consultas, peso, receitas, perfil
+│   │   ├── patient/            # início, agendar, consultas, peso e medidas, receitas, perfil
 │   │   ├── doctor/             # início, consultas, receitas, certificado, perfil
-│   │   └── admin/              # médicos, usuários, consultas, pagamentos,
+│   │   └── admin/              # visão geral, médicos, usuários, consultas, pagamentos,
 │   │                           #   receitas, certificados, auditoria
 │   ├── prescricao/[id]/        # validação pública de receita
 │   ├── privacidade/ termos/    # páginas legais
 │   └── page.tsx                # página inicial (seções em components/landing)
-├── components/                 # landing, auth, layout, patient, doctor, admin,
-│                               #   consulta, weight, prescription, three (3D), ui...
+├── components/                 # landing, auth, layout, patient, doctor, admin, consulta,
+│                               #   weight, measures, profile, prescription, three (3D), ui...
 ├── hooks/                      # useSSE, useChat, useConsultation, useAuth...
-├── lib/                        # auth (auth.ts + auth.config.ts), scheduling, bmi,
-│                               #   realtime, s3 (arquivos), sign-pdf, security,
-│                               #   audit, oauth-profile, redirect, validations/
+├── lib/                        # auth (auth.ts + auth.config.ts), scheduling, bmi, measures,
+│                               #   calendar, chat-access, realtime, s3 (arquivos), sign-pdf,
+│                               #   prescription-pdf, security, audit, error-catalog,
+│                               #   oauth-profile, redirect, validations/ (+ testes *.test.ts)
 ├── services/
-│   ├── api/                    # regras de negócio (consultation, payment, weight...)
+│   ├── api/                    # cliente tipado do front (consultation, payment, weight...)
 │   └── external/               # Asaas, CFM (simulado), e-mail (Resend)
-├── prisma/                     # schema.prisma, seed.ts, seed-demo.ts, medicamentos
+├── prisma/                     # schema.prisma, seed.ts, seed-demo.ts, seed-test.ts, medicamentos
 ├── public/                     # app.apk, app/ (build web do app), 3d/, photos/, QR codes
 ├── mobile/                     # app Flutter (paciente + médico) — ver mobile/HANDOFF.md
-├── docs/                       # roteiro da banca, auditoria, front-end, 3D, fotos
+├── docs/                       # roteiro da banca, auditoria, catálogo de erros, front-end,
+│                               #   planejamento, 3D, fotos
+├── scripts/                    # gerar-catalogo-erros.ts (gera docs/catalogo-erros.md)
+├── types/                      # tipos globais e extensão de tipos do NextAuth
 ├── art/3d-src/                 # arquivos .blend dos modelos 3D
-└── test/                       # stubs dos testes
+├── test/                       # falhas/ (testes de queda e do catálogo) e stubs/
+├── middleware.ts               # protege rotas e restringe /dashboard/* por papel
+└── vercel.json                 # build, ignoreCommand, região e headers do APK
 ```
 
 ## Setup local
@@ -94,6 +138,9 @@ TCC-EMACRESCERE/
 > para ele. Tudo o que você fizer rodando localmente (cadastros, pagamentos de
 > teste, pesagens) aparece no site público. Teste que grava dado precisa
 > desfazer o que gravou.
+
+Pré-requisitos: **Node.js 18.17 ou mais novo** (recomendado 20) com npm; para o
+app, **Flutter** com Dart 3.10 ou mais novo (`mobile/pubspec.yaml`).
 
 ```bash
 npm install                      # também roda prisma generate
@@ -110,12 +157,44 @@ de produção**): `npm run prisma:studio`, `prisma:push`, `prisma:seed`,
 `prisma:seed-demo`. Num banco novo e vazio, a ordem é `prisma:push` →
 `prisma:seed` → `prisma:seed-demo`.
 
+### Rodar o app (Flutter)
+
+O app não precisa de `.env`: por padrão ele fala com a API de produção.
+
+```bash
+cd mobile
+flutter pub get
+dart run tool/dev_web.dart       # no navegador (sobe o app + proxy de API com CORS)
+flutter run -d <device-id>       # num Android físico (flutter devices lista)
+flutter test                     # testes do app
+```
+
+Não use `flutter run -d chrome` direto (o navegador bloqueia o cookie de
+sessão). Outro servidor: `--dart-define=API_BASE_URL=...`. Detalhes em
+[`mobile/HANDOFF.md`](mobile/HANDOFF.md).
+
+### Scripts
+
+| Script | O que faz |
+|---|---|
+| `npm run dev` | servidor local em `:3000` (**banco real**) |
+| `npm run build` | **só na Vercel**: `prisma generate` + `db push` + seed demo + `next build` |
+| `npm start` | serve o build |
+| `npm run lint` / `npm run typecheck` | ESLint / `tsc --noEmit` |
+| `npm test` | Vitest (`vitest run`) |
+| `npm run prisma:generate` | gera o cliente Prisma |
+| `npm run prisma:push` / `prisma:migrate` | aplica o schema no banco (**produção**) |
+| `npm run prisma:studio` | abre o Prisma Studio (**produção**) |
+| `npm run prisma:seed` / `prisma:seed-demo` | seed inicial / dados de demonstração |
+| `npx tsx scripts/gerar-catalogo-erros.ts` | regera `docs/catalogo-erros.md` |
+
 ### Verificação antes de enviar
 
 ```bash
 npx tsc --noEmit | grep -c "error TS"   # 60 erros antigos (dívida): não pode subir
-npx vitest run                           # 62 testes
+npx vitest run                           # 177 testes em 20 arquivos (24/10/2026)
 npx eslint <arquivos alterados>          # ou: npx next lint --dir components --dir app
+cd mobile && flutter test                # se mexeu no app
 ```
 
 O build da Vercel ignora erros de TypeScript e de lint (`ignoreBuildErrors` em
@@ -124,7 +203,9 @@ O build da Vercel ignora erros de TypeScript e de lint (`ignoreBuildErrors` em
 ## Autenticação
 
 NextAuth v5 com sessão JWT (30 dias). A senha fica com hash bcrypt e o papel
-(`PATIENT`, `DOCTOR`, `ADMIN`) é revalidado no banco a cada 60 s. O
+(`PATIENT`, `DOCTOR`, `ADMIN`) é revalidado no banco a cada 60 s. O login
+aceita 5 tentativas a cada 15 min por e-mail (contador em memória: reiniciar o
+servidor zera). O
 `callbackUrl` do login só aceita caminhos internos do site.
 
 ### Recuperação de senha (Resend)
@@ -280,7 +361,25 @@ entrega.
 preenchidas; sem elas, guarda tudo no próprio banco (tabela `stored_files`),
 com links de download assinados. Hoje o S3 **não** está configurado: os
 arquivos ficam no banco. Preencher as `S3_*` muda o armazenamento sem mudar
-código.
+código. Sem S3, a Vercel recusa uploads acima de ~4,5 MB; o site limita os
+anexos a 4 MB (`MAX_UPLOAD_BYTES` em `lib/constants.ts`).
+
+## Erros e saúde do sistema
+
+- **Catálogo único de erros** em `lib/error-catalog.ts` (código, mensagem ao
+  usuário, ação sugerida). Servidor: `new AppError("CODIGO")` /
+  `apiError("CODIGO")` (`lib/api-response.ts`); site: `apiFetch`
+  (`lib/api-client.ts`); app: `ApiError.from` (`mobile/lib/services/api_error.dart`).
+- O documento [`docs/catalogo-erros.md`](docs/catalogo-erros.md) é gerado pelo
+  script `scripts/gerar-catalogo-erros.ts`; o teste
+  `test/falhas/catalogo.test.ts` reprova se ele ficar desatualizado. A seção
+  "Problemas conhecidos" desse documento lista os defeitos registrados e ainda
+  não corrigidos.
+- **`/api/health`**: sem login mostra só o estado geral; o admin vê o card
+  "Saúde do sistema" no painel (banco testado na hora; serviços externos
+  conferidos pela configuração).
+- Testes de queda das peças críticas (login, rotas, tempo real, serviços
+  externos, webhook) em `test/falhas/`.
 
 ## App: Android (APK) e iPhone (web) + QR codes
 
@@ -301,7 +400,7 @@ O QR aponta para `https://tcc-emacrescere.vercel.app/app.apk` (arquivo em
 nova:
 
 ```bash
-# dentro de mobile/ (o app vive neste repositório; precisa do mobile/.env)
+# dentro de mobile/ (o app vive neste repositório; não precisa de .env)
 flutter build apk --release --split-per-abi
 cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../public/app.apk
 ```
@@ -348,6 +447,10 @@ cache: teste numa aba privada ou apague os dados do site no Safari.
 | [`CLAUDE.md`](CLAUDE.md) | regras e arquitetura para quem (pessoa ou Claude) vai mexer no código |
 | [`docs/roteiro-demonstracao.md`](docs/roteiro-demonstracao.md) | roteiro da banca |
 | [`docs/auditoria-seguranca.md`](docs/auditoria-seguranca.md) | auditoria de segurança e LGPD |
+| [`docs/catalogo-erros.md`](docs/catalogo-erros.md) | todos os códigos de erro e os problemas conhecidos (gerado) |
+| [`docs/planejamento-novas-implementacoes.md`](docs/planejamento-novas-implementacoes.md) | planejamento e decisões (D1–D9) das últimas entregas |
+| [`docs/plano-de-testes.md`](docs/plano-de-testes.md) | checklist completo de testes (site, app, celular) para os testadores |
+| [`mobile/PENDENCIAS-DO-SITE.md`](mobile/PENDENCIAS-DO-SITE.md) | o que já está no site e ainda falta no app |
 | [`docs/frontend-handoff.md`](docs/frontend-handoff.md) · [`docs/frontend-diagnostico.md`](docs/frontend-diagnostico.md) | regras visuais e diagnóstico do front-end |
 | [`docs/3d/`](docs/3d/BRIEFING.md) · [`docs/fotos/`](docs/fotos/BRIEFING.md) | modelos 3D e fotos do site |
 | [`mobile/HANDOFF.md`](mobile/HANDOFF.md) · [`mobile/CLAUDE.md`](mobile/CLAUDE.md) | app Flutter |
@@ -367,3 +470,10 @@ cache: teste numa aba privada ou apague os dados do site no Safari.
 - Sem `robots.txt`, `sitemap.xml`, imagem de Open Graph e monitoramento de erros.
 - Propostas da auditoria ainda não implementadas (CPF cifrado, log de leitura do
   prontuário, limite de login por IP): ver `docs/auditoria-seguranca.md`.
+- Defeitos registrados e não corrigidos (reserva dupla de horário sob
+  concorrência, médico pendente agindo na consulta, receita emitível em
+  qualquer status etc.): seção "Problemas conhecidos" de
+  [`docs/catalogo-erros.md`](docs/catalogo-erros.md).
+- No app ainda faltam: formação do médico, baixar dados/desativar conta,
+  contato de emergência e histórico no prontuário
+  ([`mobile/PENDENCIAS-DO-SITE.md`](mobile/PENDENCIAS-DO-SITE.md)).
