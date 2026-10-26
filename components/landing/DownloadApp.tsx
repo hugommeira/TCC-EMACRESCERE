@@ -3,7 +3,8 @@
 // Seção "Nosso Aplicativo": um único retângulo com as duas formas de usar o
 // app, sem títulos separados por aparelho (pedido do grupo):
 // - "Baixar APK (Android)": APK hospedado no próprio site (public/app.apk,
-//   build arm64, ~35 MB). Só instala no Android.
+//   build arm64, ~35 MB). Só instala no Android; os passos de instalação
+//   ficam logo abaixo do botão.
 // - "Nosso Aplicativo Web": versão web do próprio app em /app/ (public/app/),
 //   que roda no Android e no iPhone (não há app na App Store). O link é um <a>
 //   comum: /app/ é um app estático, não uma página do Next.
@@ -14,6 +15,7 @@
 export const APK_PATH = "/app.apk";
 export const WEB_APP_PATH = "/app/";
 
+const STEP_NUMBER = "font-semibold text-brand-700";
 const PRIMARY_BUTTON =
   "inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-teal-500 px-5 py-3.5 text-base font-semibold text-white shadow-md shadow-brand-500/25 transition-all sm:px-7 duration-200 hover:shadow-lg hover:shadow-brand-500/40 sm:w-auto";
 const OPTION =
@@ -47,6 +49,11 @@ export function DownloadApp() {
                 </svg>
                 Baixar APK (Android)
               </a>
+              <ol aria-label="Como instalar o APK" className="w-full space-y-2 text-sm text-slate-600">
+                <li className="flex gap-2"><span className={STEP_NUMBER}>1.</span><span className="min-w-0">Baixe o arquivo no Android.</span></li>
+                <li className="flex gap-2"><span className={STEP_NUMBER}>2.</span><span className="min-w-0">Ao abrir, permita a instalação de apps desta fonte (o Android pede uma vez).</span></li>
+                <li className="flex gap-2"><span className={STEP_NUMBER}>3.</span><span className="min-w-0">Entre com a mesma conta do site.</span></li>
+              </ol>
             </div>
 
             <div className={OPTION}>

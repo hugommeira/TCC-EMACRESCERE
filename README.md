@@ -288,7 +288,8 @@ A seção do app na landing (`/#app`) é um único retângulo, "Nosso Aplicativo
 com as duas opções e o QR code real de cada uma (o QR some no celular, onde a
 pessoa já está no aparelho):
 
-- **Baixar APK (Android)**: o app instalável, só para Android.
+- **Baixar APK (Android)**: o app instalável, só para Android, com os passos
+  de instalação logo abaixo do botão.
 - **Nosso Aplicativo Web**: a versão web do app em `/app/`, que roda no Android
   e no iPhone. Na web o PDF da receita não baixa (a receita é conferida pelo
   link de validação do site); no APK, baixa.
