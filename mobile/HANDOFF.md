@@ -20,7 +20,7 @@ site — aprova médicos, vê pagamentos/receita, gerencia usuários).
 | Parte | Onde | Remote | O que é |
 |---|---|---|---|
 | Site (backend + frontend web + admin) | raiz de `C:\Users\jujuj\TCC-EMACRESCERE` | `origin` → `github.com/hugommeira/TCC-EMACRESCERE` (branch `main`) | Next.js 14 (App Router), TypeScript strict, Prisma + PostgreSQL (Neon), NextAuth v5, TailwindCSS. Deploy: Vercel, `https://tcc-emacrescere.vercel.app`, região `gru1`, auto-deploy a cada push em `main`. |
-| App mobile (paciente + médico) | `TCC-EMACRESCERE/mobile/` | o mesmo `origin` do site | Flutter/Dart, consome a API do site via HTTP (nunca acessa o banco direto). Distribuição planejada: Google Play (Teste Interno) ou APK direto — hoje é APK direto, ver seção do QR code. |
+| App mobile (paciente + médico) | `TCC-EMACRESCERE/mobile/` | o mesmo `origin` do site | Flutter/Dart, consome a API do site via HTTP (nunca acessa o banco direto). Distribuição: hoje é APK direto (e a versão web em `/app/`), ver seção do QR code; Google Play (Teste Interno) fica como plano futuro. |
 
 **O app é editado em `mobile/`**, no mesmo repositório, branch e commits do site — também
 pelas sessões na nuvem. Até 2026-10-03 ele vivia num repo local separado
@@ -116,11 +116,11 @@ webhooks/asaas
   receita total, pagamentos pendentes).
 - App: 5 abas do paciente (Início, Peso, Consultas, Chat, Perfil) + interface completa do
   médico (Fila, Consultas, Agenda, Perfil) desde 2026-09-11.
-- Landing do site com seção "App Android e iPhone" (`/#app`), com dois QR codes reais:
+- Landing do site com a seção "Nosso Aplicativo" (`/#app`), com dois QR codes reais:
   `public/qr-app.svg` (gerado com o pacote Dart `qr`) apontando pra `/app.apk` (build arm64
-  real, ~19 MB, hospedado no próprio site, headers corretos pro Android instalar direto), e
+  real, ~35 MB, hospedado no próprio site, headers corretos pro Android instalar direto), e
   `public/qr-app-iphone.svg` (gerado com `npx qrcode`) apontando pra `/app/`, a versão web
-  que o iPhone instala pelo Safari.
+  que roda no Android e no iPhone (no iPhone, instalada pelo Safari).
 - Dados de demonstração: `prisma/seed-demo.ts` roda no build de **produção** da Vercel
   (idempotente; prévias não rodam seed nem `db push` — ver "Deploy na Vercel").
   Cria médicos em cada situação de credenciamento (aprovado, pendente com CRM ativo, pendente
