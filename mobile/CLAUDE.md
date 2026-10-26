@@ -128,8 +128,10 @@ analisador marcar como `dead_code` justamente o código que queremos preservar.
 - iOS (só Android nesta entrega)
 
 ## Distribuição
-- Google Play, faixa de Teste Interno (Android)
-- Plano B: gerar .apk e disponibilizar direto no site
+- Atual: .apk (arm64) disponibilizado direto no site (`public/app.apk`) e a
+  versão web em `/app/` (Android e iPhone)
+- Plano futuro: Google Play, faixa de Teste Interno (Android). A landing não
+  menciona a Google Play enquanto isso não existir
 
 ## Convenções
 - Seguir estrutura de pastas padrão Flutter (lib/screens, lib/widgets,

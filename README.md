@@ -284,13 +284,20 @@ código.
 
 ## App: Android (APK) e iPhone (web) + QR codes
 
-A seção do app na landing (`/#app`) mostra os dois caminhos lado a lado, cada
-um com o seu QR code real.
+A seção do app na landing (`/#app`) é um único retângulo, "Nosso Aplicativo",
+com as duas opções e o QR code real de cada uma (o QR some no celular, onde a
+pessoa já está no aparelho):
+
+- **Baixar APK (Android)**: o app instalável, só para Android, com os passos
+  de instalação logo abaixo do botão.
+- **Nosso Aplicativo Web**: a versão web do app em `/app/`, que roda no Android
+  e no iPhone. Na web o PDF da receita não baixa (a receita é conferida pelo
+  link de validação do site); no APK, baixa.
 
 ### Android
 
 O QR aponta para `https://tcc-emacrescere.vercel.app/app.apk` (arquivo em
-`public/app.apk`, build arm64 do app Flutter, ~19 MB). Para publicar uma versão
+`public/app.apk`, build arm64 do app Flutter, ~35 MB). Para publicar uma versão
 nova:
 
 ```bash
@@ -353,6 +360,8 @@ cache: teste numa aba privada ou apague os dados do site no Safari.
 - Certificado de teste sem validade jurídica (um A1 ICP-Brasil real é pago e
   exige validação presencial).
 - Fila on-demand desligada (`QUEUE_ENABLED`), não apagada.
+- App Android distribuído só pelo APK do site; publicar na Google Play (faixa de
+  Teste Interno) fica para depois. A landing não menciona a Google Play.
 - Login com Facebook sem credenciais; Resend em sandbox; S3 não configurado.
 - 60 erros antigos de TypeScript escondidos por `ignoreBuildErrors`.
 - Sem `robots.txt`, `sitemap.xml`, imagem de Open Graph e monitoramento de erros.
